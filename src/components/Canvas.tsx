@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMouse } from "../hooks/useMouse";
-import { useStore } from "../state";
+import { Op, useStore } from "../state";
 import { TmpCanvas } from "../ccanvas";
 
 export default function Canvas() {
@@ -29,7 +29,7 @@ export default function Canvas() {
       });
       return {
         onMouseMove: (pos) => {
-          if (dist(lastPos, pos) > 10) {
+          if (dist(lastPos, pos) > 3) {
             poss.push(pos);
             tmpCanvas.addLine({
               line: [...lastPos, ...pos],
@@ -49,8 +49,23 @@ export default function Canvas() {
               ctx.lineTo(pos[0], pos[1]);
             }
             ctx.fill();
+            const op: Op = {
+              type: "fill",
+              fillColor: store.color,
+            };
+            store.apply(op, tmpCanvas.canvas);
+          } else {
+            const op: Op = {
+              type: "stroke",
+              strokeStyle: {
+                color: store.color,
+                width: store.penSize,
+                soft: store.softPen,
+              },
+              path: poss,
+            };
+            store.apply(op, tmpCanvas.canvas);
           }
-          store.finish(tmpCanvas.canvas);
           tmpCanvas.finish();
         },
       };

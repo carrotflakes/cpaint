@@ -7,9 +7,9 @@ export type State = {
   penSize: number
   opacity: number
   softPen: boolean
+  ops: Op[]
   canvas: HTMLCanvasElement
-  imageData: ImageData | null
-  finish: (canvas: HTMLCanvasElement) => void
+  apply: (op: Op, canvas: HTMLCanvasElement) => void
   setSize: (width: number, height: number) => void
   updatedAt: Date
   setColor: (color: string) => void
@@ -20,23 +20,35 @@ export type State = {
   setTool: (tool: ToolType) => void
 };
 
+export type Op = {
+  type: "stroke";
+  strokeStyle: {
+    color: string
+    width: number
+    soft: boolean
+  };
+  path: [number, number][];
+} | {
+  type: "fill";
+  fillColor: string
+};
+
 export const useStore = create<State>()((set) => ({
   color: "#000",
   penSize: 5,
   opacity: 1,
   softPen: false,
+  ops: [],
   canvas: document.createElement("canvas"),
   canvasRaster: document.createElement("canvas"),
-  imageData: null,
-  finish(canvas) {
+  apply(op, canvas) {
     set((state) => {
       const ctx = state.canvas.getContext("2d")!;
       ctx.save();
       ctx.globalAlpha = state.opacity;
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
-      // state.canvasRaster.getContext('2d')!.clearRect(0, 0, state.canvasRaster.width, state.canvasRaster.height);
-      return { updatedAt: new Date() }
+      return { ops: [...state.ops, op], updatedAt: new Date() }
     })
   },
   setSize(width, height) {
