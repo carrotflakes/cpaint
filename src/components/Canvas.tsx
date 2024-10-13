@@ -100,6 +100,7 @@ export default function Canvas() {
       style={{
         width: store.canvas.width * store.canvasScale,
         height: store.canvas.height * store.canvasScale,
+        imageRendering: "pixelated",
       }}
       {...mouse.props}
     />
