@@ -42,7 +42,8 @@ export class TmpCanvas {
         line[1],
         line[2],
         line[3],
-        lineWidth
+        lineWidth,
+        (d) => Math.tanh((d - 0.5) * 5.0) * 0.5 + 0.5,
       );
       ctx.putImageData(this.imageData, 0, 0);
     } else {
@@ -63,16 +64,17 @@ export class TmpCanvas {
 }
 
 
-export function drawSoftLine(imageData: ImageData, x0: number, y0: number, x1: number, y1: number, size: number) {
-  const left = Math.min(x0, x1) - size;
-  const top = Math.min(y0, y1) - size;
-  const right = Math.max(x0, x1) + size;
-  const bottom = Math.max(y0, y1) + size;
+export function drawSoftLine(imageData: ImageData, x0: number, y0: number, x1: number, y1: number, size: number, f: (v: number) => number) {
+  const left = Math.floor(Math.min(x0, x1) - size);
+  const top = Math.floor(Math.min(y0, y1) - size);
+  const right = Math.ceil(Math.max(x0, x1) + size);
+  const bottom = Math.ceil(Math.max(y0, y1) + size);
 
   for (let y = Math.max(0, top); y < Math.min(imageData.height, bottom); y++) {
     for (let x = Math.max(0, left); x < Math.min(imageData.width, right); x++) {
       const { d2 } = distanceWithSeg(x, y, x0, y0, x1, y1);
-      const alpha = Math.max(0, Math.min(1, 1 - Math.sqrt(d2) / size));
+      const d = Math.max(0, Math.min(1, 1 - Math.sqrt(d2) / size));
+      const alpha = f(d);
       const i = (y * imageData.width + x) * 4;
       imageData.data[i + 3] = Math.max(imageData.data[i + 3], Math.round(alpha * 255));
     }
