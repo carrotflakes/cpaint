@@ -4,6 +4,8 @@ import { useStore } from "../state";
 import { ColorPalette } from "./ColorPalette";
 import { IconEraser, IconFill, IconMinus, IconPencil, IconPlus } from "./icons";
 
+const scaleFactor = 2 ** (1 / 4);
+
 export function ToolBar() {
   const store = useStore();
   const [showCp, setShowCp] = useState(false);
@@ -119,7 +121,7 @@ export function ToolBar() {
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         onClick={() =>
-          store.setCanvasScale(roundFloat(store.canvasScale * 1.1, 4))
+          store.setCanvasScale(roundFloat(store.canvasScale * scaleFactor, 4))
         }
         title="Zoom"
       >
@@ -129,7 +131,7 @@ export function ToolBar() {
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         onClick={() =>
-          store.setCanvasScale(roundFloat(store.canvasScale / 1.1, 4))
+          store.setCanvasScale(roundFloat(store.canvasScale / scaleFactor, 4))
         }
         title="Unzoom"
       >
