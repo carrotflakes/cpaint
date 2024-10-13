@@ -14,6 +14,7 @@ export default function Canvas() {
 
   const mouse = useMouse<HTMLCanvasElement>({
     onMouseDown: (pos, e) => {
+      pos = [pos[0] / store.canvasScale, pos[1] / store.canvasScale];
       let lastPos = pos;
       e.preventDefault();
       const poss = [pos];
@@ -29,6 +30,7 @@ export default function Canvas() {
       });
       return {
         onMouseMove: (pos) => {
+          pos = [pos[0] / store.canvasScale, pos[1] / store.canvasScale];
           if (dist(lastPos, pos) > 3) {
             poss.push(pos);
             tmpCanvas.addLine({
@@ -91,7 +93,16 @@ export default function Canvas() {
   }, [store, mouse.props.ref, tmpCanvas.canvas, updatedAt]);
 
   return (
-    <canvas className="border" width="400" height="400" {...mouse.props} />
+    <canvas
+      className="border"
+      width={store.canvas.width}
+      height={store.canvas.height}
+      style={{
+        width: store.canvas.width * store.canvasScale,
+        height: store.canvas.height * store.canvasScale,
+      }}
+      {...mouse.props}
+    />
   );
 }
 

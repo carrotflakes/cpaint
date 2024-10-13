@@ -1,8 +1,8 @@
 import { useState } from "react";
+import { useMouse } from "../hooks/useMouse";
 import { useStore } from "../state";
 import { ColorPalette } from "./ColorPalette";
-import { useMouse } from "../hooks/useMouse";
-import { IconPencil, IconEraser, IconFill } from "./icons";
+import { IconEraser, IconFill, IconMinus, IconPencil, IconPlus } from "./icons";
 
 export function ToolBar() {
   const store = useStore();
@@ -85,6 +85,8 @@ export function ToolBar() {
         </div>
       </div>
 
+      <hr />
+
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         data-selected={store.tool === "pen"}
@@ -110,6 +112,28 @@ export function ToolBar() {
         title="Fill"
       >
         <IconFill />
+      </div>
+
+      <hr />
+
+      <div
+        className="cursor-pointer data-[selected=false]:opacity-50"
+        onClick={() =>
+          store.setCanvasScale(roundFloat(store.canvasScale * 1.1, 4))
+        }
+        title="Zoom"
+      >
+        <IconPlus />
+      </div>
+
+      <div
+        className="cursor-pointer data-[selected=false]:opacity-50"
+        onClick={() =>
+          store.setCanvasScale(roundFloat(store.canvasScale / 1.1, 4))
+        }
+        title="Unzoom"
+      >
+        <IconMinus />
       </div>
     </div>
   );
@@ -181,4 +205,8 @@ function useControl({
     show: show || temporalShow,
     setShow,
   };
+}
+
+function roundFloat(x: number, n: number) {
+  return Math.round(x * 10 ** n) / 10 ** n;
 }

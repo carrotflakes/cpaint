@@ -18,6 +18,8 @@ export type State = {
   setSoftPen: (softPen: boolean) => void
   tool: ToolType
   setTool: (tool: ToolType) => void
+  canvasScale: number
+  setCanvasScale: (scale: number) => void
 };
 
 export type Op = {
@@ -74,5 +76,9 @@ export const useStore = create<State>()((set) => ({
   tool: "pen",
   setTool(tool) {
     set({ tool })
-  }
+  },
+  canvasScale: 1,
+  setCanvasScale(scale) {
+    set({ canvasScale: scale })
+  },
 }));
