@@ -65,7 +65,7 @@ export function ToolBar() {
           title="Opacity"
           {...controlOpacity.props}
         >
-          {Math.round(store.opacity * 100)}
+          {Math.round(store.opacity * 255)}
         </div>
         {controlOpacity.show && (
           <div className="absolute p-2 bg-white shadow z-10">
