@@ -1,22 +1,27 @@
 import { useRef, useMemo, useEffect } from "react";
 
+export type MyMouseEvent = {
+  preventDefault: () => void;
+  target: EventTarget | Element | null;
+};
+
 export function useMouse<T extends Element>({
   onMouseDown,
 }: {
   onMouseDown: (
     pos: [number, number],
-    event: MouseEvent,
+    event: MyMouseEvent,
     el: T
   ) => null | {
-    onMouseMove?: (pos: [number, number], event: MouseEvent) => void;
-    onMouseUp?: (event: MouseEvent) => void;
+    onMouseMove?: (pos: [number, number], event: MyMouseEvent) => void;
+    onMouseUp?: (event: MyMouseEvent) => void;
   };
 }) {
   const ref = useRef(null as null | T);
   const handlers = useRef(
     null as null | {
-      onMouseMove?: (pos: [number, number], event: MouseEvent) => void;
-      onMouseUp?: (event: MouseEvent) => void;
+      onMouseMove?: (pos: [number, number], event: MyMouseEvent) => void;
+      onMouseUp?: (event: MyMouseEvent) => void;
     }
   );
 
