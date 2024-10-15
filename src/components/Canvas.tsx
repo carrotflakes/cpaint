@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { TmpCanvas } from "../ccanvas";
 import { useMouse } from "../hooks/useMouse";
 import { Op, useStore } from "../state";
-import { TmpCanvas } from "../ccanvas";
 
 export default function Canvas() {
   const store = useStore();
   const tmpCanvas = useMemo(() => new TmpCanvas(), []);
   const [updatedAt, setUpdatedAt] = useState(0);
+  const ref = useRef(null as null | HTMLCanvasElement);
 
   useEffect(() => {
     store.setSize(400, 400);
   }, []);
 
-  const mouse = useMouse<HTMLCanvasElement>({
+  useMouse<HTMLCanvasElement>({
+    ref,
     onMouseDown: (pos, e) => {
       pos = [pos[0] / store.canvasScale, pos[1] / store.canvasScale];
       let lastPos = pos;
@@ -75,7 +77,7 @@ export default function Canvas() {
   });
 
   useEffect(() => {
-    const canvas = mouse.props.ref.current!;
+    const canvas = ref.current!;
     const ctx = canvas.getContext("2d")!;
 
     ctx.putImageData(
@@ -90,7 +92,7 @@ export default function Canvas() {
     ctx.globalAlpha = store.opacity;
     ctx.drawImage(tmpCanvas.canvas, 0, 0);
     ctx.restore();
-  }, [store, mouse.props.ref, tmpCanvas.canvas, updatedAt]);
+  }, [store, ref, tmpCanvas.canvas, updatedAt]);
 
   return (
     <canvas
@@ -102,7 +104,7 @@ export default function Canvas() {
         height: store.canvas.height * store.canvasScale,
         imageRendering: "pixelated",
       }}
-      {...mouse.props}
+      ref={ref}
     />
   );
 }

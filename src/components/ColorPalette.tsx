@@ -49,6 +49,8 @@ export function ColorPicker({
   initialColor?: Color;
   onChanged?: (color: Color) => void;
 }) {
+  const circleRef = useRef<HTMLDivElement>(null);
+  const rectRef = useRef<HTMLDivElement>(null);
   const [hsl, setHsl] = useState({
     hue: 0,
     saturation: 1,
@@ -79,7 +81,8 @@ export function ColorPicker({
   const changed = useRef(() => {});
   changed.current = () => onChanged?.(code);
 
-  const mouseCircle = useMouse<HTMLDivElement>({
+  useMouse<HTMLDivElement>({
+    ref: circleRef,
     onMouseDown: (pos, e, el) => {
       if (el !== e.target) return null;
       const bbox = el.getBoundingClientRect();
@@ -101,7 +104,8 @@ export function ColorPicker({
     },
   });
 
-  const mouseRect = useMouse<HTMLDivElement>({
+  useMouse<HTMLDivElement>({
+    ref: rectRef,
     onMouseDown: (pos, e, el) => {
       if (el !== e.target) return null;
       const bbox = el.getBoundingClientRect();
@@ -153,7 +157,7 @@ export function ColorPicker({
             background:
               "conic-gradient(#f00, #ff0 16.6%, #0f0 33.3%, #0ff 50%, #00f 66.6%, #f0f 83.3%, #f00)",
           }}
-          {...mouseCircle.props}
+          ref={circleRef}
         ></div>
         <div
           className="w-4 h-4 rounded-full bg-white border-2 border-black absolute cursor-default"
@@ -172,7 +176,7 @@ export function ColorPicker({
             }, 100%, 50%))`,
             backgroundBlendMode: "multiply, normal",
           }}
-          {...mouseRect.props}
+          ref={rectRef}
         >
           <div
             className="w-4 h-4 rounded-full bg-white border-2 border-black absolute"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMouse } from "../hooks/useMouse";
 import { useStore } from "../state";
 import { ColorPalette } from "./ColorPalette";
@@ -148,7 +148,9 @@ function SliderV({
   value: number;
   onChange?: (value: number) => void;
 }) {
-  const mouse = useMouse<HTMLDivElement>({
+  const ref = useRef<HTMLDivElement>(null);
+  useMouse<HTMLDivElement>({
+    ref,
     onMouseDown(pos, _event, el) {
       const bbox = el.getBoundingClientRect();
       const h = (pos: [number, number]) => {
@@ -165,7 +167,7 @@ function SliderV({
   });
 
   return (
-    <div className="relative w-4 h-32 rounded border-2" {...mouse.props}>
+    <div className="relative w-4 h-32 rounded border-2" ref={ref}>
       <div
         className="absolute w-3 h-[1px] bg-gray-400"
         style={{ top: `${(1 - value) * 100}%` }}
@@ -183,9 +185,11 @@ function useControl({
   setValue: (value: number) => void;
   sensitivity?: number;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
   const [temporalShow, setTemporalShow] = useState(false);
-  const mouse = useMouse<HTMLDivElement>({
+  useMouse<HTMLDivElement>({
+    ref,
     onMouseDown(pos) {
       setTemporalShow(true);
       const initValue = getValue();
@@ -203,7 +207,7 @@ function useControl({
   });
 
   return {
-    props: mouse.props,
+    props: { ref },
     show: show || temporalShow,
     setShow,
   };
