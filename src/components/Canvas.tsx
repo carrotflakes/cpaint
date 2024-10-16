@@ -31,13 +31,15 @@ export default function Canvas() {
         opacity: store.opacity,
       });
       return {
-        onMouseMove: (pos) => {
+        onMouseMove: (pos, e) => {
           pos = [pos[0] / store.canvasScale, pos[1] / store.canvasScale];
           if (dist(lastPos, pos) > 3) {
             poss.push(pos);
+            const lineWidth =
+              store.tool === "fill" ? 1 : store.penSize * (e.force ?? 1);
             tmpCanvas.addLine({
               line: [...lastPos, ...pos],
-              lineWidth: store.tool === "fill" ? 1 : store.penSize,
+              lineWidth,
             });
             lastPos = pos;
             setUpdatedAt(Date.now());

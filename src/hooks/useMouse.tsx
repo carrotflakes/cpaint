@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 export type MyMouseEvent = {
   preventDefault: () => void;
   target: EventTarget | Element | null;
+  force: number | null;
 };
 
 export function useMouse<T extends HTMLElement>({
@@ -34,7 +35,12 @@ export function useMouse<T extends HTMLElement>({
         number,
         number
       ];
-      const r = onMouseDown(pos, e, ref.current);
+      const ev = {
+        preventDefault: () => e.preventDefault(),
+        target: e.target,
+        force: null,
+      };
+      const r = onMouseDown(pos, ev, ref.current);
       if (!r) return;
       handlers.current = r;
       e.preventDefault();
@@ -46,7 +52,12 @@ export function useMouse<T extends HTMLElement>({
         e.touches[0].clientX - bbox.left,
         e.touches[0].clientY - bbox.top,
       ] as [number, number];
-      const r = onMouseDown(pos, e, ref.current);
+      const ev = {
+        preventDefault: () => e.preventDefault(),
+        target: e.target,
+        force: e.touches[0].force,
+      };
+      const r = onMouseDown(pos, ev, ref.current);
       if (!r) return;
       handlers.current = r;
       e.preventDefault();
@@ -71,10 +82,20 @@ export function useMouse<T extends HTMLElement>({
         number,
         number
       ];
-      handlers.current?.onMouseMove?.(pos, e);
+      const ev = {
+        preventDefault: () => e.preventDefault(),
+        target: e.target,
+        force: null,
+      };
+      handlers.current?.onMouseMove?.(pos, ev);
     };
     const onMouseUp = (e: MouseEvent) => {
-      handlers.current?.onMouseUp?.(e);
+      const ev = {
+        preventDefault: () => e.preventDefault(),
+        target: e.target,
+        force: null,
+      };
+      handlers.current?.onMouseUp?.(ev);
       handlers.current = null;
     };
     const onTouchMove = (e: TouchEvent) => {
@@ -84,10 +105,20 @@ export function useMouse<T extends HTMLElement>({
         e.touches[0].clientX - bbox.left,
         e.touches[0].clientY - bbox.top,
       ] as [number, number];
-      handlers.current?.onMouseMove?.(pos, e);
+      const ev = {
+        preventDefault: () => e.preventDefault(),
+        target: e.target,
+        force: e.touches[0].force,
+      };
+      handlers.current?.onMouseMove?.(pos, ev);
     };
     const onTouchEnd = (e: TouchEvent) => {
-      handlers.current?.onMouseUp?.(e);
+      const ev = {
+        preventDefault: () => e.preventDefault(),
+        target: e.target,
+        force: null,
+      };
+      handlers.current?.onMouseUp?.(ev);
       handlers.current = null;
     };
 
