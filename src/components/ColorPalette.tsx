@@ -31,7 +31,7 @@ export function ColorPalette({
           {colors.map((color) => (
             <div
               key={color}
-              className="w-4 h-4 rounded-sm shadow cursor-pointer"
+              className="w-6 h-6 rounded-sm shadow cursor-pointer"
               style={{ background: color }}
               onClick={() => onChanged?.(color)}
             />
@@ -139,16 +139,16 @@ export function ColorPicker({
 
   return (
     <div>
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <div
-          className="w-8 h-4"
+          className="w-6 h-6 rounded-sm shadow"
           style={{
             background: `hsl(${hsl.hue * 360}, ${hsl.saturation * 100}%, ${
               hsl.lightness * 100
             }%)`,
           }}
         ></div>
-        <p>{code}</p>
+        <p className="select-text">{code}</p>
       </div>
       <div className="flex w-52 h-52 relative">
         <div
