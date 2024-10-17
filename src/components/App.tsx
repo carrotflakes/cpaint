@@ -25,7 +25,7 @@ function App() {
       <div className="bg-gray-100">
         <ToolBar />
       </div>
-      <div className="flex-grow flex items-center justify-center bg-gray-200">
+      <div className="flex-grow bg-gray-200">
         <Canvas />
       </div>
       <Toasts />

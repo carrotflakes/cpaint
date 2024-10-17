@@ -8,9 +8,11 @@ export type MyMouseEvent = {
 
 export function useMouse<T extends HTMLElement>({
   ref,
+  containerRef,
   onMouseDown,
 }: {
   ref: { current: T | null };
+  containerRef?: { current: HTMLElement | null };
   onMouseDown: (
     pos: [number, number],
     event: MyMouseEvent,
@@ -20,6 +22,8 @@ export function useMouse<T extends HTMLElement>({
     onMouseUp?: (event: MyMouseEvent) => void;
   };
 }) {
+  containerRef = containerRef ?? ref;
+
   const handlers = useRef(
     null as null | {
       onMouseMove?: (pos: [number, number], event: MyMouseEvent) => void;
@@ -63,14 +67,14 @@ export function useMouse<T extends HTMLElement>({
       e.preventDefault();
     };
 
-    ref.current?.addEventListener("mousedown", onMouseDown_);
-    ref.current?.addEventListener("touchstart", onTouchStart_, {
+    containerRef.current?.addEventListener("mousedown", onMouseDown_);
+    containerRef.current?.addEventListener("touchstart", onTouchStart_, {
       passive: false,
     });
 
     return () => {
-      ref.current?.removeEventListener("mousedown", onMouseDown_);
-      ref.current?.removeEventListener("touchstart", onTouchStart_);
+      containerRef.current?.removeEventListener("mousedown", onMouseDown_);
+      containerRef.current?.removeEventListener("touchstart", onTouchStart_);
     };
   }, [onMouseDown]);
 

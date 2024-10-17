@@ -7,14 +7,17 @@ export default function Canvas() {
   const store = useStore();
   const tmpCanvas = useMemo(() => new TmpCanvas(), []);
   const [updatedAt, setUpdatedAt] = useState(0);
-  const ref = useRef(null as null | HTMLCanvasElement);
+
+  const containerRef = useRef(null as null | HTMLDivElement);
+  const canvasRef = useRef(null as null | HTMLCanvasElement);
 
   useEffect(() => {
     store.setSize(400, 400);
   }, []);
 
   useMouse<HTMLCanvasElement>({
-    ref,
+    ref: canvasRef,
+    containerRef,
     onMouseDown: (pos, e) => {
       pos = [pos[0] / store.canvasScale, pos[1] / store.canvasScale];
       let lastPos = pos;
@@ -75,7 +78,7 @@ export default function Canvas() {
   });
 
   useEffect(() => {
-    const canvas = ref.current!;
+    const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
     ctx.clearRect(0, 0, store.canvas.width, store.canvas.height);
@@ -85,20 +88,25 @@ export default function Canvas() {
     ctx.globalAlpha = store.opacity;
     ctx.drawImage(tmpCanvas.canvas, 0, 0);
     ctx.restore();
-  }, [store, ref, tmpCanvas.canvas, updatedAt]);
+  }, [store, canvasRef, tmpCanvas.canvas, updatedAt]);
 
   return (
-    <canvas
-      className="border bg-white"
-      width={store.canvas.width}
-      height={store.canvas.height}
-      style={{
-        width: store.canvas.width * store.canvasScale,
-        height: store.canvas.height * store.canvasScale,
-        imageRendering: "pixelated",
-      }}
-      ref={ref}
-    />
+    <div
+      className="w-full h-full flex items-center justify-center"
+      ref={containerRef}
+    >
+      <canvas
+        className="border bg-white"
+        width={store.canvas.width}
+        height={store.canvas.height}
+        style={{
+          width: store.canvas.width * store.canvasScale,
+          height: store.canvas.height * store.canvasScale,
+          imageRendering: "pixelated",
+        }}
+        ref={canvasRef}
+      />
+    </div>
   );
 }
 
