@@ -4,7 +4,6 @@ export class TmpCanvas {
   imageData = null as null | ImageData;
   style = "#000";
   soft = false;
-  opacity = 1;
 
   constructor() { }
 
@@ -12,13 +11,11 @@ export class TmpCanvas {
     size: [number, number];
     style: string;
     soft: boolean;
-    opacity: number;
   }) {
     this.canvas.width = args.size[0];
     this.canvas.height = args.size[1];
     this.style = args.style;
     this.soft = args.soft;
-    this.opacity = args.opacity;
     const ctx = this.canvas.getContext("2d")!;
     ctx.fillStyle = this.style;
     ctx.fillRect(0, 0, args.size[0], args.size[1]);

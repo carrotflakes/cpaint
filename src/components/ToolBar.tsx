@@ -132,9 +132,9 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[enabled=false]:opacity-50"
-        data-enabled={false}
+        data-enabled={store.history.hasUndo}
         onClick={() => {
-          pushToast("Not implemented");
+          store.undo();
         }}
         title="Undo"
       >
@@ -143,9 +143,9 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[enabled=false]:opacity-50"
-        data-enabled={false}
+        data-enabled={store.history.hasRedo}
         onClick={() => {
-          pushToast("Not implemented");
+          store.redo();
         }}
         title="Redo"
       >

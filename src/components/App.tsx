@@ -15,6 +15,8 @@ function App() {
       if (e.key === "p") store.setTool("pen");
       if (e.key === "e") store.setTool("eraser");
       if (e.key === "f") store.setTool("fill");
+      if (e.ctrlKey && e.key === "z") store.undo();
+      if (e.ctrlKey && e.key === "Z") store.redo();
     };
     window.addEventListener("keydown", keyDown);
     return () => window.removeEventListener("keydown", keyDown);

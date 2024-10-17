@@ -32,7 +32,6 @@ export default function Canvas() {
           fill: "#f00",
         }[store.tool],
         soft: store.softPen,
-        opacity: store.opacity,
       });
       return {
         onMouseMove: (pos, e) => {
@@ -56,6 +55,7 @@ export default function Canvas() {
             const op: Op = {
               type: "fill",
               fillColor: store.color,
+              opacity: store.opacity,
               path,
             };
             store.apply(op, tmpCanvas.canvas);
@@ -63,10 +63,10 @@ export default function Canvas() {
             const op: Op = {
               type: "stroke",
               strokeStyle: {
-                color: store.color,
-                width: store.penSize,
+                color: tmpCanvas.style,
                 soft: store.softPen,
               },
+              opacity: store.opacity,
               path,
             };
             store.apply(op, tmpCanvas.canvas);
