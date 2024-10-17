@@ -32,7 +32,7 @@ export function ToolBar() {
   });
 
   return (
-    <div className="h-full p-2 flex flex-col gap-2">
+    <div className="h-full p-2 flex flex-col gap-2 overflow-y-auto">
       <div>
         <div
           className="relative w-6 h-6 rounded-full shadow cursor-pointer"
