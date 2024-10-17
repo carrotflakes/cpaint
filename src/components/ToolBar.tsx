@@ -4,6 +4,7 @@ import { useStore } from "../state";
 import { ColorPalette } from "./ColorPalette";
 import { IconEraser, IconFill, IconMinus, IconPencil, IconPlus } from "./icons";
 
+const penWidthMax = 50;
 const scaleFactor = 2 ** (1 / 4);
 
 export function ToolBar() {
@@ -12,7 +13,8 @@ export function ToolBar() {
 
   const controlPenWidth = useControl({
     getValue: () => store.penSize,
-    setValue: (v) => store.setPenSize(Math.max(Math.min(Math.round(v), 20), 1)),
+    setValue: (v) =>
+      store.setPenSize(Math.max(Math.min(Math.round(v), penWidthMax), 1)),
     sensitivity: 1 / 5,
   });
   const controlOpacity = useControl({
@@ -51,8 +53,10 @@ export function ToolBar() {
         {controlPenWidth.show && (
           <div className="absolute p-2 bg-white shadow z-10">
             <SliderV
-              value={store.penSize / 20}
-              onChange={(value) => store.setPenSize(Math.round(value * 20))}
+              value={store.penSize / penWidthMax}
+              onChange={(value) =>
+                store.setPenSize(Math.round(value * penWidthMax))
+              }
             />
           </div>
         )}
