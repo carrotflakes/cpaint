@@ -94,7 +94,7 @@ export default function Canvas() {
 
   return (
     <canvas
-      className="border"
+      className="border bg-white"
       width={store.canvas.width}
       height={store.canvas.height}
       style={{
