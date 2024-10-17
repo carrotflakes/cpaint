@@ -17,7 +17,7 @@ function App() {
   }, [store]);
 
   return (
-    <div className="w-screen h-screen flex items-stretch">
+    <div className="w-dvw h-dvh flex items-stretch overflow-hidden">
       <div className="bg-gray-100">
         <ToolBar />
       </div>
