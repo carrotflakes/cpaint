@@ -48,17 +48,12 @@ export default function Canvas() {
         },
         onMouseUp: () => {
           if (store.tool === "fill") {
-            const ctx = tmpCanvas.canvas.getContext("2d")!;
-            ctx.fillStyle = store.color;
-            ctx.clearRect(0, 0, store.canvas.width, store.canvas.height);
-            ctx.beginPath();
-            for (const pi of path) {
-              ctx.lineTo(pi.pos[0], pi.pos[1]);
-            }
-            ctx.fill();
+            tmpCanvas.style = store.color;
+            tmpCanvas.fill(path);
             const op: Op = {
               type: "fill",
               fillColor: store.color,
+              path,
             };
             store.apply(op, tmpCanvas.canvas);
           } else {

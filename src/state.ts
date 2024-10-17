@@ -32,7 +32,8 @@ export type Op = {
   path: { pos: [number, number], size: number }[];
 } | {
   type: "fill";
-  fillColor: string
+  fillColor: string;
+  path: { pos: [number, number] }[];
 };
 
 export const useStore = create<State>()((set) => ({

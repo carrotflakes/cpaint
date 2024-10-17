@@ -57,6 +57,16 @@ export class TmpCanvas {
     }
   }
 
+  fill(path: { pos: [number, number] }[]) {
+    const ctx = this.canvas.getContext("2d")!;
+    ctx.fillStyle = this.style;
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.beginPath();
+    for (const pi of path)
+      ctx.lineTo(pi.pos[0], pi.pos[1]);
+    ctx.fill();
+  }
+
   finish() {
     const ctx = this.canvas.getContext("2d")!;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
