@@ -3,8 +3,11 @@ import { useStore } from "../state";
 import Canvas from "./Canvas";
 import { Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
+import { useDisableScroll } from "../hooks/useDisableScroll";
 
 function App() {
+  useDisableScroll();
+
   const store = useStore();
 
   useEffect(() => {
