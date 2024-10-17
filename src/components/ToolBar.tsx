@@ -2,7 +2,15 @@ import { useRef, useState } from "react";
 import { useMouse } from "../hooks/useMouse";
 import { useStore } from "../state";
 import { ColorPalette } from "./ColorPalette";
-import { IconEraser, IconFill, IconMinus, IconPencil, IconPlus } from "./icons";
+import {
+  IconEraser,
+  IconFill,
+  IconFrameCorners,
+  IconMinus,
+  IconPencil,
+  IconPlus,
+} from "./icons";
+import { pushToast } from "./Toasts";
 
 const penWidthMax = 50;
 const scaleFactor = 2 ** (1 / 4);
@@ -24,7 +32,7 @@ export function ToolBar() {
   });
 
   return (
-    <div className="p-2 flex flex-col gap-2">
+    <div className="h-full p-2 flex flex-col gap-2">
       <div>
         <div
           className="relative w-6 h-6 rounded-full shadow cursor-pointer"
@@ -139,6 +147,22 @@ export function ToolBar() {
       >
         <IconMinus />
       </div>
+
+      <div className="grow" />
+
+      {document.body.requestFullscreen && (
+        <div
+          className="cursor-pointer"
+          onClick={() => {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else
+              document.body.requestFullscreen().catch((e) => pushToast("" + e));
+          }}
+          title="Fullscreen"
+        >
+          <IconFrameCorners />
+        </div>
+      )}
     </div>
   );
 }

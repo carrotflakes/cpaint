@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useStore } from "../state";
 import Canvas from "./Canvas";
+import { Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
       <div className="flex-grow flex items-center justify-center bg-gray-200">
         <Canvas />
       </div>
+      <Toasts />
     </div>
   );
 }

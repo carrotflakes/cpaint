@@ -55,3 +55,11 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+@keyframes toast-fade-in-out {
+  0%, 100% { opacity: 0; }
+  10%, 90% { opacity: 1; }
+}
+.toast-fade-in-out {
+  animation: toast-fade-in-out 4s ease-in-out forwards;
+}
