@@ -29,7 +29,7 @@ export type Op = {
     width: number
     soft: boolean
   };
-  path: [number, number][];
+  path: { pos: [number, number], size: number }[];
 } | {
   type: "fill";
   fillColor: string

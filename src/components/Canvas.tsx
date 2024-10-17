@@ -19,7 +19,8 @@ export default function Canvas() {
       pos = [pos[0] / store.canvasScale, pos[1] / store.canvasScale];
       let lastPos = pos;
       e.preventDefault();
-      const poss = [pos];
+      const size = store.penSize * (e.force ?? 1);
+      const path = [{ pos, size }];
       tmpCanvas.begin({
         size: [store.canvas.width, store.canvas.height],
         style: {
@@ -34,9 +35,9 @@ export default function Canvas() {
         onMouseMove: (pos, e) => {
           pos = [pos[0] / store.canvasScale, pos[1] / store.canvasScale];
           if (dist(lastPos, pos) > 3) {
-            poss.push(pos);
-            const lineWidth =
-              store.tool === "fill" ? 1 : store.penSize * (e.force ?? 1);
+            const size = store.penSize * (e.force ?? 1);
+            path.push({ pos, size });
+            const lineWidth = store.tool === "fill" ? 1 : size;
             tmpCanvas.addLine({
               line: [...lastPos, ...pos],
               lineWidth,
@@ -51,8 +52,8 @@ export default function Canvas() {
             ctx.fillStyle = store.color;
             ctx.clearRect(0, 0, store.canvas.width, store.canvas.height);
             ctx.beginPath();
-            for (const pos of poss) {
-              ctx.lineTo(pos[0], pos[1]);
+            for (const pi of path) {
+              ctx.lineTo(pi.pos[0], pi.pos[1]);
             }
             ctx.fill();
             const op: Op = {
@@ -68,7 +69,7 @@ export default function Canvas() {
                 width: store.penSize,
                 soft: store.softPen,
               },
-              path: poss,
+              path,
             };
             store.apply(op, tmpCanvas.canvas);
           }
