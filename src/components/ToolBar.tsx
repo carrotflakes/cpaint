@@ -9,6 +9,8 @@ import {
   IconMinus,
   IconPencil,
   IconPlus,
+  IconRedo,
+  IconUndo,
 } from "./icons";
 import { pushToast } from "./Toasts";
 
@@ -124,6 +126,30 @@ export function ToolBar() {
         title="Fill"
       >
         <IconFill />
+      </div>
+
+      <hr />
+
+      <div
+        className="cursor-pointer data-[enabled=false]:opacity-50"
+        data-enabled={false}
+        onClick={() => {
+          pushToast("Not implemented");
+        }}
+        title="Undo"
+      >
+        <IconUndo />
+      </div>
+
+      <div
+        className="cursor-pointer data-[enabled=false]:opacity-50"
+        data-enabled={false}
+        onClick={() => {
+          pushToast("Not implemented");
+        }}
+        title="Redo"
+      >
+        <IconRedo />
       </div>
 
       <hr />
