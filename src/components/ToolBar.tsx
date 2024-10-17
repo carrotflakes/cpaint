@@ -44,7 +44,6 @@ export function ToolBar() {
       <div>
         <div
           className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white cursor-pointer"
-          onClick={() => controlPenWidth.setShow((x) => !x)}
           title="Pen width"
           {...controlPenWidth.props}
         >
@@ -65,7 +64,6 @@ export function ToolBar() {
       <div>
         <div
           className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white cursor-pointer"
-          onClick={() => controlOpacity.setShow((x) => !x)}
           title="Opacity"
           {...controlOpacity.props}
         >
@@ -197,14 +195,18 @@ function useControl({
     onMouseDown(pos) {
       setTemporalShow(true);
       const initValue = getValue();
+      let moved = false;
+
       return {
         onMouseMove(pos_) {
           const dy = pos_[1] - pos[1];
           const value = initValue - dy * sensitivity;
           setValue(value);
+          moved = true;
         },
         onMouseUp() {
           setTemporalShow(false);
+          if (!moved) setShow((x) => !x);
         },
       };
     },
