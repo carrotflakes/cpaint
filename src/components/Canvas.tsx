@@ -78,13 +78,8 @@ export default function Canvas() {
     const canvas = ref.current!;
     const ctx = canvas.getContext("2d")!;
 
-    ctx.putImageData(
-      store.canvas
-        .getContext("2d", { willReadFrequently: true })!
-        .getImageData(0, 0, store.canvas.width, store.canvas.height),
-      0,
-      0
-    );
+    ctx.clearRect(0, 0, store.canvas.width, store.canvas.height);
+    ctx.drawImage(store.canvas, 0, 0);
 
     ctx.save();
     ctx.globalAlpha = store.opacity;
