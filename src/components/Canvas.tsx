@@ -52,6 +52,8 @@ export default function Canvas() {
           if (store.tool === "fill") {
             tmpCanvas.style = store.color;
             tmpCanvas.fill(path);
+            if (!tmpCanvas.isDirty()) return;
+
             const op: Op = {
               type: "fill",
               fillColor: store.color,
@@ -60,6 +62,8 @@ export default function Canvas() {
             };
             store.apply(op, tmpCanvas.canvas);
           } else {
+            if (!tmpCanvas.isDirty()) return;
+
             const op: Op = {
               type: "stroke",
               strokeStyle: {
@@ -79,7 +83,7 @@ export default function Canvas() {
 
   useEffect(() => {
     const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d", { alpha: false })!;
 
     ctx.clearRect(0, 0, store.canvas.width, store.canvas.height);
     ctx.drawImage(store.canvas, 0, 0);

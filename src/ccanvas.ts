@@ -68,6 +68,17 @@ export class TmpCanvas {
     const ctx = this.canvas.getContext("2d")!;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
+
+  isDirty() {
+    const imageData = this.canvas
+      .getContext("2d", { willReadFrequently: true })!
+      .getImageData(0, 0, this.canvas.width, this.canvas.height);
+
+    for (let i = 3; i < imageData.data.length; i += 4) {
+      if (imageData.data[i] > 0) return true;
+    }
+    return false;
+  }
 }
 
 
