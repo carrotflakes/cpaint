@@ -1,3 +1,4 @@
+import logo from "../assets/cpaint.svg";
 import { IconFrameCorners, IconGear } from "./icons";
 import { useSettingDialog } from "./SettingDialog";
 import { pushToast } from "./Toasts";
@@ -6,12 +7,12 @@ export function Header() {
   return (
     <div className="p-2 flex gap-2 overflow-x-auto">
       <div
-        className="opacity-50"
+        className="self-center opacity-50"
         onDoubleClick={() =>
           pushToast("cpaint v0.0.0 created by @carrotflakes")
         }
       >
-        cpaint
+        <img src={logo} alt="cpaint" />
       </div>
 
       <div className="grow" />
