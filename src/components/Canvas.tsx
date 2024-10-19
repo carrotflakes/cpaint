@@ -85,7 +85,8 @@ export default function Canvas() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d", { alpha: false })!;
 
-    ctx.clearRect(0, 0, store.canvas.width, store.canvas.height);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, store.canvas.width, store.canvas.height);
     ctx.drawImage(store.canvas, 0, 0);
 
     ctx.save();
