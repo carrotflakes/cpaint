@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as color from "color-convert";
-import { usePointer } from "../hooks/useMouse";
+import { usePointer } from "../hooks/usePointer";
 
 type Color = string;
 

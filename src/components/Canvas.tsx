@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TmpCanvas } from "../ccanvas";
-import { usePointer } from "../hooks/useMouse";
+import { usePointer } from "../hooks/usePointer";
 import { Op, useStore } from "../state";
 
 export default function Canvas() {

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { usePointer } from "../hooks/useMouse";
+import { usePointer } from "../hooks/usePointer";
 import { useStore } from "../state";
 import { ColorPalette } from "./ColorPalette";
 import {
