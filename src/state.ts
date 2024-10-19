@@ -43,90 +43,95 @@ export type Op = {
   path: { pos: [number, number] }[];
 };
 
-export const useStore = create<State>()((set) => ({
-  color: "#000",
-  penSize: 5,
-  opacity: 1,
-  softPen: false,
-  history: new History<Op>(Infinity), // TODO: limit
-  canvas: document.createElement("canvas"),
-  canvasRaster: document.createElement("canvas"),
-  apply(op, canvas) {
-    set((state) => {
-      const ctx = state.canvas.getContext("2d")!;
-      ctx.save();
-      ctx.globalAlpha = state.opacity;
-      ctx.drawImage(canvas, 0, 0);
-      ctx.restore();
-      const history = state.history.clone();
-      history.push(op);
-      return { history, updatedAt: new Date() }
-    })
-  },
-  setSize(width, height) {
-    set((state) => {
-      state.canvas.width = width;
-      state.canvas.height = height;
-      return { updatedAt: new Date() }
-    })
-  },
-  updatedAt: new Date(),
-  setColor(color) {
-    set({ color })
-  },
-  setPenSize(size) {
-    set({ penSize: size })
-  },
-  setOpacity(opacity) {
-    set({ opacity })
-  },
-  setSoftPen(softPen) {
-    set({ softPen })
-  },
-  tool: "pen",
-  setTool(tool) {
-    set({ tool })
-  },
-  canvasScale: 1,
-  setCanvasScale(scale) {
-    set({ canvasScale: scale })
-  },
+export const useStore = create<State>()((set) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 400;
+  canvas.height = 400;
 
-  undo() {
-    set((state) => {
-      const history = state.history.clone();
-      const op = history.undo();
-
-      if (op) {
+  return ({
+    color: "#000",
+    penSize: 5,
+    opacity: 1,
+    softPen: false,
+    history: new History<Op>(Infinity), // TODO: limit
+    canvas,
+    apply(op, canvas) {
+      set((state) => {
         const ctx = state.canvas.getContext("2d")!;
-        ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
-        const tmpCanvas = new TmpCanvas();
+        ctx.save();
+        ctx.globalAlpha = state.opacity;
+        ctx.drawImage(canvas, 0, 0);
+        ctx.restore();
+        const history = state.history.clone();
+        history.push(op);
+        return { history, updatedAt: new Date() }
+      })
+    },
+    setSize(width, height) {
+      set((state) => {
+        state.canvas.width = width;
+        state.canvas.height = height;
+        return { updatedAt: new Date() }
+      })
+    },
+    updatedAt: new Date(),
+    setColor(color) {
+      set({ color })
+    },
+    setPenSize(size) {
+      set({ penSize: size })
+    },
+    setOpacity(opacity) {
+      set({ opacity })
+    },
+    setSoftPen(softPen) {
+      set({ softPen })
+    },
+    tool: "pen",
+    setTool(tool) {
+      set({ tool })
+    },
+    canvasScale: 1,
+    setCanvasScale(scale) {
+      set({ canvasScale: scale })
+    },
 
-        for (let i = 0; i < history.index; i++) {
-          const op = history.history[i];
-          applyOp(op, tmpCanvas, state, ctx);
+    undo() {
+      set((state) => {
+        const history = state.history.clone();
+        const op = history.undo();
+
+        if (op) {
+          const ctx = state.canvas.getContext("2d")!;
+          ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
+          const tmpCanvas = new TmpCanvas();
+
+          for (let i = 0; i < history.index; i++) {
+            const op = history.history[i];
+            applyOp(op, tmpCanvas, state, ctx);
+          }
+
+          return { history, updatedAt: new Date() }
         }
+        return {}
+      })
+    },
+    redo() {
+      set((state) => {
+        const history = state.history.clone();
+        const op = history.redo();
+        if (op) {
+          const ctx = state.canvas.getContext("2d")!;
+          const tmpCanvas = new TmpCanvas();
+          applyOp(op, tmpCanvas, state, ctx);
 
-        return { history, updatedAt: new Date() }
-      }
-      return {}
-    })
-  },
-  redo() {
-    set((state) => {
-      const history = state.history.clone();
-      const op = history.redo();
-      if (op) {
-        const ctx = state.canvas.getContext("2d")!;
-        const tmpCanvas = new TmpCanvas();
-        applyOp(op, tmpCanvas, state, ctx);
-
-        return { history, updatedAt: new Date() }
-      }
-      return {}
-    })
-  },
-}));
+          return { history, updatedAt: new Date() }
+        }
+        return {}
+      })
+    },
+  })
+});
 
 function applyOp(op: Op, tmpCanvas: TmpCanvas, state: State, ctx: CanvasRenderingContext2D) {
   if (op.type === "stroke") {

@@ -11,10 +11,6 @@ export default function Canvas() {
   const containerRef = useRef(null as null | HTMLDivElement);
   const canvasRef = useRef(null as null | HTMLCanvasElement);
 
-  useEffect(() => {
-    store.setSize(400, 400);
-  }, []);
-
   usePointer<HTMLCanvasElement>({
     ref: canvasRef,
     containerRef,
