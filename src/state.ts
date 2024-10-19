@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { History } from './libs/history';
+import { persist } from 'zustand/middleware';
 import { TmpCanvas } from './ccanvas';
+import { History } from './libs/history';
 
 type ToolType = "pen" | "eraser" | "fill";
 
@@ -157,3 +158,14 @@ function applyOp(op: Op, tmpCanvas: TmpCanvas, state: State, ctx: CanvasRenderin
   ctx.restore();
   tmpCanvas.finish();
 }
+
+export type GlobalSettings = {
+  fingerOperations: boolean
+}
+
+export const useGlobalSettings = create<GlobalSettings>()(
+  persist((_set) => ({
+    fingerOperations: false
+  }), {
+    name: 'cpaint',
+  }));

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useGlobalSettings } from "../state";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
 
@@ -18,13 +19,29 @@ export const useSettingDialog = create<{
 
 export function SettingDialog() {
   const settingDialog = useSettingDialog();
+  const globalSettings = useGlobalSettings();
 
   return (
     settingDialog.show && (
       <ModalDialog onClickOutside={() => settingDialog.setShow(false)}>
         <div className="flex flex-col gap-2">
-          <div className="text-lg">Setting</div>
+          <div className="text-lg">Settings</div>
           <hr />
+
+          <div className="flex gap-2">
+            <input
+              type="checkbox"
+              name="fingerOperations"
+              checked={globalSettings.fingerOperations}
+              onChange={(e) =>
+                useGlobalSettings.setState({
+                  fingerOperations: e.target.checked,
+                })
+              }
+              className="w-6 h-6"
+            />
+            <label htmlFor="fingerOperations">Finger operations</label>
+          </div>
 
           <button
             onClick={() => {
