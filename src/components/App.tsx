@@ -26,11 +26,11 @@ function App() {
 
   return (
     <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden">
-      <div className="bg-gray-100">
+      <div className="bg-gray-50 border-b border-gray-300">
         <Header />
       </div>
       <div className="grow flex items-stretch">
-        <div className="bg-gray-100">
+        <div className="bg-gray-50 border-r border-gray-300">
           <ToolBar />
         </div>
         <div className="grow bg-gray-200">
