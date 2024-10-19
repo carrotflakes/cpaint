@@ -21,7 +21,7 @@ export function Header() {
         onClick={() => {
           useSettingDialog.getState().toggleShow();
         }}
-        title="Setting"
+        title="Settings"
       >
         <IconGear />
       </div>
