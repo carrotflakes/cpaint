@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TmpCanvas } from "../ccanvas";
-import { useMouse } from "../hooks/useMouse";
+import { usePointer } from "../hooks/useMouse";
 import { Op, useStore } from "../state";
 
 export default function Canvas() {
@@ -15,14 +15,14 @@ export default function Canvas() {
     store.setSize(400, 400);
   }, []);
 
-  useMouse<HTMLCanvasElement>({
+  usePointer<HTMLCanvasElement>({
     ref: canvasRef,
     containerRef,
-    onMouseDown: (pos, e) => {
+    onPointerDown: (pos, e) => {
       pos = [pos[0] / store.canvasScale, pos[1] / store.canvasScale];
       let lastPos = pos;
       e.preventDefault();
-      const size = store.penSize * (e.force ?? 1);
+      const size = store.penSize * (e.pressure ?? 1);
       const path = [{ pos, size }];
       tmpCanvas.begin({
         size: [store.canvas.width, store.canvas.height],
@@ -34,10 +34,10 @@ export default function Canvas() {
         soft: store.softPen,
       });
       return {
-        onMouseMove: (pos, e) => {
+        onMove: (pos, e) => {
           pos = [pos[0] / store.canvasScale, pos[1] / store.canvasScale];
           if (dist(lastPos, pos) > 3) {
-            const size = store.penSize * (e.force ?? 1);
+            const size = store.penSize * (e.pressure ?? 1);
             path.push({ pos, size });
             const lineWidth = store.tool === "fill" ? 1 : size;
             tmpCanvas.addLine({
@@ -48,7 +48,7 @@ export default function Canvas() {
             setUpdatedAt(Date.now());
           }
         },
-        onMouseUp: () => {
+        onUp: () => {
           if (store.tool === "fill") {
             tmpCanvas.style = store.color;
             tmpCanvas.fill(path);

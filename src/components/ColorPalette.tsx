@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as color from "color-convert";
-import { useMouse } from "../hooks/useMouse";
+import { usePointer } from "../hooks/useMouse";
 
 type Color = string;
 
@@ -81,9 +81,9 @@ export function ColorPicker({
   const changed = useRef(() => {});
   changed.current = () => onChanged?.(code);
 
-  useMouse<HTMLDivElement>({
+  usePointer<HTMLDivElement>({
     ref: circleRef,
-    onMouseDown: (pos, e, el) => {
+    onPointerDown: (pos, e, el) => {
       if (el !== e.target) return null;
       const bbox = el.getBoundingClientRect();
       const h = (pos: [number, number]) => {
@@ -94,19 +94,19 @@ export function ColorPicker({
       };
       h(pos);
       return {
-        onMouseMove(pos) {
+        onMove(pos) {
           h(pos);
         },
-        onMouseUp() {
+        onUp() {
           changed.current();
         },
       };
     },
   });
 
-  useMouse<HTMLDivElement>({
+  usePointer<HTMLDivElement>({
     ref: rectRef,
-    onMouseDown: (pos, e, el) => {
+    onPointerDown: (pos, e, el) => {
       if (el !== e.target) return null;
       const bbox = el.getBoundingClientRect();
       const h = (pos: [number, number]) => {
@@ -127,10 +127,10 @@ export function ColorPicker({
       };
       h(pos);
       return {
-        onMouseMove(pos) {
+        onMove(pos) {
           h(pos);
         },
-        onMouseUp() {
+        onUp() {
           changed.current();
         },
       };

@@ -1,38 +1,38 @@
 import { useEffect, useRef } from "react";
 
-export type MyMouseEvent = {
+export type MyPointerEvent = {
   preventDefault: () => void;
   target: EventTarget | Element | null;
-  force: number | null;
+  pressure: number | null;
 };
 
-export function useMouse<T extends HTMLElement>({
+export function usePointer<T extends HTMLElement>({
   ref,
   containerRef,
-  onMouseDown,
+  onPointerDown,
 }: {
   ref: { current: T | null };
   containerRef?: { current: HTMLElement | null };
-  onMouseDown: (
+  onPointerDown: (
     pos: [number, number],
-    event: MyMouseEvent,
+    event: MyPointerEvent,
     el: T
   ) => null | {
-    onMouseMove?: (pos: [number, number], event: MyMouseEvent) => void;
-    onMouseUp?: (event: MyMouseEvent) => void;
+    onMove?: (pos: [number, number], event: MyPointerEvent) => void;
+    onUp?: (event: MyPointerEvent) => void;
   };
 }) {
   containerRef = containerRef ?? ref;
 
   const handlers = useRef(
     null as null | {
-      onMouseMove?: (pos: [number, number], event: MyMouseEvent) => void;
-      onMouseUp?: (event: MyMouseEvent) => void;
+      onMove?: (pos: [number, number], event: MyPointerEvent) => void;
+      onUp?: (event: MyPointerEvent) => void;
     }
   );
 
   useEffect(() => {
-    const onMouseDown_ = (e: MouseEvent) => {
+    const onPointerDown_ = (e: PointerEvent) => {
       if (!ref.current) return;
       const bbox = ref.current.getBoundingClientRect();
       const pos = [e.clientX - bbox.left, e.clientY - bbox.top] as [
@@ -42,44 +42,23 @@ export function useMouse<T extends HTMLElement>({
       const ev = {
         preventDefault: () => e.preventDefault(),
         target: e.target,
-        force: null,
+        pressure: e.pressure,
       };
-      const r = onMouseDown(pos, ev, ref.current);
-      if (!r) return;
-      handlers.current = r;
-      e.preventDefault();
-    };
-    const onTouchStart_ = (e: TouchEvent) => {
-      if (!ref.current) return;
-      const bbox = ref.current.getBoundingClientRect();
-      const pos = [
-        e.touches[0].clientX - bbox.left,
-        e.touches[0].clientY - bbox.top,
-      ] as [number, number];
-      const ev = {
-        preventDefault: () => e.preventDefault(),
-        target: e.target,
-        force: e.touches[0].force,
-      };
-      const r = onMouseDown(pos, ev, ref.current);
+      const r = onPointerDown(pos, ev, ref.current);
       if (!r) return;
       handlers.current = r;
       e.preventDefault();
     };
 
-    containerRef.current?.addEventListener("mousedown", onMouseDown_);
-    containerRef.current?.addEventListener("touchstart", onTouchStart_, {
-      passive: false,
-    });
+    containerRef.current?.addEventListener("pointerdown", onPointerDown_);
 
     return () => {
-      containerRef.current?.removeEventListener("mousedown", onMouseDown_);
-      containerRef.current?.removeEventListener("touchstart", onTouchStart_);
+      containerRef.current?.removeEventListener("pointerdown", onPointerDown_);
     };
-  }, [onMouseDown]);
+  }, [onPointerDown]);
 
   useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
+    const onPointerMove = (e: PointerEvent) => {
       if (!ref.current) return;
       const bbox = ref.current.getBoundingClientRect();
       const pos = [e.clientX - bbox.left, e.clientY - bbox.top] as [
@@ -89,53 +68,26 @@ export function useMouse<T extends HTMLElement>({
       const ev = {
         preventDefault: () => e.preventDefault(),
         target: e.target,
-        force: null,
+        pressure: e.pressure,
       };
-      handlers.current?.onMouseMove?.(pos, ev);
+      handlers.current?.onMove?.(pos, ev);
     };
-    const onMouseUp = (e: MouseEvent) => {
+    const onPointerUp = (e: PointerEvent) => {
       const ev = {
         preventDefault: () => e.preventDefault(),
         target: e.target,
-        force: null,
+        pressure: null,
       };
-      handlers.current?.onMouseUp?.(ev);
-      handlers.current = null;
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      if (!ref.current) return;
-      const bbox = ref.current.getBoundingClientRect();
-      const pos = [
-        e.touches[0].clientX - bbox.left,
-        e.touches[0].clientY - bbox.top,
-      ] as [number, number];
-      const ev = {
-        preventDefault: () => e.preventDefault(),
-        target: e.target,
-        force: e.touches[0].force,
-      };
-      handlers.current?.onMouseMove?.(pos, ev);
-    };
-    const onTouchEnd = (e: TouchEvent) => {
-      const ev = {
-        preventDefault: () => e.preventDefault(),
-        target: e.target,
-        force: null,
-      };
-      handlers.current?.onMouseUp?.(ev);
+      handlers.current?.onUp?.(ev);
       handlers.current = null;
     };
 
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("touchend", onTouchEnd, { passive: false });
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
 
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
     };
   }, []);
 }

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useMouse } from "../hooks/useMouse";
+import { usePointer } from "../hooks/useMouse";
 import { useStore } from "../state";
 import { ColorPalette } from "./ColorPalette";
 import {
@@ -201,9 +201,9 @@ function SliderV({
   onChange?: (value: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  useMouse<HTMLDivElement>({
+  usePointer<HTMLDivElement>({
     ref,
-    onMouseDown(pos, _event, el) {
+    onPointerDown(pos, _event, el) {
       const bbox = el.getBoundingClientRect();
       const h = (pos: [number, number]) => {
         const y = Math.max(Math.min(1 - pos[1] / bbox.height, 1), 0);
@@ -211,7 +211,7 @@ function SliderV({
       };
       h(pos);
       return {
-        onMouseMove(pos) {
+        onMove(pos) {
           h(pos);
         },
       };
@@ -240,21 +240,21 @@ function useControl({
   const ref = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
   const [temporalShow, setTemporalShow] = useState(false);
-  useMouse<HTMLDivElement>({
+  usePointer<HTMLDivElement>({
     ref,
-    onMouseDown(pos) {
+    onPointerDown(pos) {
       setTemporalShow(true);
       const initValue = getValue();
       let moved = false;
 
       return {
-        onMouseMove(pos_) {
+        onMove(pos_) {
           const dy = pos_[1] - pos[1];
           const value = initValue - dy * sensitivity;
           setValue(value);
           moved = true;
         },
-        onMouseUp() {
+        onUp() {
           setTemporalShow(false);
           if (!moved) setShow((x) => !x);
         },
