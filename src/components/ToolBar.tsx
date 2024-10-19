@@ -9,7 +9,7 @@ import {
   IconPencil,
   IconPlus,
   IconRedo,
-  IconUndo
+  IconUndo,
 } from "./icons";
 
 const penWidthMax = 50;
@@ -210,6 +210,8 @@ function SliderV({
   );
 }
 
+const clickTime = 200;
+
 function useControl({
   getValue,
   setValue,
@@ -222,12 +224,14 @@ function useControl({
   const ref = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
   const [temporalShow, setTemporalShow] = useState(false);
+
   usePointer<HTMLDivElement>({
     ref,
     onPointerDown(pos) {
       setTemporalShow(true);
       const initValue = getValue();
       let moved = false;
+      const startAt = Date.now();
 
       return {
         onMove(pos_) {
@@ -238,7 +242,7 @@ function useControl({
         },
         onUp() {
           setTemporalShow(false);
-          if (!moved) setShow((x) => !x);
+          if (!moved || Date.now() - startAt <= clickTime) setShow((x) => !x);
         },
       };
     },
