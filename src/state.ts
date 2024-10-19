@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { TmpCanvas } from './ccanvas';
+import { TmpCanvas } from './libs/tmpCanvas';
 import { History } from './libs/history';
 
 type ToolType = "pen" | "eraser" | "fill";

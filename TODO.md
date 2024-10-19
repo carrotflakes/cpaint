@@ -17,3 +17,4 @@
 - timelapsed
 - eyedropper
 - pen types
+- mac key bindings

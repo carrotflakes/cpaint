@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TmpCanvas } from "../ccanvas";
+import { TmpCanvas } from "../libs/tmpCanvas";
 import { usePointer } from "../hooks/usePointer";
 import { Op, useStore } from "../state";
 
