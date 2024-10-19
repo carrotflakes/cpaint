@@ -1,9 +1,11 @@
 import { useEffect } from "react";
+import { useDisableScroll } from "../hooks/useDisableScroll";
 import { useStore } from "../state";
 import Canvas from "./Canvas";
+import { Header } from "./Header";
+import { SettingDialog } from "./SettingDialog";
 import { Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
-import { useDisableScroll } from "../hooks/useDisableScroll";
 
 function App() {
   useDisableScroll();
@@ -23,14 +25,22 @@ function App() {
   }, [store]);
 
   return (
-    <div className="w-dvw h-dvh flex items-stretch overflow-hidden">
+    <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden">
       <div className="bg-gray-100">
-        <ToolBar />
+        <Header />
       </div>
-      <div className="flex-grow bg-gray-200">
-        <Canvas />
+      <div className="grow flex items-stretch">
+        <div className="bg-gray-100">
+          <ToolBar />
+        </div>
+        <div className="grow bg-gray-200">
+          <Canvas />
+        </div>
       </div>
+
       <Toasts />
+
+      <SettingDialog />
     </div>
   );
 }

@@ -19,11 +19,6 @@
   user-select: none;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -41,6 +36,10 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+dialog {
+  user-select: none;
 }
 
 @media (prefers-color-scheme: light) {

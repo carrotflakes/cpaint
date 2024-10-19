@@ -5,14 +5,12 @@ import { ColorPalette } from "./ColorPalette";
 import {
   IconEraser,
   IconFill,
-  IconFrameCorners,
   IconMinus,
   IconPencil,
   IconPlus,
   IconRedo,
-  IconUndo,
+  IconUndo
 } from "./icons";
-import { pushToast } from "./Toasts";
 
 const penWidthMax = 50;
 const scaleFactor = 2 ** (1 / 4);
@@ -173,22 +171,6 @@ export function ToolBar() {
       >
         <IconMinus />
       </div>
-
-      <div className="grow" />
-
-      {document.body.requestFullscreen && (
-        <div
-          className="cursor-pointer"
-          onClick={() => {
-            if (document.fullscreenElement) document.exitFullscreen();
-            else
-              document.body.requestFullscreen().catch((e) => pushToast("" + e));
-          }}
-          title="Fullscreen"
-        >
-          <IconFrameCorners />
-        </div>
-      )}
     </div>
   );
 }
