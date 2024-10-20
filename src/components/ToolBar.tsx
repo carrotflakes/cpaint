@@ -5,6 +5,7 @@ import { ColorPalette } from "./ColorPalette";
 import {
   IconEraser,
   IconFill,
+  IconMagnifyingGlass,
   IconMinus,
   IconPencil,
   IconPlus,
@@ -155,7 +156,12 @@ export function ToolBar() {
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         onClick={() =>
-          store.setCanvasScale(roundFloat(store.canvasScale * scaleFactor, 4))
+          useStore.setState((state) => ({
+            canvasView: {
+              ...state.canvasView,
+              scale: roundFloat(state.canvasView.scale * scaleFactor, 4),
+            },
+          }))
         }
         title="Zoom"
       >
@@ -165,11 +171,32 @@ export function ToolBar() {
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         onClick={() =>
-          store.setCanvasScale(roundFloat(store.canvasScale / scaleFactor, 4))
+          useStore.setState((state) => ({
+            canvasView: {
+              ...state.canvasView,
+              scale: roundFloat(state.canvasView.scale / scaleFactor, 4),
+            },
+          }))
         }
         title="Unzoom"
       >
         <IconMinus />
+      </div>
+
+      <div
+        className="cursor-pointer data-[selected=false]:opacity-50"
+        onClick={() =>
+          useStore.setState(() => ({
+            canvasView: {
+              angle: 0,
+              scale: 1,
+              pan: [0, 0],
+            },
+          }))
+        }
+        title="Reset view"
+      >
+        <IconMagnifyingGlass />
       </div>
     </div>
   );

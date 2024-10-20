@@ -21,8 +21,11 @@ export type State = {
   setSoftPen: (softPen: boolean) => void
   tool: ToolType
   setTool: (tool: ToolType) => void
-  canvasScale: number
-  setCanvasScale: (scale: number) => void
+  canvasView: {
+    angle: number,
+    scale: number,
+    pan: [number, number],
+  },
 
   undo: () => void
   redo: () => void
@@ -91,9 +94,10 @@ export const useStore = create<State>()((set) => {
     setTool(tool) {
       set({ tool })
     },
-    canvasScale: 1,
-    setCanvasScale(scale) {
-      set({ canvasScale: scale })
+    canvasView: {
+      angle: 0,
+      scale: 1,
+      pan: [0, 0],
     },
 
     undo() {

@@ -27,17 +27,23 @@ export default function Canvas() {
   }, [store, canvasRef, tmpCanvas.canvas, updatedAt]);
 
   return (
-    <div
-      className="w-full h-full flex items-center justify-center"
-      ref={containerRef}
-    >
+    <div className="relative w-full h-full overflow-hidden" ref={containerRef}>
       <canvas
-        className="border bg-white"
+        className="absolute border bg-white"
         width={store.canvas.width}
         height={store.canvas.height}
         style={{
-          width: store.canvas.width * store.canvasScale,
-          height: store.canvas.height * store.canvasScale,
+          top: `calc(50% + ${
+            -(store.canvas.width * store.canvasView.scale) / 2 +
+            store.canvasView.pan[1]
+          }px)`,
+          left: `calc(50% + ${
+            -(store.canvas.height * store.canvasView.scale) / 2 +
+            store.canvasView.pan[0]
+          }px)`,
+          width: store.canvas.width * store.canvasView.scale,
+          height: store.canvas.height * store.canvasView.scale,
+          transform: `rotate(${store.canvasView.angle}rad)`,
           imageRendering: "pixelated",
         }}
         ref={canvasRef}
@@ -65,18 +71,29 @@ function useControl(
       | {
           type: "panning";
           pointers: { id: number; pos: [number, number] }[];
+          angleUnnormalized: number;
+        }
+      | {
+          type: "translate";
+          pointerId: number;
         }
   );
 
   useEffect(() => {
     function computePos(e: PointerEvent): [number, number] {
-      if (!canvasRef.current) return [0, 0];
-      const bbox = canvasRef.current.getBoundingClientRect();
+      if (!containerRef.current) return [0, 0];
+      const bbox = containerRef.current.getBoundingClientRect();
 
-      const store = useStore.getState();
+      const { canvas, canvasView: cv } = useStore.getState();
+      const pos_ = [
+        (e.clientX - (bbox.left + bbox.width / 2) - cv.pan[0]) / cv.scale,
+        (e.clientY - (bbox.top + bbox.height / 2) - cv.pan[1]) / cv.scale,
+      ];
+      const sin = Math.sin(-cv.angle);
+      const cos = Math.cos(-cv.angle);
       return [
-        (e.clientX - bbox.left) / store.canvasScale,
-        (e.clientY - bbox.top) / store.canvasScale,
+        pos_[0] * cos - pos_[1] * sin + canvas.width / 2,
+        pos_[0] * sin + pos_[1] * cos + canvas.height / 2,
       ];
     }
 
@@ -89,6 +106,7 @@ function useControl(
 
       if (
         state.current?.type !== "drawing" &&
+        e.button === 0 &&
         !(fingerOperations && e.pointerType === "touch")
       ) {
         const size = store.penSize * e.pressure;
@@ -113,19 +131,29 @@ function useControl(
       }
 
       if (state.current == null) {
+        // Middle button to pan
+        if (e.pointerType === "mouse" && e.button === 1) {
+          state.current = {
+            type: "translate",
+            pointerId: e.pointerId,
+          };
+          return;
+        }
+
         state.current = {
           type: "panning",
           pointers: [{ id: e.pointerId, pos: [e.clientX, e.clientY] }],
+          angleUnnormalized: store.canvasView.angle,
         };
         return;
       }
 
       if (state.current.type === "panning") {
-        if (state.current.pointers.length > 2) return;
-        state.current.pointers.push({
-          id: e.pointerId,
-          pos: [e.clientX, e.clientY],
-        });
+        if (state.current.pointers.length < 2)
+          state.current.pointers.push({
+            id: e.pointerId,
+            pos: [e.clientX, e.clientY],
+          });
         return;
       }
     };
@@ -151,28 +179,81 @@ function useControl(
           state.current.lastPos = pos;
           setUpdatedAt(Date.now());
         }
+        return;
       }
 
       if (state.current.type === "panning") {
-        const po = state.current.pointers.find((p) => p.id === e.pointerId);
-        if (po) {
+        const pi = state.current.pointers.findIndex(
+          (p) => p.id === e.pointerId
+        );
+        if (pi !== -1) {
           if (state.current.pointers.length === 2) {
-            const d1 = dist(
-              state.current.pointers[0].pos,
-              state.current.pointers[1].pos
+            const ps = state.current.pointers;
+            const prevPos = ps[pi].pos;
+            const d1 = dist(ps[0].pos, ps[1].pos);
+            const a1 = Math.atan2(
+              ps[0].pos[1] - ps[1].pos[1],
+              ps[0].pos[0] - ps[1].pos[0]
             );
-            po.pos = [e.clientX, e.clientY];
-            const d2 = dist(
-              state.current.pointers[0].pos,
-              state.current.pointers[1].pos
+            ps[pi].pos = [e.clientX, e.clientY];
+            const d2 = dist(ps[0].pos, ps[1].pos);
+            const a2 = Math.atan2(
+              ps[0].pos[1] - ps[1].pos[1],
+              ps[0].pos[0] - ps[1].pos[0]
             );
-            const scale = d2 / d1;
-            const store = useStore.getState();
-            store.setCanvasScale(store.canvasScale * scale);
+            const bbox = containerRef.current.getBoundingClientRect();
+            const panOffset = [
+              bbox.left + bbox.width / 2,
+              bbox.top + bbox.height / 2,
+            ];
+            const angleUnnormalized =
+              (state.current.angleUnnormalized + (a2 - a1)) % (2 * Math.PI);
+            state.current.angleUnnormalized = angleUnnormalized;
+            useStore.setState((state) => {
+              const prevPan_ = [
+                state.canvasView.pan[0] + panOffset[0],
+                state.canvasView.pan[1] + panOffset[1],
+              ] as Pos;
+              const pan_ = calculateTransformedPoint(
+                ps[1 - pi].pos,
+                prevPos,
+                ps[pi].pos,
+                prevPan_
+              );
+              const pan = [
+                pan_[0] - panOffset[0],
+                pan_[1] - panOffset[1],
+              ] as Pos;
+
+              return {
+                canvasView: {
+                  ...state.canvasView,
+                  angle: normalizeAngle(angleUnnormalized),
+                  scale: (state.canvasView.scale * d2) / d1,
+                  pan,
+                },
+              };
+            });
           } else {
-            po.pos = [e.clientX, e.clientY];
+            state.current.pointers[pi].pos = [e.clientX, e.clientY];
           }
         }
+        return;
+      }
+
+      if (state.current.type === "translate") {
+        if (e.pointerId === state.current.pointerId) {
+          useStore.setState((state) => ({
+            canvasView: {
+              ...state.canvasView,
+              pan: [
+                state.canvasView.pan[0] + e.movementX,
+                state.canvasView.pan[1] + e.movementY,
+              ],
+            },
+          }));
+        }
+        return;
       }
     };
 
@@ -221,21 +302,60 @@ function useControl(
         state.current.pointers = state.current.pointers.filter(
           (p) => p.id !== e.pointerId
         );
+        return;
+      }
+
+      if (state.current.type === "translate") {
+        if (e.button === 1) {
+          state.current = null;
+        }
+        return;
       }
     };
 
     containerRef.current?.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp); // FIXME
 
     return () => {
       containerRef.current?.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.addEventListener("pointercancel", onPointerUp);
     };
   }, [canvasRef, containerRef, tmpCanvas, setUpdatedAt, fingerOperations]);
 }
 
 function dist(a: [number, number], b: [number, number]) {
   return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2);
+}
+
+const angleGripGrace = 0.05;
+
+function normalizeAngle(angle: number) {
+  const a = (angle / (2 * Math.PI)) * 4;
+  const b = Math.round(a);
+  const d = Math.abs(a - b);
+  if (d < angleGripGrace) return (b * (2 * Math.PI)) / 4;
+  return angle;
+}
+
+type Pos = [number, number];
+
+function calculateTransformedPoint(o: Pos, a1: Pos, a2: Pos, p: Pos): Pos {
+  const a1x = a1[0] - o[0];
+  const a1y = a1[1] - o[1];
+  const a2x = a2[0] - o[0];
+  const a2y = a2[1] - o[1];
+  const px = p[0] - o[0];
+  const py = p[1] - o[1];
+
+  const d = a1x ** 2 + a1y ** 2;
+  const a = (a1x * a2x + a1y * a2y) / d;
+  const b = (a1x * a2y - a1y * a2x) / d;
+
+  const x = a * px - b * py + o[0];
+  const y = b * px + a * py + o[1];
+  return [x, y];
 }

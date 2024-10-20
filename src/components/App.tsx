@@ -4,7 +4,7 @@ import { useStore } from "../state";
 import Canvas from "./Canvas";
 import { Header } from "./Header";
 import { SettingDialog } from "./SettingDialog";
-import { Toasts } from "./Toasts";
+import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
 
 function App() {
@@ -24,8 +24,16 @@ function App() {
     return () => window.removeEventListener("keydown", keyDown);
   }, [store]);
 
+  useEffect(() => {
+    const onError = (event: ErrorEvent) => {
+      pushToast("Uncaught error occurred: " + event.error.message);
+    };
+    window.addEventListener("error", onError);
+    return () => window.removeEventListener("error", onError);
+  }, []);
+
   return (
-    <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden">
+    <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden touch-none">
       <div className="bg-gray-50 border-b border-gray-300">
         <Header />
       </div>
