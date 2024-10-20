@@ -91,7 +91,7 @@ function useControl(
         state.current?.type !== "drawing" &&
         !(fingerOperations && e.pointerType === "touch")
       ) {
-        const size = store.penSize * (e.pressure ?? 1);
+        const size = store.penSize * e.pressure;
         const path = [{ pos, size }];
         tmpCanvas.begin({
           size: [store.canvas.width, store.canvas.height],
@@ -141,7 +141,7 @@ function useControl(
 
         const { path, lastPos } = state.current;
         if (dist(lastPos, pos) > 3) {
-          const size = store.penSize * (e.pressure ?? 1);
+          const size = store.penSize * e.pressure;
           path.push({ pos, size });
           const lineWidth = store.tool === "fill" ? 1 : size;
           tmpCanvas.addLine({
