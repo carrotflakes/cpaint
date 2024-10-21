@@ -6,6 +6,11 @@ import { History } from './libs/history';
 type ToolType = "pen" | "eraser" | "fill";
 
 export type State = {
+  imageMeta: null | {
+    id: number,
+    name: string,
+    createdAt: number,
+  }
   color: string
   penSize: number
   opacity: number
@@ -52,6 +57,7 @@ export const useStore = create<State>()((set) => {
   canvas.height = 400;
 
   return ({
+    imageMeta: null,
     color: "#000",
     penSize: 5,
     opacity: 1,

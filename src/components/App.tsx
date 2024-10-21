@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useDisableScroll } from "../hooks/useDisableScroll";
 import { useStore } from "../state";
 import Canvas from "./Canvas";
+import { Files } from "./Files";
 import { Header } from "./Header";
 import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
@@ -37,14 +38,21 @@ function App() {
       <div className="bg-gray-50 border-b border-gray-300">
         <Header />
       </div>
-      <div className="grow flex items-stretch">
-        <div className="bg-gray-50 border-r border-gray-300">
-          <ToolBar />
+      {store.imageMeta && (
+        <div className="grow flex items-stretch">
+          <div className="bg-gray-50 border-r border-gray-300">
+            <ToolBar />
+          </div>
+          <div className="grow bg-gray-200">
+            <Canvas />
+          </div>
         </div>
-        <div className="grow bg-gray-200">
-          <Canvas />
+      )}
+      {!store.imageMeta && (
+        <div className="grow flex items-stretch bg-gray-200">
+          <Files />
         </div>
-      </div>
+      )}
 
       <Toasts />
 

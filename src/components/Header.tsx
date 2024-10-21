@@ -1,5 +1,7 @@
 import logo from "../assets/cpaint.svg";
-import { IconFrameCorners, IconGear } from "./icons";
+import { storage } from "../libs/storage";
+import { useStore } from "../state";
+import { IconFrameCorners, IconGear, IconSave } from "./icons";
 import { useSettingDialog } from "./SettingDialog";
 import { pushToast } from "./Toasts";
 
@@ -9,13 +11,25 @@ export function Header() {
       <div
         className="self-center opacity-50"
         onDoubleClick={() =>
-          pushToast("cpaint v0.0.0 created by @carrotflakes")
+          useStore.setState({
+            imageMeta: null,
+          })
         }
       >
         <img src={logo} alt="cpaint" />
       </div>
 
       <div className="grow" />
+
+      <div
+        className="basis-6 cursor-pointer"
+        onClick={() => {
+          save();
+        }}
+        title="Save"
+      >
+        <IconSave />
+      </div>
 
       <div
         className="basis-6 cursor-pointer"
@@ -42,4 +56,20 @@ export function Header() {
       )}
     </div>
   );
+}
+
+function save() {
+  const state = useStore.getState();
+  const meta = state.imageMeta;
+
+  if (!meta) return;
+
+  return new Promise((resolve) => {
+    state.canvas.toBlob((thumbnail) => {
+      state.canvas.toBlob((blob) => {
+        storage.putImage(meta, blob, thumbnail);
+        resolve(null);
+      }, "image/png");
+    }, "image/png");
+  });
 }
