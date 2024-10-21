@@ -170,11 +170,13 @@ function applyOp(op: Op, tmpCanvas: TmpCanvas, state: State, ctx: CanvasRenderin
 
 export type GlobalSettings = {
   fingerOperations: boolean
+  wheelZoom: boolean
 }
 
 export const useGlobalSettings = create<GlobalSettings>()(
   persist((_set) => ({
-    fingerOperations: false
+    fingerOperations: false,
+    wheelZoom: false,
   }), {
     name: 'cpaint',
   }));

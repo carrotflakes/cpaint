@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TmpCanvas } from "../libs/tmpCanvas";
 import { Op, useGlobalSettings, useStore } from "../state";
 
@@ -58,7 +58,8 @@ function useControl(
   tmpCanvas: TmpCanvas,
   setUpdatedAt: (time: number) => void
 ) {
-  const fingerOperations = useGlobalSettings((state) => state.fingerOperations);
+  const { fingerOperations, wheelZoom } = useGlobalSettings((state) => state);
+
   const state = useRef(
     null as
       | null
@@ -79,24 +80,24 @@ function useControl(
         }
   );
 
+  const computePos = useCallback((e: MouseEvent): [number, number] => {
+    if (!containerRef.current) return [0, 0];
+    const bbox = containerRef.current.getBoundingClientRect();
+
+    const { canvas, canvasView: cv } = useStore.getState();
+    const pos_ = [
+      (e.clientX - (bbox.left + bbox.width / 2) - cv.pan[0]) / cv.scale,
+      (e.clientY - (bbox.top + bbox.height / 2) - cv.pan[1]) / cv.scale,
+    ];
+    const sin = Math.sin(-cv.angle);
+    const cos = Math.cos(-cv.angle);
+    return [
+      pos_[0] * cos - pos_[1] * sin + canvas.width / 2,
+      pos_[0] * sin + pos_[1] * cos + canvas.height / 2,
+    ];
+  }, []);
+
   useEffect(() => {
-    function computePos(e: PointerEvent): [number, number] {
-      if (!containerRef.current) return [0, 0];
-      const bbox = containerRef.current.getBoundingClientRect();
-
-      const { canvas, canvasView: cv } = useStore.getState();
-      const pos_ = [
-        (e.clientX - (bbox.left + bbox.width / 2) - cv.pan[0]) / cv.scale,
-        (e.clientY - (bbox.top + bbox.height / 2) - cv.pan[1]) / cv.scale,
-      ];
-      const sin = Math.sin(-cv.angle);
-      const cos = Math.cos(-cv.angle);
-      return [
-        pos_[0] * cos - pos_[1] * sin + canvas.width / 2,
-        pos_[0] * sin + pos_[1] * cos + canvas.height / 2,
-      ];
-    }
-
     const onPointerDown = (e: PointerEvent) => {
       e.preventDefault();
       if (!canvasRef.current || !containerRef.current) return;
@@ -325,6 +326,59 @@ function useControl(
       window.addEventListener("pointercancel", onPointerUp);
     };
   }, [canvasRef, containerRef, tmpCanvas, setUpdatedAt, fingerOperations]);
+
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      if (!containerRef.current) return;
+      e.preventDefault();
+
+      if (wheelZoom) {
+        if (e.deltaMode !== 0) return;
+        const base = 0.995;
+        const scaleFactor = base ** e.deltaY;
+
+        const bbox = containerRef.current.getBoundingClientRect();
+        const pos = [
+          e.clientX - bbox.left - bbox.width / 2,
+          e.clientY - bbox.top - bbox.height / 2,
+        ] as Pos;
+
+        useStore.setState((state) => {
+          const scale = state.canvasView.scale * scaleFactor;
+          const pan = [
+            (state.canvasView.pan[0] - pos[0]) * scaleFactor + pos[0],
+            (state.canvasView.pan[1] - pos[1]) * scaleFactor + pos[1],
+          ] as Pos;
+          return {
+            canvasView: {
+              ...state.canvasView,
+              scale,
+              pan,
+            },
+          };
+        });
+      } else {
+        if (e.deltaMode !== 0) return;
+
+        useStore.setState((state) => {
+          return {
+            canvasView: {
+              ...state.canvasView,
+              pan: [
+                state.canvasView.pan[0] - e.deltaX,
+                state.canvasView.pan[1] - e.deltaY,
+              ],
+            },
+          };
+        });
+      }
+    };
+
+    containerRef.current?.addEventListener("wheel", onWheel, {
+      passive: false,
+    });
+    return () => containerRef.current?.removeEventListener("wheel", onWheel);
+  }, [wheelZoom]);
 }
 
 function dist(a: [number, number], b: [number, number]) {

@@ -43,6 +43,21 @@ export function SettingDialog() {
             <label htmlFor="fingerOperations">Finger operations</label>
           </div>
 
+          <div className="flex gap-2">
+            <input
+              type="checkbox"
+              name="wheelZoom"
+              checked={globalSettings.wheelZoom}
+              onChange={(e) =>
+                useGlobalSettings.setState({
+                  wheelZoom: e.target.checked,
+                })
+              }
+              className="w-6 h-6"
+            />
+            <label htmlFor="wheelZoom">Wheel zoom</label>
+          </div>
+
           <button
             onClick={() => {
               pushToast("🌟（ゝω・）vｷｬﾋﾟ");
