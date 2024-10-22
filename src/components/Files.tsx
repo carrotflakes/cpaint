@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { useStore } from "../state";
 
@@ -9,11 +9,15 @@ export function Files() {
 
   const storage = useStorage();
 
-  useEffect(() => {
+  const load = useCallback(() => {
     storage?.getAllImageMetas()?.then((images) => {
       images && setFiles(images as any);
     });
   }, [storage]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <div className="p-4">
@@ -30,15 +34,25 @@ export function Files() {
       >
         New file
       </button>
-      {files?.map((file) => (
-        <div
-          key={file.id}
-          className="p-4 flex flex-col gap-2 hover:bg-gray-100"
-        >
-          {file.name}
-          <Thumbnail id={file.id} />
-        </div>
-      ))}
+      <div className="flex flex-wrap">
+        {files?.map((file) => (
+          <div
+            key={file.id}
+            className="p-4 flex flex-col gap-2 hover:bg-gray-100"
+          >
+            {file.name}
+            <Thumbnail id={file.id} />
+            <button
+              onClick={() => {
+                storage?.deleteImage(file.id);
+                load();
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -53,7 +67,7 @@ function Thumbnail(props: { id: number }) {
     storage?.getThumbnail(props.id)?.then((thumbnail) => {
       thumbnail && setThumbnail(URL.createObjectURL(thumbnail as any));
     });
-  });
+  }, [storage]);
 
   return (
     <div className="w-40 h-40 bg-gray-200">

@@ -82,6 +82,17 @@ export class Storage {
     });
   }
 
+  deleteImage(id: number) {
+    if (!this.db) return;
+    const transaction = this.db.transaction(["images", "imageMetas", "thumbnails"], "readwrite");
+    const imageStore = transaction.objectStore("images");
+    const imageMetaStore = transaction.objectStore("imageMetas");
+    const thumbnailStore = transaction.objectStore("thumbnails");
+    imageStore.delete(id);
+    imageMetaStore.delete(id);
+    thumbnailStore.delete(id);
+  }
+
   get isReady() {
     return !!this.db;
   }
