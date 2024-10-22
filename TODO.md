@@ -6,8 +6,9 @@
 - undo/redo
 - pointer event
 - zoom
-
 - touch to move canvas
+
+- view
 - bucket
 - selection
 - layer
@@ -18,3 +19,8 @@
 - eyedropper
 - pen types
 - mac key bindings
+- effect
+- text
+- shape
+- gradient
+- pattern
