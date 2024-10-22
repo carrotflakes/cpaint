@@ -6,6 +6,8 @@ import { useSettingDialog } from "./SettingDialog";
 import { pushToast } from "./Toasts";
 
 export function Header() {
+  const imageMeta = useStore((store) => store.imageMeta);
+
   return (
     <div className="p-2 flex gap-2 overflow-x-auto">
       <div
@@ -21,15 +23,17 @@ export function Header() {
 
       <div className="grow" />
 
-      <div
-        className="basis-6 cursor-pointer"
-        onClick={() => {
-          save();
-        }}
-        title="Save"
-      >
-        <IconSave />
-      </div>
+      {imageMeta && (
+        <div
+          className="basis-6 cursor-pointer"
+          onClick={() => {
+            save();
+          }}
+          title="Save"
+        >
+          <IconSave />
+        </div>
+      )}
 
       <div
         className="basis-6 cursor-pointer"
