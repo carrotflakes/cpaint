@@ -16,8 +16,8 @@ export type State = {
   opacity: number
   softPen: boolean
   history: History<Op>
-  canvas: HTMLCanvasElement
-  apply: (op: Op, canvas: HTMLCanvasElement) => void
+  canvas: OffscreenCanvas
+  apply: (op: Op, canvas: OffscreenCanvas) => void
   setSize: (width: number, height: number) => void
   updatedAt: Date
   setColor: (color: string) => void
@@ -52,9 +52,7 @@ export type Op = {
 };
 
 export const useStore = create<State>()((set) => {
-  const canvas = document.createElement("canvas");
-  canvas.width = 400;
-  canvas.height = 400;
+  const canvas = new OffscreenCanvas(400, 400);
 
   return ({
     imageMeta: null,
@@ -143,7 +141,7 @@ export const useStore = create<State>()((set) => {
   })
 });
 
-function applyOp(op: Op, tmpCanvas: TmpCanvas, state: State, ctx: CanvasRenderingContext2D) {
+function applyOp(op: Op, tmpCanvas: TmpCanvas, state: State, ctx: OffscreenCanvasRenderingContext2D) {
   if (op.type === "stroke") {
     tmpCanvas.begin({
       size: [state.canvas.width, state.canvas.height],

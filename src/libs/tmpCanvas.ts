@@ -1,6 +1,6 @@
 
 export class TmpCanvas {
-  canvas = document.createElement("canvas");
+  canvas = new OffscreenCanvas(1, 1);
   imageData = null as null | ImageData;
   style = "#000";
   soft = false;

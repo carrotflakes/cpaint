@@ -62,18 +62,13 @@ export function Header() {
   );
 }
 
-function save() {
+async function save() {
   const state = useStore.getState();
   const meta = state.imageMeta;
 
   if (!meta) return;
 
-  return new Promise((resolve) => {
-    state.canvas.toBlob((thumbnail) => {
-      state.canvas.toBlob((blob) => {
-        storage.putImage(meta, blob, thumbnail);
-        resolve(null);
-      }, "image/png");
-    }, "image/png");
-  });
+  const thumbnail = await state.canvas.convertToBlob();
+  const blob = await state.canvas.convertToBlob();
+  storage.putImage(meta, blob, thumbnail);
 }
