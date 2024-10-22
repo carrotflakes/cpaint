@@ -42,4 +42,9 @@ export class History<T> {
     h.index = this.index
     return h;
   }
+
+  clear() {
+    this.history = [];
+    this.index = 0;
+  }
 }

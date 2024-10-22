@@ -15,6 +15,7 @@ export type State = {
   penSize: number
   opacity: number
   softPen: boolean
+  initialImage: OffscreenCanvas
   history: History<Op>
   canvas: OffscreenCanvas
   apply: (op: Op, canvas: OffscreenCanvas) => void
@@ -60,6 +61,7 @@ export const useStore = create<State>()((set) => {
     penSize: 5,
     opacity: 1,
     softPen: false,
+    initialImage: new OffscreenCanvas(400, 400),
     history: new History<Op>(Infinity), // TODO: limit
     canvas,
     apply(op, canvas) {
@@ -112,6 +114,7 @@ export const useStore = create<State>()((set) => {
         if (op) {
           const ctx = state.canvas.getContext("2d")!;
           ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
+          ctx.drawImage(state.initialImage, 0, 0);
           const tmpCanvas = new TmpCanvas();
 
           for (let i = 0; i < history.index; i++) {

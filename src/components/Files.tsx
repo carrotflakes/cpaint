@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { useStore } from "../state";
+import { Storage } from "../libs/storage";
 
 export function Files() {
   const [files, setFiles] = useState(
@@ -39,6 +40,7 @@ export function Files() {
           <div
             key={file.id}
             className="p-4 flex flex-col gap-2 hover:bg-gray-100"
+            onClick={() => storage && loadImage(storage, file.id)}
           >
             {file.name}
             <Thumbnail id={file.id} />
@@ -76,4 +78,34 @@ function Thumbnail(props: { id: number }) {
       )}
     </div>
   );
+}
+
+async function loadImage(storage: Storage, id: number) {
+  const imageMeta: any = await storage.getImageMeta(id);
+  const imageData = await storage.getImage(id);
+  if (!imageMeta || !imageData) return;
+
+  const blobUrl = URL.createObjectURL(imageData as any);
+  const image = new Image();
+  image.onload = () => {
+    const initialImage = new OffscreenCanvas(image.width, image.height);
+    const ctx = initialImage.getContext("2d");
+    ctx!.drawImage(image, 0, 0);
+    useStore.setState((state) => {
+      state.canvas.width = image.width;
+      state.canvas.height = image.height;
+      const ctx = state.canvas.getContext("2d")!;
+      ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
+      ctx.drawImage(initialImage, 0, 0);
+
+      const history = state.history.clone();
+      history.clear();
+      return {
+        imageMeta,
+        initialImage,
+        history,
+      };
+    });
+  };
+  image.src = blobUrl;
 }
