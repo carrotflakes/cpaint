@@ -332,7 +332,7 @@ function useControl(
       if (!containerRef.current) return;
       e.preventDefault();
 
-      if (wheelZoom) {
+      if (wheelZoom || e.ctrlKey) {
         if (e.deltaMode !== 0) return;
         const base = 0.995;
         const scaleFactor = base ** e.deltaY;
