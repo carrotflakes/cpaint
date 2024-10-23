@@ -79,6 +79,33 @@ export class TmpCanvas {
     }
     return false;
   }
+
+  dirtyRect() {
+    const imageData = this.canvas
+      .getContext("2d", { willReadFrequently: true })!
+      .getImageData(0, 0, this.canvas.width, this.canvas.height);
+
+    let left = this.canvas.width;
+    let top = this.canvas.height;
+    let right = 0;
+    let bottom = 0;
+
+    for (let y = 0; y < this.canvas.height; y++) {
+      for (let x = 0; x < this.canvas.width; x++) {
+        const i = (y * this.canvas.width + x) * 4;
+        if (imageData.data[i + 3] > 0) {
+          left = Math.min(left, x);
+          top = Math.min(top, y);
+          right = Math.max(right, x + 1);
+          bottom = Math.max(bottom, y + 1);
+        }
+      }
+    }
+
+    if (right === 0) return null;
+
+    return { left, top, right, bottom };
+  }
 }
 
 

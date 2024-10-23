@@ -7,6 +7,7 @@
 - pointer event
 - zoom
 - touch to move canvas
+- transparent background
 
 - view
 - bucket
@@ -25,3 +26,4 @@
 - gradient
 - pattern
 - dark mode
+- transform

@@ -39,6 +39,7 @@ export type State = {
 
 export type Op = {
   type: "stroke";
+  erase: boolean;
   strokeStyle: {
     color: string
     soft: boolean
@@ -69,6 +70,8 @@ export const useStore = create<State>()((set) => {
         const ctx = state.canvas.getContext("2d")!;
         ctx.save();
         ctx.globalAlpha = state.opacity;
+        if (state.tool === "eraser")
+          ctx.globalCompositeOperation = "destination-out";
         ctx.drawImage(canvas, 0, 0);
         ctx.restore();
         const history = state.history.clone();
@@ -145,6 +148,8 @@ export const useStore = create<State>()((set) => {
 });
 
 function applyOp(op: Op, tmpCanvas: TmpCanvas, state: State, ctx: OffscreenCanvasRenderingContext2D) {
+  ctx.save();
+
   if (op.type === "stroke") {
     tmpCanvas.begin({
       size: [state.canvas.width, state.canvas.height],
@@ -159,6 +164,8 @@ function applyOp(op: Op, tmpCanvas: TmpCanvas, state: State, ctx: OffscreenCanva
         lineWidth: p2.size,
       });
     }
+    if (op.erase)
+      ctx.globalCompositeOperation = "destination-out";
   } else if (op.type === "fill") {
     tmpCanvas.begin({
       size: [state.canvas.width, state.canvas.height],
@@ -168,7 +175,6 @@ function applyOp(op: Op, tmpCanvas: TmpCanvas, state: State, ctx: OffscreenCanva
     tmpCanvas.fill(op.path);
   }
 
-  ctx.save();
   ctx.globalAlpha = op.opacity;
   ctx.drawImage(tmpCanvas.canvas, 0, 0);
   ctx.restore();

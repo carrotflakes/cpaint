@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createCheckCanvas } from "../libs/check";
 import { TmpCanvas } from "../libs/tmpCanvas";
 import { Op, useGlobalSettings, useStore } from "../state";
 
@@ -12,24 +13,36 @@ export default function Canvas() {
 
   useControl(canvasRef, containerRef, tmpCanvas, setUpdatedAt);
 
+  const checkPat = useMemo(() => {
+    const url = createCheckCanvas().toDataURL();
+    return `url(${url})`;
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d", { alpha: false })!;
+    const ctx = canvas.getContext("2d")!;
 
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, store.canvas.width, store.canvas.height);
+    ctx.clearRect(0, 0, store.canvas.width, store.canvas.height);
     ctx.drawImage(store.canvas, 0, 0);
 
     ctx.save();
+    if (store.tool === "eraser")
+      ctx.globalCompositeOperation = "destination-out";
     ctx.globalAlpha = store.opacity;
     ctx.drawImage(tmpCanvas.canvas, 0, 0);
     ctx.restore();
   }, [store, canvasRef, tmpCanvas.canvas, updatedAt]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden" ref={containerRef}>
+    <div
+      className="relative w-full h-full overflow-hidden"
+      ref={containerRef}
+      style={{
+        backgroundImage: checkPat,
+      }}
+    >
       <canvas
-        className="absolute border bg-white"
+        className="absolute shadow-[0_0_0_99999px_#f3f4f6]"
         width={store.canvas.width}
         height={store.canvas.height}
         style={{
@@ -284,6 +297,7 @@ function useControl(
 
             const op: Op = {
               type: "stroke",
+              erase: store.tool === "eraser",
               strokeStyle: {
                 color: tmpCanvas.style,
                 soft: store.softPen,
