@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { useGlobalSettings } from "../state";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
+import { storage } from "../libs/storage";
 
 export const useSettingDialog = create<{
   show: boolean;
@@ -57,6 +58,19 @@ export function SettingDialog() {
             />
             <label htmlFor="wheelZoom">Wheel zoom</label>
           </div>
+
+          <hr />
+
+          <button
+            onClick={() => {
+              if (confirm("Delete all data?")) {
+                storage.deleteDatabase();
+                pushToast("All data deleted.");
+              }
+            }}
+          >
+            Delete storage
+          </button>
 
           <button
             onClick={() => {

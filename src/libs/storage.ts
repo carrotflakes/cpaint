@@ -3,8 +3,10 @@
 export class Storage {
   private db: IDBDatabase | null = null;
 
+  private readonly dbName = "cpaint";
+
   constructor() {
-    const request = indexedDB.open("cpaint", 1);
+    const request = indexedDB.open(this.dbName, 1);
     request.onerror = () => {
       console.error("Failed to open database");
     };
@@ -95,6 +97,11 @@ export class Storage {
 
   get isReady() {
     return !!this.db;
+  }
+
+  deleteDatabase() {
+    this.db = null;
+    indexedDB.deleteDatabase(this.dbName);
   }
 }
 

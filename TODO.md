@@ -24,3 +24,4 @@
 - shape
 - gradient
 - pattern
+- dark mode
