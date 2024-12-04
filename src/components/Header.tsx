@@ -1,7 +1,7 @@
 import logo from "../assets/cpaint.svg";
 import { storage } from "../libs/storage";
 import { useStore } from "../state";
-import { IconFrameCorners, IconGear, IconSave } from "./icons";
+import { IconCaretLeft, IconFrameCorners, IconGear, IconSave } from "./icons";
 import { useSettingDialog } from "./SettingDialog";
 import { pushToast } from "./Toasts";
 
@@ -10,16 +10,27 @@ export function Header() {
 
   return (
     <div className="p-2 flex gap-2 overflow-x-auto">
-      <div
-        className="self-center opacity-50"
-        onDoubleClick={() =>
-          useStore.setState({
-            imageMeta: null,
-          })
-        }
-      >
-        <img src={logo} alt="cpaint" />
-      </div>
+      {imageMeta ? (
+        <div
+          className="basis-6 cursor-pointer"
+          onClick={() => {
+            useStore.setState({
+              imageMeta: null,
+            });
+          }}
+          title="Back to home"
+        >
+          <IconCaretLeft />
+        </div>
+      ) : (
+        <div className="self-center opacity-50">
+          <img src={logo} alt="cpaint" />
+        </div>
+      )}
+
+      <div className="grow" />
+
+      {imageMeta && <div>{imageMeta.name}</div>}
 
       <div className="grow" />
 

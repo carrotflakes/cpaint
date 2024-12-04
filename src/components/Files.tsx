@@ -20,21 +20,20 @@ export function Files() {
     load();
   }, [load]);
 
+  const newFile = useCallback(() => {
+    useStore.setState({
+      imageMeta: {
+        id: Date.now(),
+        name: new Date().toISOString().split(".")[0].replace(/:/g, "-"),
+        createdAt: Date.now(),
+      },
+    });
+    useStore.getState().clearAll();
+  }, []);
+
   return (
     <div className="p-4">
-      <button
-        onClick={() => {
-          useStore.setState({
-            imageMeta: {
-              id: Date.now(),
-              name: new Date().toISOString().replace(/:/g, "-"),
-              createdAt: Date.now(),
-            },
-          });
-        }}
-      >
-        New file
-      </button>
+      <button onClick={newFile}>New file</button>
       <div className="flex flex-wrap">
         {files?.map((file) => (
           <div

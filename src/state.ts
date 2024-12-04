@@ -32,6 +32,7 @@ export type State = {
     scale: number,
     pan: [number, number],
   },
+  clearAll: () => void
 
   undo: () => void
   redo: () => void
@@ -107,6 +108,15 @@ export const useStore = create<State>()((set) => {
       angle: 0,
       scale: 1,
       pan: [0, 0],
+    },
+    clearAll() {
+      set((state) => {
+        const ctx = state.canvas.getContext("2d")!;
+        ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
+        const ctx2 = state.initialImage.getContext("2d")!;
+        ctx2.clearRect(0, 0, state.initialImage.width, state.initialImage.height);
+        return { history: new History<Op>(Infinity), updatedAt: new Date() }
+      })
     },
 
     undo() {
