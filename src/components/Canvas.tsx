@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useViewControl } from "../hooks/useViewControl";
 import { createCheckCanvas } from "../libs/check";
 import { TmpCanvas } from "../libs/tmpCanvas";
 import { Op, useGlobalSettings, useStore } from "../state";
@@ -12,6 +13,7 @@ export default function Canvas() {
   const canvasRef = useRef(null as null | HTMLCanvasElement);
 
   useControl(canvasRef, containerRef, tmpCanvas, setUpdatedAt);
+  useViewControl(containerRef);
 
   const checkPat = useMemo(() => {
     const url = createCheckCanvas().toDataURL();
@@ -71,7 +73,7 @@ function useControl(
   tmpCanvas: TmpCanvas,
   setUpdatedAt: (time: number) => void
 ) {
-  const { fingerOperations, wheelZoom } = useGlobalSettings((state) => state);
+  const { fingerOperations } = useGlobalSettings((state) => state);
 
   const state = useRef(
     null as
@@ -328,71 +330,19 @@ function useControl(
       }
     };
 
-    containerRef.current?.addEventListener("pointerdown", onPointerDown);
+    const el = containerRef.current;
+    el?.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp); // FIXME
 
     return () => {
-      containerRef.current?.removeEventListener("pointerdown", onPointerDown);
+      el?.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
       window.addEventListener("pointercancel", onPointerUp);
     };
   }, [canvasRef, containerRef, tmpCanvas, setUpdatedAt, fingerOperations]);
-
-  useEffect(() => {
-    const onWheel = (e: WheelEvent) => {
-      if (!containerRef.current) return;
-      e.preventDefault();
-
-      if (wheelZoom || e.ctrlKey) {
-        if (e.deltaMode !== 0) return;
-        const base = 0.995;
-        const scaleFactor = base ** e.deltaY;
-
-        const bbox = containerRef.current.getBoundingClientRect();
-        const pos = [
-          e.clientX - bbox.left - bbox.width / 2,
-          e.clientY - bbox.top - bbox.height / 2,
-        ] as Pos;
-
-        useStore.setState((state) => {
-          const scale = state.canvasView.scale * scaleFactor;
-          const pan = [
-            (state.canvasView.pan[0] - pos[0]) * scaleFactor + pos[0],
-            (state.canvasView.pan[1] - pos[1]) * scaleFactor + pos[1],
-          ] as Pos;
-          return {
-            canvasView: {
-              ...state.canvasView,
-              scale,
-              pan,
-            },
-          };
-        });
-      } else {
-        if (e.deltaMode !== 0) return;
-
-        useStore.setState((state) => {
-          return {
-            canvasView: {
-              ...state.canvasView,
-              pan: [
-                state.canvasView.pan[0] - e.deltaX,
-                state.canvasView.pan[1] - e.deltaY,
-              ],
-            },
-          };
-        });
-      }
-    };
-
-    containerRef.current?.addEventListener("wheel", onWheel, {
-      passive: false,
-    });
-    return () => containerRef.current?.removeEventListener("wheel", onWheel);
-  }, [wheelZoom]);
 }
 
 function dist(a: [number, number], b: [number, number]) {
