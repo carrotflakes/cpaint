@@ -23,12 +23,15 @@ export function ToolBar() {
   const controlPenWidth = useControl({
     getValue: () => store.penSize,
     setValue: (v) =>
-      store.setPenSize(Math.max(Math.min(Math.round(v), penWidthMax), 1)),
+      useStore.setState({
+        penSize: Math.max(Math.min(Math.round(v), penWidthMax), 1),
+      }),
     sensitivity: 1 / 5,
   });
   const controlOpacity = useControl({
     getValue: () => store.opacity,
-    setValue: (v) => store.setOpacity(Math.max(Math.min(v, 1), 0)),
+    setValue: (v) =>
+      useStore.setState({ opacity: Math.max(Math.min(v, 1), 0) }),
     sensitivity: 0.01,
   });
 
@@ -44,7 +47,7 @@ export function ToolBar() {
           <div className="absolute p-2 bg-white shadow z-10">
             <ColorPalette
               initialColor={store.color}
-              onChanged={(color) => store.setColor(color)}
+              onChanged={(color: string) => useStore.setState({ color })}
             />
           </div>
         )}
@@ -63,7 +66,7 @@ export function ToolBar() {
             <SliderV
               value={store.penSize / penWidthMax}
               onChange={(value) =>
-                store.setPenSize(Math.round(value * penWidthMax))
+                useStore.setState({ penSize: Math.round(value * penWidthMax) })
               }
             />
           </div>
@@ -82,7 +85,7 @@ export function ToolBar() {
           <div className="absolute p-2 bg-white shadow z-10">
             <SliderV
               value={store.opacity}
-              onChange={(value) => store.setOpacity(value)}
+              onChange={(value) => useStore.setState({ opacity: value })}
             />
           </div>
         )}
@@ -91,7 +94,7 @@ export function ToolBar() {
       <div>
         <div
           className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white cursor-pointer"
-          onClick={() => store.setSoftPen(!store.softPen)}
+          onClick={() => useStore.setState({ softPen: !store.softPen })}
           title="Soft/Hard pen"
         >
           {store.softPen ? "S" : "H"}
@@ -103,7 +106,7 @@ export function ToolBar() {
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         data-selected={store.tool === "pen"}
-        onClick={() => store.setTool("pen")}
+        onClick={() => useStore.setState({ tool: "pen" })}
         title="Pen"
       >
         <IconPencil />
@@ -112,7 +115,7 @@ export function ToolBar() {
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         data-selected={store.tool === "eraser"}
-        onClick={() => store.setTool("eraser")}
+        onClick={() => useStore.setState({ tool: "eraser" })}
         title="Eraser"
       >
         <IconEraser />
@@ -121,7 +124,7 @@ export function ToolBar() {
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         data-selected={store.tool === "fill"}
-        onClick={() => store.setTool("fill")}
+        onClick={() => useStore.setState({ tool: "fill" })}
         title="Fill"
       >
         <IconFill />

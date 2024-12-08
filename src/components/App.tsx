@@ -15,9 +15,9 @@ function App() {
 
   useEffect(() => {
     const keyDown = (e: KeyboardEvent) => {
-      if (e.key === "p") store.setTool("pen");
-      if (e.key === "e") store.setTool("eraser");
-      if (e.key === "f") store.setTool("fill");
+      if (e.key === "p") useStore.setState({ tool: "pen" });
+      if (e.key === "e") useStore.setState({ tool: "eraser" });
+      if (e.key === "f") useStore.setState({ tool: "fill" });
       if (e.ctrlKey && e.key === "z") store.undo();
       if (e.ctrlKey && e.key === "Z") store.redo();
     };

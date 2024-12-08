@@ -21,12 +21,7 @@ export type State = {
   apply: (op: Op, canvas: OffscreenCanvas) => void
   setSize: (width: number, height: number) => void
   updatedAt: Date
-  setColor: (color: string) => void
-  setPenSize: (size: number) => void
-  setOpacity: (opacity: number) => void
-  setSoftPen: (softPen: boolean) => void
   tool: ToolType
-  setTool: (tool: ToolType) => void
   canvasView: {
     angle: number,
     scale: number,
@@ -88,22 +83,7 @@ export const useStore = create<State>()((set) => {
       })
     },
     updatedAt: new Date(),
-    setColor(color) {
-      set({ color })
-    },
-    setPenSize(size) {
-      set({ penSize: size })
-    },
-    setOpacity(opacity) {
-      set({ opacity })
-    },
-    setSoftPen(softPen) {
-      set({ softPen })
-    },
     tool: "pen",
-    setTool(tool) {
-      set({ tool })
-    },
     canvasView: {
       angle: 0,
       scale: 1,
