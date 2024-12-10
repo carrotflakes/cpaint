@@ -23,7 +23,7 @@ export function Header() {
           <IconCaretLeft />
         </div>
       ) : (
-        <div className="self-center opacity-50">
+        <div className="self-center">
           <img src={logo} alt="cpaint" />
         </div>
       )}

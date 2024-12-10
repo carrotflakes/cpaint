@@ -33,17 +33,23 @@ export function Files() {
 
   return (
     <div className="p-4">
-      <button onClick={newFile}>New file</button>
+      <button
+        className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200"
+        onClick={newFile}
+      >
+        New file
+      </button>
       <div className="flex flex-wrap">
         {files?.map((file) => (
           <div
             key={file.id}
-            className="p-4 flex flex-col gap-2 hover:bg-gray-100"
+            className="p-4 flex flex-col gap-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-900"
             onClick={() => storage && loadImage(storage, file.id)}
           >
             {file.name}
             <Thumbnail id={file.id} />
             <button
+              className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200"
               onClick={() => {
                 storage?.deleteImage(file.id);
                 load();

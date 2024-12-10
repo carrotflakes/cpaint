@@ -44,7 +44,7 @@ export function ToolBar() {
           onClick={() => setShowCp((showCp) => !showCp)}
         ></div>
         {showCp && (
-          <div className="absolute p-2 bg-white shadow z-10">
+          <div className="absolute p-2 bg-gray-50 dark:bg-gray-950 shadow z-10">
             <ColorPalette
               initialColor={store.color}
               onChanged={(color: string) => useStore.setState({ color })}
@@ -55,14 +55,14 @@ export function ToolBar() {
 
       <div>
         <div
-          className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white cursor-pointer"
+          className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
           title="Pen width"
           {...controlPenWidth.props}
         >
           {store.penSize}
         </div>
         {controlPenWidth.show && (
-          <div className="absolute p-2 bg-white shadow z-10">
+          <div className="absolute p-2 bg-white dark:bg-black shadow z-10">
             <SliderV
               value={store.penSize / penWidthMax}
               onChange={(value) =>
@@ -75,14 +75,14 @@ export function ToolBar() {
 
       <div>
         <div
-          className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white cursor-pointer"
+          className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
           title="Opacity"
           {...controlOpacity.props}
         >
           {Math.round(store.opacity * 255)}
         </div>
         {controlOpacity.show && (
-          <div className="absolute p-2 bg-white shadow z-10">
+          <div className="absolute p-2 bg-white dark:bg-black shadow z-10">
             <SliderV
               value={store.opacity}
               onChange={(value) => useStore.setState({ opacity: value })}
@@ -93,7 +93,7 @@ export function ToolBar() {
 
       <div>
         <div
-          className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white cursor-pointer"
+          className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
           onClick={() => useStore.setState({ softPen: !store.softPen })}
           title="Soft/Hard pen"
         >

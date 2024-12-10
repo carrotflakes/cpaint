@@ -28,7 +28,9 @@ export function ModalDialog({
 
   return (
     <dialog
-      className={"min-w-[10rem] min-h-10 rounded-lg bg-gray-50 p-4"}
+      className={
+        "min-w-[10rem] min-h-10 rounded-lg bg-gray-50 dark:bg-gray-950 p-4"
+      }
       onClick={onClick}
       ref={ref}
     >
