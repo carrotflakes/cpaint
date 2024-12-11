@@ -34,13 +34,13 @@ function App() {
   }, []);
 
   return (
-    <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden touch-none">
-      <div className="bg-gray-50 dark:bg-gray-950 text-gray-950 dark:text-gray-50 border-b border-gray-300">
+    <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden touch-none text-gray-800 dark:text-gray-100">
+      <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-300">
         <Header />
       </div>
       {store.imageMeta && (
         <div className="grow flex items-stretch">
-          <div className="bg-gray-50 dark:bg-gray-950 border-r border-gray-300">
+          <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
             <ToolBar />
           </div>
           <div className="grow bg-gray-200 dark:bg-gray-800">

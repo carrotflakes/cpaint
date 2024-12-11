@@ -167,7 +167,7 @@ export function ColorPicker({
             transform: "translate(-50%, -50%)",
           }}
         />
-        <div className="w-[80%] h-[80%] absolute top-[10%] left-[10%] rounded-full bg-white"></div>
+        <div className="w-[80%] h-[80%] absolute top-[10%] left-[10%] rounded-full bg-white dark:bg-black"></div>
         <div
           className="w-[50%] h-[50%] absolute top-[25%] left-[25%] cursor-pointer"
           style={{
