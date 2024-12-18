@@ -9,10 +9,13 @@ export default function Canvas() {
   const tmpCanvas = useMemo(() => new TmpCanvas(), []);
   const [updatedAt, setUpdatedAt] = useState(0);
 
-  const containerRef = useRef(null as null | HTMLDivElement);
-  const canvasRef = useRef(null as null | HTMLCanvasElement);
+  const containerRef = useRef<null | HTMLDivElement>(null);
+  const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
-  useControl(canvasRef, containerRef, tmpCanvas, setUpdatedAt);
+  const redraw = useCallback(() => {
+    setUpdatedAt(Date.now());
+  }, []);
+  useControl(canvasRef, containerRef, tmpCanvas, redraw);
   useViewControl(containerRef);
 
   const checkPat = useMemo(() => {
@@ -71,29 +74,28 @@ function useControl(
   canvasRef: { current: HTMLCanvasElement | null },
   containerRef: { current: HTMLDivElement | null },
   tmpCanvas: TmpCanvas,
-  setUpdatedAt: (time: number) => void
+  redraw: () => void
 ) {
   const { fingerOperations } = useGlobalSettings((state) => state);
 
-  const state = useRef(
-    null as
-      | null
-      | {
-          type: "drawing";
-          path: any[];
-          lastPos: [number, number];
-          pointerId: number;
-        }
-      | {
-          type: "panning";
-          pointers: { id: number; pos: [number, number] }[];
-          angleUnnormalized: number;
-        }
-      | {
-          type: "translate";
-          pointerId: number;
-        }
-  );
+  const state = useRef<
+    | null
+    | {
+        type: "drawing";
+        path: any[];
+        lastPos: [number, number];
+        pointerId: number;
+      }
+    | {
+        type: "panning";
+        pointers: { id: number; pos: [number, number] }[];
+        angleUnnormalized: number;
+      }
+    | {
+        type: "translate";
+        pointerId: number;
+      }
+  >(null);
 
   const computePos = useCallback((e: MouseEvent): [number, number] => {
     if (!containerRef.current) return [0, 0];
@@ -193,7 +195,7 @@ function useControl(
             lineWidth,
           });
           state.current.lastPos = pos;
-          setUpdatedAt(Date.now());
+          redraw();
         }
         return;
       }
@@ -342,7 +344,7 @@ function useControl(
       window.removeEventListener("pointerup", onPointerUp);
       window.addEventListener("pointercancel", onPointerUp);
     };
-  }, [canvasRef, containerRef, tmpCanvas, setUpdatedAt, fingerOperations]);
+  }, [canvasRef, containerRef, tmpCanvas, redraw, fingerOperations]);
 }
 
 function dist(a: [number, number], b: [number, number]) {
