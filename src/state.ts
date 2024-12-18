@@ -15,11 +15,14 @@ export type State = {
   penSize: number
   opacity: number
   softPen: boolean
-  initialImage: OffscreenCanvas
   history: History<Op>
-  canvas: OffscreenCanvas
+  layers: {
+    initial: OffscreenCanvas,
+    canvas: OffscreenCanvas,
+  }[],
+  layerIndex: number,
   apply: (op: Op, canvas: OffscreenCanvas) => void
-  setSize: (width: number, height: number) => void
+  // setSize: (width: number, height: number) => void
   updatedAt: Date
   tool: ToolType
   canvasView: {
@@ -42,28 +45,34 @@ export type Op = {
   };
   opacity: number;
   path: { pos: [number, number], size: number }[];
+  layerIndex: number;
 } | {
   type: "fill";
   fillColor: string;
   opacity: number;
   path: { pos: [number, number] }[];
+  layerIndex: number;
 };
 
 export const useStore = create<State>()((set) => {
-  const canvas = new OffscreenCanvas(400, 400);
-
   return ({
     imageMeta: null,
     color: "#000",
     penSize: 5,
     opacity: 1,
     softPen: false,
-    initialImage: new OffscreenCanvas(400, 400),
     history: new History<Op>(Infinity), // TODO: limit
-    canvas,
+    layers: [
+      {
+        initial: new OffscreenCanvas(400, 400),
+        canvas: new OffscreenCanvas(400, 400),
+      }
+    ],
+    layerIndex: 0,
     apply(op, canvas) {
       set((state) => {
-        const ctx = state.canvas.getContext("2d")!;
+        const layer = state.layers[op.layerIndex];
+        const ctx = layer.canvas.getContext("2d")!;
         ctx.save();
         ctx.globalAlpha = state.opacity;
         if (state.tool === "eraser")
@@ -75,13 +84,13 @@ export const useStore = create<State>()((set) => {
         return { history, updatedAt: new Date() }
       })
     },
-    setSize(width, height) {
-      set((state) => {
-        state.canvas.width = width;
-        state.canvas.height = height;
-        return { updatedAt: new Date() }
-      })
-    },
+    // setSize(width, height) {
+    //   set((state) => {
+    //     state.canvas.width = width;
+    //     state.canvas.height = height;
+    //     return { updatedAt: new Date() }
+    //   })
+    // },
     updatedAt: new Date(),
     tool: "pen",
     canvasView: {
@@ -90,12 +99,15 @@ export const useStore = create<State>()((set) => {
       pan: [0, 0],
     },
     clearAll() {
-      set((state) => {
-        const ctx = state.canvas.getContext("2d")!;
-        ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
-        const ctx2 = state.initialImage.getContext("2d")!;
-        ctx2.clearRect(0, 0, state.initialImage.width, state.initialImage.height);
-        return { history: new History<Op>(Infinity), updatedAt: new Date() }
+      set(() => {
+        return {
+          layers: [
+            {
+              initial: new OffscreenCanvas(400, 400),
+              canvas: new OffscreenCanvas(400, 400),
+            }
+          ], layerIndex: 0, history: new History<Op>(Infinity), updatedAt: new Date()
+        }
       })
     },
 
@@ -105,9 +117,10 @@ export const useStore = create<State>()((set) => {
         const op = history.undo();
 
         if (op) {
-          const ctx = state.canvas.getContext("2d")!;
-          ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
-          ctx.drawImage(state.initialImage, 0, 0);
+          const layer = state.layers[op.layerIndex];
+          const ctx = layer.canvas.getContext("2d")!;
+          ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+          ctx.drawImage(layer.initial, 0, 0);
           const tmpCanvas = new TmpCanvas();
 
           for (let i = 0; i < history.index; i++) {
@@ -125,7 +138,8 @@ export const useStore = create<State>()((set) => {
         const history = state.history.clone();
         const op = history.redo();
         if (op) {
-          const ctx = state.canvas.getContext("2d")!;
+          const layer = state.layers[op.layerIndex];
+          const ctx = layer.canvas.getContext("2d")!;
           const tmpCanvas = new TmpCanvas();
           applyOp(op, tmpCanvas, state, ctx);
 
@@ -141,8 +155,9 @@ function applyOp(op: Op, tmpCanvas: TmpCanvas, state: State, ctx: OffscreenCanva
   ctx.save();
 
   if (op.type === "stroke") {
+    const layer = state.layers[op.layerIndex];
     tmpCanvas.begin({
-      size: [state.canvas.width, state.canvas.height],
+      size: [layer.canvas.width, layer.canvas.height],
       style: op.strokeStyle.color,
       soft: op.strokeStyle.soft,
     });
@@ -157,8 +172,9 @@ function applyOp(op: Op, tmpCanvas: TmpCanvas, state: State, ctx: OffscreenCanva
     if (op.erase)
       ctx.globalCompositeOperation = "destination-out";
   } else if (op.type === "fill") {
+    const layer = state.layers[op.layerIndex];
     tmpCanvas.begin({
-      size: [state.canvas.width, state.canvas.height],
+      size: [layer.canvas.width, layer.canvas.height],
       style: op.fillColor,
       soft: false,
     });

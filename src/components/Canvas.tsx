@@ -27,17 +27,24 @@ export default function Canvas() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    ctx.clearRect(0, 0, store.canvas.width, store.canvas.height);
-    ctx.drawImage(store.canvas, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.save();
-    if (store.tool === "eraser")
-      ctx.globalCompositeOperation = "destination-out";
-    ctx.globalAlpha = store.opacity;
-    ctx.drawImage(tmpCanvas.canvas, 0, 0);
-    ctx.restore();
+    for (let i = 0; i < store.layers.length; i++) {
+      const layer = store.layers[i];
+      ctx.drawImage(layer.canvas, 0, 0);
+
+      if (i === store.layerIndex) {
+        ctx.save();
+        if (store.tool === "eraser")
+          ctx.globalCompositeOperation = "destination-out";
+        ctx.globalAlpha = store.opacity;
+        ctx.drawImage(tmpCanvas.canvas, 0, 0);
+        ctx.restore();
+      }
+    }
   }, [store, canvasRef, tmpCanvas.canvas, updatedAt]);
 
+  const canvas = store.layers[store.layerIndex].canvas;
   return (
     <div
       className="relative w-full h-full overflow-hidden"
@@ -48,19 +55,19 @@ export default function Canvas() {
     >
       <canvas
         className="absolute shadow-[0_0_0_99999px_#f3f4f6] dark:shadow-gray-950"
-        width={store.canvas.width}
-        height={store.canvas.height}
+        width={canvas.width}
+        height={canvas.height}
         style={{
           top: `calc(50% + ${
-            -(store.canvas.width * store.canvasView.scale) / 2 +
+            -(canvas.width * store.canvasView.scale) / 2 +
             store.canvasView.pan[1]
           }px)`,
           left: `calc(50% + ${
-            -(store.canvas.height * store.canvasView.scale) / 2 +
+            -(canvas.height * store.canvasView.scale) / 2 +
             store.canvasView.pan[0]
           }px)`,
-          width: store.canvas.width * store.canvasView.scale,
-          height: store.canvas.height * store.canvasView.scale,
+          width: canvas.width * store.canvasView.scale,
+          height: canvas.height * store.canvasView.scale,
           transform: `rotate(${store.canvasView.angle}rad)`,
           imageRendering: "pixelated",
         }}
@@ -101,7 +108,8 @@ function useControl(
     if (!containerRef.current) return [0, 0];
     const bbox = containerRef.current.getBoundingClientRect();
 
-    const { canvas, canvasView: cv } = useStore.getState();
+    const { layers, canvasView: cv } = useStore.getState();
+    const firstCanvas = layers[0].canvas;
     const pos_ = [
       (e.clientX - (bbox.left + bbox.width / 2) - cv.pan[0]) / cv.scale,
       (e.clientY - (bbox.top + bbox.height / 2) - cv.pan[1]) / cv.scale,
@@ -109,8 +117,8 @@ function useControl(
     const sin = Math.sin(-cv.angle);
     const cos = Math.cos(-cv.angle);
     return [
-      pos_[0] * cos - pos_[1] * sin + canvas.width / 2,
-      pos_[0] * sin + pos_[1] * cos + canvas.height / 2,
+      pos_[0] * cos - pos_[1] * sin + firstCanvas.width / 2,
+      pos_[0] * sin + pos_[1] * cos + firstCanvas.height / 2,
     ];
   }, []);
 
@@ -129,8 +137,9 @@ function useControl(
       ) {
         const size = store.penSize * e.pressure;
         const path = [{ pos, size }];
+        const firstCanvas = store.layers[0].canvas;
         tmpCanvas.begin({
-          size: [store.canvas.width, store.canvas.height],
+          size: [firstCanvas.width, firstCanvas.height],
           style: {
             pen: store.color,
             eraser: "#fff",
@@ -294,6 +303,7 @@ function useControl(
               fillColor: store.color,
               opacity: store.opacity,
               path,
+              layerIndex: store.layerIndex,
             };
             store.apply(op, tmpCanvas.canvas);
           } else {
@@ -308,6 +318,7 @@ function useControl(
               },
               opacity: store.opacity,
               path,
+              layerIndex: store.layerIndex,
             };
             store.apply(op, tmpCanvas.canvas);
           }

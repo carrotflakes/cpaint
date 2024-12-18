@@ -90,27 +90,44 @@ async function loadImage(storage: Storage, id: number) {
   const imageData = await storage.getImage(id);
   if (!imageMeta || !imageData) return;
 
-  const blobUrl = URL.createObjectURL(imageData as any);
-  const image = new Image();
-  image.onload = () => {
+  const layers: {
+    initial: OffscreenCanvas;
+    canvas: OffscreenCanvas;
+  }[] = [];
+  for (const layerData of imageData as any) {
+    const image = await blobToImage(layerData);
     const initialImage = new OffscreenCanvas(image.width, image.height);
-    const ctx = initialImage.getContext("2d");
-    ctx!.drawImage(image, 0, 0);
-    useStore.setState((state) => {
-      state.canvas.width = image.width;
-      state.canvas.height = image.height;
-      const ctx = state.canvas.getContext("2d")!;
-      ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
-      ctx.drawImage(initialImage, 0, 0);
-
-      const history = state.history.clone();
-      history.clear();
-      return {
-        imageMeta,
-        initialImage,
-        history,
-      };
+    {
+      const ctx = initialImage.getContext("2d")!;
+      ctx.drawImage(image, 0, 0);
+    }
+    const canvas = new OffscreenCanvas(image.width, image.height);
+    {
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(image, 0, 0);
+    }
+    layers.push({
+      initial: initialImage,
+      canvas,
     });
-  };
-  image.src = blobUrl;
+  }
+
+  useStore.setState((state) => {
+    const history = state.history.clone();
+    history.clear();
+    return {
+      imageMeta,
+      layers,
+      layerIndex: 0,
+      history,
+    };
+  });
+}
+
+function blobToImage(blob: Blob) {
+  return new Promise<HTMLImageElement>((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.src = URL.createObjectURL(blob);
+  });
 }
