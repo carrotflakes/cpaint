@@ -24,33 +24,19 @@ export function useViewControl(containerRef: {
           e.clientY - bbox.top - bbox.height / 2,
         ] as Pos;
 
-        useStore.setState((state) => {
-          const scale = state.canvasView.scale * scaleFactor;
-          const pan = [
-            (state.canvasView.pan[0] - pos[0]) * scaleFactor + pos[0],
-            (state.canvasView.pan[1] - pos[1]) * scaleFactor + pos[1],
-          ] as Pos;
-          return {
-            canvasView: {
-              ...state.canvasView,
-              scale,
-              pan,
-            },
-          };
+        useStore.getState().update(draft => {
+          draft.uiState.canvasView.scale *= scaleFactor;
+          draft.uiState.canvasView.pan[0] =
+            (draft.uiState.canvasView.pan[0] - pos[0]) * scaleFactor + pos[0];
+          draft.uiState.canvasView.pan[1] =
+            (draft.uiState.canvasView.pan[1] - pos[1]) * scaleFactor + pos[1];
         });
       } else {
         if (e.deltaMode !== 0) return;
 
-        useStore.setState((state) => {
-          return {
-            canvasView: {
-              ...state.canvasView,
-              pan: [
-                state.canvasView.pan[0] - e.deltaX,
-                state.canvasView.pan[1] - e.deltaY,
-              ],
-            },
-          };
+        useStore.getState().update(draft => {
+          draft.uiState.canvasView.pan[0] -= e.deltaX;
+          draft.uiState.canvasView.pan[1] -= e.deltaY;
         });
       }
     };

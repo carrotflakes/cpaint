@@ -15,9 +15,9 @@ function App() {
 
   useEffect(() => {
     const keyDown = (e: KeyboardEvent) => {
-      if (e.key === "p") useStore.setState({ tool: "pen" });
-      if (e.key === "e") useStore.setState({ tool: "eraser" });
-      if (e.key === "f") useStore.setState({ tool: "fill" });
+      if (e.key === "p") useStore.setState({ uiState: { ...store.uiState, tool: "pen" } });
+      if (e.key === "e") useStore.setState({ uiState: { ...store.uiState, tool: "eraser" } });
+      if (e.key === "f") useStore.setState({ uiState: { ...store.uiState, tool: "fill" } });
       if (e.ctrlKey && e.key === "z") store.undo();
       if (e.ctrlKey && e.key === "Z") store.redo();
     };
@@ -39,13 +39,16 @@ function App() {
         <Header />
       </div>
       {store.imageMeta && (
-        <div className="grow flex items-stretch">
+        <div className="relative grow flex items-stretch">
           <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
             <ToolBar />
           </div>
           <div className="grow bg-gray-200 dark:bg-gray-800">
             <Canvas />
           </div>
+          {/* <div className="absolute top-0 right-0">
+            <LayersBar />
+          </div> */}
         </div>
       )}
       {!store.imageMeta && (
@@ -62,3 +65,48 @@ function App() {
 }
 
 export default App;
+
+// function LayersBar() {
+//   const store = useStore();
+
+//   const addLayer = () => {
+//     const canvas = new OffscreenCanvas(
+//       store.layers[0].canvas.width,
+//       store.layers[0].canvas.height
+//     );
+//     const initial = new OffscreenCanvas(
+//       store.layers[0].canvas.width,
+//       store.layers[0].canvas.height
+//     );
+//     store.layers.push({
+//       canvas,
+//     });
+//     store.layerIndex = store.layers.length - 1;
+//   }
+
+//   return (
+//     <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
+//       <div className="flex flex-col items-stretch">
+//         <div className="p-2 border-b border-gray-300">Layers</div>
+//         <div className="flex-grow overflow-y-auto">
+//           {store.layers.map((layer, i) => (
+//             <div
+//               key={i}
+//               className={`p-2 cursor-pointer ${
+//                 i === store.layerIndex ? "bg-gray-100 dark:bg-gray-700" : ""
+//               }`}
+//               onClick={() => {
+//                 store.layerIndex = i;
+//               }}
+//             >
+//               Layer {i}
+//             </div>
+//           ))}
+//           <div className="p-2 cursor-pointer" onClick={addLayer}>
+//             New Layer
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }

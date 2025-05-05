@@ -81,7 +81,7 @@ async function save() {
 
   const thumbnail = await createThumbnail();
   const layers = [];
-  for (const layer of state.layers) {
+  for (const layer of state.stateContainer.state.layers) {
     layers.push(await layer.canvas.convertToBlob());
   }
   storage.putImage(meta, layers, thumbnail);
@@ -89,10 +89,10 @@ async function save() {
 
 function createThumbnail() {
   const state = useStore.getState();
-  const c = state.layers[0].canvas;
+  const c = state.stateContainer.state.layers[0].canvas;
   const canvas = new OffscreenCanvas(c.width, c.height);
   const ctx = canvas.getContext("2d")!;
-  for (const layer of state.layers) {
+  for (const layer of state.stateContainer.state.layers) {
     ctx.drawImage(layer.canvas, 0, 0);
   }
   return canvas.convertToBlob();

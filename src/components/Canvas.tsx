@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useViewControl } from "../hooks/useViewControl";
 import { createCheckCanvas } from "../libs/check";
 import { TmpCanvas } from "../libs/tmpCanvas";
-import { Op, useGlobalSettings, useStore } from "../state";
+import { StateRender } from "../model/state";
+import { useGlobalSettings, useStore } from "../state";
+import { Op } from "../model/op";
 
 export default function Canvas() {
   const store = useStore();
@@ -27,24 +29,21 @@ export default function Canvas() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (let i = 0; i < store.layers.length; i++) {
-      const layer = store.layers[i];
-      ctx.drawImage(layer.canvas, 0, 0);
-
-      if (i === store.layerIndex) {
+    StateRender(store.stateContainer.state, ctx, {
+      layerId: store.stateContainer.state.layers[store.uiState.layerIndex].id,
+      apply: (ctx) => {
         ctx.save();
-        if (store.tool === "eraser")
+        if (store.uiState.tool === "eraser")
           ctx.globalCompositeOperation = "destination-out";
-        ctx.globalAlpha = store.opacity;
+        ctx.globalAlpha = store.uiState.opacity;
         ctx.drawImage(tmpCanvas.canvas, 0, 0);
         ctx.restore();
       }
-    }
+    });
   }, [store, canvasRef, tmpCanvas.canvas, updatedAt]);
 
-  const canvas = store.layers[store.layerIndex].canvas;
+  const canvasWidth = store.stateContainer.state.layers[0].canvas.width;
+  const canvasHeight = store.stateContainer.state.layers[0].canvas.height;
   return (
     <div
       className="relative w-full h-full overflow-hidden"
@@ -55,20 +54,20 @@ export default function Canvas() {
     >
       <canvas
         className="absolute shadow-[0_0_0_99999px_#f3f4f6] dark:shadow-gray-950"
-        width={canvas.width}
-        height={canvas.height}
+        width={canvasWidth}
+        height={canvasHeight}
         style={{
           top: `calc(50% + ${
-            -(canvas.width * store.canvasView.scale) / 2 +
-            store.canvasView.pan[1]
+            -(canvasWidth * store.uiState.canvasView.scale) / 2 +
+            store.uiState.canvasView.pan[1]
           }px)`,
           left: `calc(50% + ${
-            -(canvas.height * store.canvasView.scale) / 2 +
-            store.canvasView.pan[0]
+            -(canvasHeight * store.uiState.canvasView.scale) / 2 +
+            store.uiState.canvasView.pan[0]
           }px)`,
-          width: canvas.width * store.canvasView.scale,
-          height: canvas.height * store.canvasView.scale,
-          transform: `rotate(${store.canvasView.angle}rad)`,
+          width: canvasWidth * store.uiState.canvasView.scale,
+          height: canvasHeight * store.uiState.canvasView.scale,
+          transform: `rotate(${store.uiState.canvasView.angle}rad)`,
           imageRendering: "pixelated",
         }}
         ref={canvasRef}
@@ -108,7 +107,12 @@ function useControl(
     if (!containerRef.current) return [0, 0];
     const bbox = containerRef.current.getBoundingClientRect();
 
-    const { layers, canvasView: cv } = useStore.getState();
+    const {
+      stateContainer: {
+        state: { layers },
+      },
+      uiState: { canvasView: cv },
+    } = useStore.getState();
     const firstCanvas = layers[0].canvas;
     const pos_ = [
       (e.clientX - (bbox.left + bbox.width / 2) - cv.pan[0]) / cv.scale,
@@ -135,17 +139,17 @@ function useControl(
         e.button === 0 &&
         !(fingerOperations && e.pointerType === "touch")
       ) {
-        const size = store.penSize * e.pressure;
+        const size = store.uiState.penSize * e.pressure;
         const path = [{ pos, size }];
-        const firstCanvas = store.layers[0].canvas;
+        const firstCanvas = store.stateContainer.state.layers[0].canvas;
         tmpCanvas.begin({
           size: [firstCanvas.width, firstCanvas.height],
           style: {
-            pen: store.color,
+            pen: store.uiState.color,
             eraser: "#fff",
             fill: "#f00",
-          }[store.tool],
-          soft: store.softPen,
+          }[store.uiState.tool],
+          soft: store.uiState.softPen,
         });
 
         state.current = {
@@ -170,7 +174,7 @@ function useControl(
         state.current = {
           type: "panning",
           pointers: [{ id: e.pointerId, pos: [e.clientX, e.clientY] }],
-          angleUnnormalized: store.canvasView.angle,
+          angleUnnormalized: store.uiState.canvasView.angle,
         };
         return;
       }
@@ -196,9 +200,9 @@ function useControl(
 
         const { path, lastPos } = state.current;
         if (dist(lastPos, pos) > 3) {
-          const size = store.penSize * e.pressure;
+          const size = store.uiState.penSize * e.pressure;
           path.push({ pos, size });
-          const lineWidth = store.tool === "fill" ? 1 : size;
+          const lineWidth = store.uiState.tool === "fill" ? 1 : size;
           tmpCanvas.addLine({
             line: [...lastPos, ...pos],
             lineWidth,
@@ -238,8 +242,8 @@ function useControl(
             state.current.angleUnnormalized = angleUnnormalized;
             useStore.setState((state) => {
               const prevPan_ = [
-                state.canvasView.pan[0] + panOffset[0],
-                state.canvasView.pan[1] + panOffset[1],
+                state.uiState.canvasView.pan[0] + panOffset[0],
+                state.uiState.canvasView.pan[1] + panOffset[1],
               ] as Pos;
               const pan_ = calculateTransformedPoint(
                 ps[1 - pi].pos,
@@ -253,11 +257,14 @@ function useControl(
               ] as Pos;
 
               return {
-                canvasView: {
-                  ...state.canvasView,
-                  angle: normalizeAngle(angleUnnormalized),
-                  scale: (state.canvasView.scale * d2) / d1,
-                  pan,
+                uiState: {
+                  ...state.uiState,
+                  canvasView: {
+                    ...state.uiState.canvasView,
+                    angle: normalizeAngle(angleUnnormalized),
+                    scale: (state.uiState.canvasView.scale * d2) / d1,
+                    pan,
+                  },
                 },
               };
             });
@@ -271,12 +278,15 @@ function useControl(
       if (state.current.type === "translate") {
         if (e.pointerId === state.current.pointerId) {
           useStore.setState((state) => ({
-            canvasView: {
-              ...state.canvasView,
-              pan: [
-                state.canvasView.pan[0] + e.movementX,
-                state.canvasView.pan[1] + e.movementY,
-              ],
+            uiState: {
+              ...state.uiState,
+              canvasView: {
+                ...state.uiState.canvasView,
+                pan: [
+                  state.uiState.canvasView.pan[0] + e.movementX,
+                  state.uiState.canvasView.pan[1] + e.movementY,
+                ],
+              },
             },
           }));
         }
@@ -293,17 +303,17 @@ function useControl(
         if (e.pointerId !== state.current.pointerId) return;
         const { path } = state.current;
         apply: {
-          if (store.tool === "fill") {
-            tmpCanvas.style = store.color;
+          if (store.uiState.tool === "fill") {
+            tmpCanvas.style = store.uiState.color;
             tmpCanvas.fill(path);
             if (!tmpCanvas.isDirty()) break apply;
 
             const op: Op = {
               type: "fill",
-              fillColor: store.color,
-              opacity: store.opacity,
+              fillColor: store.uiState.color,
+              opacity: store.uiState.opacity,
               path,
-              layerIndex: store.layerIndex,
+              layerIndex: store.uiState.layerIndex,
             };
             store.apply(op, tmpCanvas.canvas);
           } else {
@@ -311,14 +321,14 @@ function useControl(
 
             const op: Op = {
               type: "stroke",
-              erase: store.tool === "eraser",
+              erase: store.uiState.tool === "eraser",
               strokeStyle: {
                 color: tmpCanvas.style,
-                soft: store.softPen,
+                soft: store.uiState.softPen,
               },
-              opacity: store.opacity,
+              opacity: store.uiState.opacity,
               path,
-              layerIndex: store.layerIndex,
+              layerIndex: store.uiState.layerIndex,
             };
             store.apply(op, tmpCanvas.canvas);
           }

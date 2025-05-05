@@ -12,26 +12,30 @@ import {
   IconRedo,
   IconUndo,
 } from "./icons";
+import { StateContainerHasRedo, StateContainerHasUndo } from "../model/state";
 
 const penWidthMax = 50;
 const scaleFactor = 2 ** (1 / 4);
 
 export function ToolBar() {
   const store = useStore();
+  const {uiState} = store;
   const [showCp, setShowCp] = useState(false);
 
   const controlPenWidth = useControl({
-    getValue: () => store.penSize,
+    getValue: () => uiState.penSize,
     setValue: (v) =>
-      useStore.setState({
-        penSize: Math.max(Math.min(Math.round(v), penWidthMax), 1),
+      store.update((draft) => {
+        draft.uiState.penSize = Math.max(Math.min(Math.round(v), penWidthMax), 1);
       }),
     sensitivity: 1 / 5,
   });
   const controlOpacity = useControl({
-    getValue: () => store.opacity,
+    getValue: () => uiState.opacity,
     setValue: (v) =>
-      useStore.setState({ opacity: Math.max(Math.min(v, 1), 0) }),
+      store.update((draft) => {
+        draft.uiState.opacity = Math.max(Math.min(v, 1), 0);
+      }),
     sensitivity: 0.01,
   });
 
@@ -40,14 +44,18 @@ export function ToolBar() {
       <div>
         <div
           className="relative w-6 h-6 rounded-full shadow cursor-pointer"
-          style={{ background: store.color }}
+          style={{ background: uiState.color }}
           onClick={() => setShowCp((showCp) => !showCp)}
         ></div>
         {showCp && (
           <div className="absolute p-2 bg-gray-50 dark:bg-gray-950 shadow z-10">
             <ColorPalette
-              initialColor={store.color}
-              onChanged={(color: string) => useStore.setState({ color })}
+              initialColor={uiState.color}
+              onChanged={(color: string) => {
+                store.update((draft) => {
+                  draft.uiState.color = color;
+                });
+              }}
             />
           </div>
         )}
@@ -59,14 +67,16 @@ export function ToolBar() {
           title="Pen width"
           {...controlPenWidth.props}
         >
-          {store.penSize}
+          {uiState.penSize}
         </div>
         {controlPenWidth.show && (
           <div className="absolute p-2 bg-white dark:bg-black shadow z-10">
             <SliderV
-              value={store.penSize / penWidthMax}
+              value={uiState.penSize / penWidthMax}
               onChange={(value) =>
-                useStore.setState({ penSize: Math.round(value * penWidthMax) })
+                store.update((draft) => {
+                  draft.uiState.penSize = Math.round(value * penWidthMax);
+                })
               }
             />
           </div>
@@ -79,13 +89,17 @@ export function ToolBar() {
           title="Opacity"
           {...controlOpacity.props}
         >
-          {Math.round(store.opacity * 255)}
+          {Math.round(uiState.opacity * 255)}
         </div>
         {controlOpacity.show && (
           <div className="absolute p-2 bg-white dark:bg-black shadow z-10">
             <SliderV
-              value={store.opacity}
-              onChange={(value) => useStore.setState({ opacity: value })}
+              value={uiState.opacity}
+              onChange={(value) => {
+                store.update((draft) => {
+                  draft.uiState.opacity = value;
+                });
+              }}
             />
           </div>
         )}
@@ -94,10 +108,14 @@ export function ToolBar() {
       <div>
         <div
           className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
-          onClick={() => useStore.setState({ softPen: !store.softPen })}
+          onClick={() => {
+            store.update((draft) => {
+              draft.uiState.softPen = !uiState.softPen;
+            });
+          }}
           title="Soft/Hard pen"
         >
-          {store.softPen ? "S" : "H"}
+          {uiState.softPen ? "S" : "H"}
         </div>
       </div>
 
@@ -105,8 +123,12 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={store.tool === "pen"}
-        onClick={() => useStore.setState({ tool: "pen" })}
+        data-selected={uiState.tool === "pen"}
+        onClick={() => {
+          store.update((draft) => {
+            draft.uiState.tool = "pen";
+          });
+        }}
         title="Pen"
       >
         <IconPencil />
@@ -114,8 +136,12 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={store.tool === "eraser"}
-        onClick={() => useStore.setState({ tool: "eraser" })}
+        data-selected={uiState.tool === "eraser"}
+        onClick={() => {
+          store.update((draft) => {
+            draft.uiState.tool = "eraser";
+          });
+        }}
         title="Eraser"
       >
         <IconEraser />
@@ -123,8 +149,12 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={store.tool === "fill"}
-        onClick={() => useStore.setState({ tool: "fill" })}
+        data-selected={uiState.tool === "fill"}
+        onClick={() => {
+          store.update((draft) => {
+            draft.uiState.tool = "fill";
+          });
+        }}
         title="Fill"
       >
         <IconFill />
@@ -134,7 +164,7 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[enabled=false]:opacity-50"
-        data-enabled={store.history.hasUndo}
+        data-enabled={StateContainerHasUndo(store.stateContainer)}
         onClick={() => {
           store.undo();
         }}
@@ -145,7 +175,7 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[enabled=false]:opacity-50"
-        data-enabled={store.history.hasRedo}
+        data-enabled={StateContainerHasRedo(store.stateContainer)}
         onClick={() => {
           store.redo();
         }}
@@ -159,12 +189,12 @@ export function ToolBar() {
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         onClick={() =>
-          useStore.setState((state) => ({
-            canvasView: {
-              ...state.canvasView,
-              scale: roundFloat(state.canvasView.scale * scaleFactor, 4),
-            },
-          }))
+          store.update((draft) => {
+            draft.uiState.canvasView.scale = roundFloat(
+              draft.uiState.canvasView.scale * scaleFactor,
+              4,
+            );
+          })
         }
         title="Zoom"
       >
@@ -174,12 +204,12 @@ export function ToolBar() {
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         onClick={() =>
-          useStore.setState((state) => ({
-            canvasView: {
-              ...state.canvasView,
-              scale: roundFloat(state.canvasView.scale / scaleFactor, 4),
-            },
-          }))
+          store.update((draft) => {
+            draft.uiState.canvasView.scale = roundFloat(
+              draft.uiState.canvasView.scale / scaleFactor,
+              4,
+            );
+          })
         }
         title="Unzoom"
       >
@@ -189,13 +219,13 @@ export function ToolBar() {
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         onClick={() =>
-          useStore.setState(() => ({
-            canvasView: {
+          store.update((draft) => {
+            draft.uiState.canvasView = {
               angle: 0,
               scale: 1,
               pan: [0, 0],
-            },
-          }))
+            };
+          })
         }
         title="Reset view"
       >

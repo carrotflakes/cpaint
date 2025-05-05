@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { useStore } from "../state";
 import { Storage } from "../libs/storage";
+import { StateContainerNew } from "../model/state";
 
 export function Files() {
   const [files, setFiles] = useState(
@@ -112,14 +113,10 @@ async function loadImage(storage: Storage, id: number) {
     });
   }
 
-  useStore.setState((state) => {
-    const history = state.history.clone();
-    history.clear();
+  useStore.setState(() => {
     return {
       imageMeta,
-      layers,
-      layerIndex: 0,
-      history,
+      stateContainer: StateContainerNew(400, 400),
     };
   });
 }
