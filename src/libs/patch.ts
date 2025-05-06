@@ -57,6 +57,35 @@ export function applyPatch(
   }
 }
 
+export function reversePatch(obj: Obj, patch: Patch): Patch {
+  switch (patch.op) {
+    case "add":
+      return {
+        op: "remove",
+        path: patch.path,
+      }
+    case "remove":
+      return {
+        op: "add",
+        path: patch.path,
+        value: getValue(obj, patch.path.split("/").slice(1)),
+      };
+    case "replace":
+      return {
+        op: "replace",
+        path: patch.path,
+        value: getValue(obj, patch.path.split("/").slice(1)),
+      };
+    case "move": {
+      return {
+        op: "move",
+        from: patch.to,
+        to: patch.from,
+      };
+    }
+  }
+}
+
 function applyAdd(obj: Obj, path: string[], value: Obj): Obj {
   const key = path.shift();
   if (key === undefined) {

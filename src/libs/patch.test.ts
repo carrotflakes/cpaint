@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyPatch, Patch } from './patch';
+import { applyPatch, Patch, reversePatch } from './patch';
 
 describe('applyPatch', () => {
   it('should add a value to an object', () => {
@@ -48,5 +48,35 @@ describe('applyPatch', () => {
     const obj = { a: 1 };
     const patch: Patch = { op: 'add', path: 'invalid', value: 2 };
     expect(() => applyPatch(obj, patch)).toThrowError('Invalid path');
+  });
+});
+
+describe('reversePatch', () => {
+  it('should reverse an add operation', () => {
+    const obj = { a: 1 };
+    const patch: Patch = { op: 'add', path: '/b', value: 2 };
+    const reversed = reversePatch(obj, patch);
+    expect(reversed).toEqual({ op: 'remove', path: '/b' });
+  });
+
+  it('should reverse a remove operation', () => {
+    const obj = { a: 1, b: 2 };
+    const patch: Patch = { op: 'remove', path: '/b' };
+    const reversed = reversePatch(obj, patch);
+    expect(reversed).toEqual({ op: 'add', path: '/b', value: 2 });
+  });
+
+  it('should reverse a replace operation', () => {
+    const obj = { a: 1, b: 2 };
+    const patch: Patch = { op: 'replace', path: '/b', value: 3 };
+    const reversed = reversePatch(obj, patch);
+    expect(reversed).toEqual({ op: 'replace', path: '/b', value: 2 });
+  });
+
+  it('should reverse a move operation', () => {
+    const obj = { a: 1, b: 2 };
+    const patch: Patch = { op: 'move', from: '/b', to: '/c' };
+    const reversed = reversePatch(obj, patch);
+    expect(reversed).toEqual({ op: 'move', from: '/c', to: '/b' });
   });
 });
