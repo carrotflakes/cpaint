@@ -1,5 +1,7 @@
 import { produce } from "immer";
+import { applyPatches } from "../libs/applyPatches";
 import { canvasToImageDiff } from "../libs/canvasUtil";
+import { Patch } from "../libs/patch";
 import { TmpCanvas } from "../libs/tmpCanvas";
 import type { State, StateDiff } from "./state";
 
@@ -19,6 +21,9 @@ export type Op = {
   opacity: number;
   path: { pos: [number, number] }[];
   layerIndex: number;
+} | {
+  type: "patch";
+  patches: Patch[];
 };
 
 export function applyOp(
@@ -90,6 +95,10 @@ export function applyOp(
       };
     });
     return { state: newState, diff };
+  }
+  if (op.type === "patch") {
+    const aps = applyPatches(state, op.patches);
+    return { state: aps.obj as State, diff: { type: "patch", patches: aps.revPatches } };
   }
   return null;
 }

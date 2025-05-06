@@ -26,7 +26,7 @@ export type State = {
     }
   }
   stateContainer: StateContainer
-  apply: (op: Op, canvas: OffscreenCanvas) => void
+  apply: (op: Op, canvas: OffscreenCanvas | null) => void
   clearAll: () => void
 
   undo: () => void
@@ -85,7 +85,7 @@ export const useStore = create<State>()((set) => {
     stateContainer: StateContainerNew(400, 400),
     apply(op, canvas) {
       set(state => ({
-        stateContainer: StateContainerDo(state.stateContainer, op, {
+        stateContainer: StateContainerDo(state.stateContainer, op, canvas && op.type !== "patch" ? {
           layerId: state.stateContainer.state.layers[op.layerIndex].id,
           apply: (ctx) => {
             ctx.save();
@@ -95,7 +95,7 @@ export const useStore = create<State>()((set) => {
             ctx.drawImage(canvas, 0, 0);
             ctx.restore();
           }
-        }),
+        }: null),
       }))
       // set((state) => {
       //   if (op.type === "stroke" || op.type === "fill") {

@@ -1,5 +1,6 @@
+import { applyPatches } from "../libs/applyPatches";
 import { applyImageDiff, canvasToImageDiff, ImageDiff } from "../libs/canvasUtil";
-import { applyPatch, Obj, Patch, reversePatch } from "../libs/patch";
+import { Patch } from "../libs/patch";
 import { applyOp, type Op } from "./op";
 
 export type State = Readonly<{
@@ -66,7 +67,7 @@ export function StateContainerDo(
   op: Op,
   touch: Touch | null,
 ): StateContainer {
-  if (touch) {
+  if ((op.type === "stroke" || op.type === "fill") && touch) {
     const layer = sc.state.layers.find(l => l.id === touch.layerId);
     if (!layer) {
       throw new Error(`Layer ${touch.layerId} not found`);
@@ -176,18 +177,12 @@ function applyStateDiff(
       diffRev,
     };
   } else if (diff.type === "patch") {
-    const revPatches: Patch[] = [];
-    let newState = state as Obj;
-    for (const patch of diff.patches) {
-      const revPatch = reversePatch(newState, patch);
-      newState = applyPatch(newState, patch);
-      revPatches.push(revPatch);
-    }
+    const aps = applyPatches(state, diff.patches);
     return {
-      state: newState as State,
+      state: aps.obj as State,
       diffRev: {
         type: "patch",
-        patches: revPatches.reverse(),
+        patches: aps.revPatches,
       },
     };
   }

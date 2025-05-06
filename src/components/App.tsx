@@ -46,9 +46,9 @@ function App() {
           <div className="grow bg-gray-200 dark:bg-gray-800">
             <Canvas />
           </div>
-          {/* <div className="absolute top-0 right-0">
+          <div className="absolute top-0 right-0">
             <LayersBar />
-          </div> */}
+          </div>
         </div>
       )}
       {!store.imageMeta && (
@@ -66,47 +66,56 @@ function App() {
 
 export default App;
 
-// function LayersBar() {
-//   const store = useStore();
+function LayersBar() {
+  const store = useStore();
 
-//   const addLayer = () => {
-//     const canvas = new OffscreenCanvas(
-//       store.layers[0].canvas.width,
-//       store.layers[0].canvas.height
-//     );
-//     const initial = new OffscreenCanvas(
-//       store.layers[0].canvas.width,
-//       store.layers[0].canvas.height
-//     );
-//     store.layers.push({
-//       canvas,
-//     });
-//     store.layerIndex = store.layers.length - 1;
-//   }
+  const addLayer = () => {
+    const layers = store.stateContainer.state.layers;
+    const firstLayer = layers[0];
+    const canvas = new OffscreenCanvas(
+      firstLayer.canvas.width,
+      firstLayer.canvas.height
+    );
+    store.apply({
+      type: "patch",
+      patches: [
+        {
+          op: "add",
+          path: `/layers/${layers.length}`,
+          value: {
+            id: `${Date.now()}`,
+            canvas,
+          },
+        }
+      ]
+    }, null);
+  }
 
-//   return (
-//     <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
-//       <div className="flex flex-col items-stretch">
-//         <div className="p-2 border-b border-gray-300">Layers</div>
-//         <div className="flex-grow overflow-y-auto">
-//           {store.layers.map((layer, i) => (
-//             <div
-//               key={i}
-//               className={`p-2 cursor-pointer ${
-//                 i === store.layerIndex ? "bg-gray-100 dark:bg-gray-700" : ""
-//               }`}
-//               onClick={() => {
-//                 store.layerIndex = i;
-//               }}
-//             >
-//               Layer {i}
-//             </div>
-//           ))}
-//           <div className="p-2 cursor-pointer" onClick={addLayer}>
-//             New Layer
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
+  return (
+    <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
+      <div className="flex flex-col items-stretch">
+        <div className="p-2 border-b border-gray-300">Layers</div>
+        <div className="flex-grow overflow-y-auto">
+          {store.stateContainer.state.layers.map((layer, i) => (
+            <div
+              key={i}
+              className={`p-2 cursor-pointer ${
+                i === store.uiState.layerIndex ? "bg-gray-100 dark:bg-gray-700" : ""
+              }`}
+              onClick={() => {
+                store.update((draft) => {
+                  draft.uiState.layerIndex = i;
+                });
+              }}
+            >
+              Layer {i}
+            </div>
+          ))}
+          <div className="p-2 cursor-pointer" onClick={addLayer}>
+            New Layer
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
