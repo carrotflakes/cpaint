@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useDisableScroll } from "../hooks/useDisableScroll";
 import { useStore } from "../state";
+import { State } from "../model/state";
 import Canvas from "./Canvas";
 import { Files } from "./Files";
 import { Header } from "./Header";
@@ -15,9 +16,12 @@ function App() {
 
   useEffect(() => {
     const keyDown = (e: KeyboardEvent) => {
-      if (e.key === "p") useStore.setState({ uiState: { ...store.uiState, tool: "pen" } });
-      if (e.key === "e") useStore.setState({ uiState: { ...store.uiState, tool: "eraser" } });
-      if (e.key === "f") useStore.setState({ uiState: { ...store.uiState, tool: "fill" } });
+      if (e.key === "p")
+        useStore.setState({ uiState: { ...store.uiState, tool: "pen" } });
+      if (e.key === "e")
+        useStore.setState({ uiState: { ...store.uiState, tool: "eraser" } });
+      if (e.key === "f")
+        useStore.setState({ uiState: { ...store.uiState, tool: "fill" } });
       if (e.ctrlKey && e.key === "z") store.undo();
       if (e.ctrlKey && e.key === "Z") store.redo();
     };
@@ -76,20 +80,40 @@ function LayersBar() {
       firstLayer.canvas.width,
       firstLayer.canvas.height
     );
-    store.apply({
-      type: "patch",
-      patches: [
-        {
-          op: "add",
-          path: `/layers/${layers.length}`,
-          value: {
-            id: `${Date.now()}`,
-            canvas,
+    store.apply(
+      {
+        type: "patch",
+        patches: [
+          {
+            op: "add",
+            path: `/layers/${layers.length}`,
+            value: {
+              id: `${Date.now()}`,
+              canvas,
+              opacity: 1,
+            } satisfies State["layers"][number],
           },
-        }
-      ]
-    }, null);
-  }
+        ],
+      },
+      null
+    );
+  };
+
+  const updateOpacity = (index: number, opacity: number) => {
+    store.apply(
+      {
+        type: "patch",
+        patches: [
+          {
+            op: "replace",
+            path: `/layers/${index}/opacity`,
+            value: opacity satisfies State["layers"][number]["opacity"],
+          },
+        ],
+      },
+      null
+    );
+  };
 
   return (
     <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
@@ -97,18 +121,30 @@ function LayersBar() {
         <div className="p-2 border-b border-gray-300">Layers</div>
         <div className="flex-grow overflow-y-auto">
           {store.stateContainer.state.layers.map((layer, i) => (
-            <div
-              key={i}
-              className={`p-2 cursor-pointer ${
-                i === store.uiState.layerIndex ? "bg-gray-100 dark:bg-gray-700" : ""
-              }`}
-              onClick={() => {
-                store.update((draft) => {
-                  draft.uiState.layerIndex = i;
-                });
-              }}
-            >
-              Layer {i}
+            <div key={i} className="p-2">
+              <div
+                className={`cursor-pointer ${
+                  i === store.uiState.layerIndex
+                    ? "bg-gray-100 dark:bg-gray-700"
+                    : ""
+                }`}
+                onClick={() => {
+                  store.update((draft) => {
+                    draft.uiState.layerIndex = i;
+                  });
+                }}
+              >
+                Layer {i}
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={layer.opacity}
+                onChange={(e) => updateOpacity(i, parseFloat(e.target.value))}
+                className="w-full mt-1"
+              />
             </div>
           ))}
           <div className="p-2 cursor-pointer" onClick={addLayer}>

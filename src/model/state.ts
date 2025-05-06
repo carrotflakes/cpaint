@@ -7,6 +7,7 @@ export type State = Readonly<{
   layers: readonly {
     id: string;
     canvas: OffscreenCanvas;
+    opacity: number;
   }[];
 }>
 
@@ -44,6 +45,7 @@ export function StateContainerNew(
         {
           id: "0",
           canvas,
+          opacity: 1,
         },
       ],
     },
@@ -207,8 +209,11 @@ export function StateRender(
       }
       layerCtx.drawImage(layer.canvas, 0, 0);
       touch.apply(layerCtx);
+
+      ctx.globalAlpha = layer.opacity;
       ctx.drawImage(canvas, 0, 0);
     } else {
+      ctx.globalAlpha = layer.opacity;
       ctx.drawImage(layer.canvas, 0, 0);
     }
   }

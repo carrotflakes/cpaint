@@ -87,6 +87,7 @@ async function save() {
     layers.push({
       id: layer.id,
       canvas: blob,
+      opacity: layer.opacity,
     });
   }
   const imageData = {
