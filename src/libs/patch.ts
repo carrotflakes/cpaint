@@ -1,4 +1,4 @@
-type Obj = any;
+type Obj = string | number | boolean | null | Obj[] | { [key: string]: Obj } | OffscreenCanvas;
 
 export type Patch = {
   op: "add",
@@ -98,7 +98,7 @@ function applyAdd(obj: Obj, path: string[], value: Obj): Obj {
     } else {
       return [...obj.slice(0, index), applyAdd(obj[index], path, value), ...obj.slice(index + 1)];
     }
-  } else if (typeof obj === "object" && obj !== null) {
+  } else if (isPlainObject(obj)) {
     return {
       ...obj,
       [key]: applyAdd(obj[key], path, value),
@@ -117,7 +117,7 @@ function applyRemove(obj: Obj, path: string[]): Obj {
     } else {
       return [...obj.slice(0, index), applyRemove(obj[index], path), ...obj.slice(index + 1)];
     }
-  } else if (typeof obj === "object" && obj !== null) {
+  } else if (isPlainObject(obj)) {
     if (path.length === 0) {
       const newObj = { ...obj };
       delete newObj[key];
@@ -141,7 +141,7 @@ function applyReplace(obj: Obj, path: string[], value: Obj): Obj {
   if (Array.isArray(obj)) {
     const index = parseInt(key, 10);
     return [...obj.slice(0, index), applyReplace(obj[index], path, value), ...obj.slice(index + 1)];
-  } else if (typeof obj === "object" && obj !== null) {
+  } else if (isPlainObject(obj)) {
     return {
       ...obj,
       [key]: applyReplace(obj[key], path, value),
@@ -159,7 +159,7 @@ function getValue(obj: Obj, path: string[]): Obj {
   if (Array.isArray(obj)) {
     const index = parseInt(key, 10);
     return getValue(obj[index], path);
-  } else if (typeof obj === "object" && obj !== null) {
+  } else if (isPlainObject(obj)) {
     return getValue(obj[key], path);
   } else {
     throw new Error("Invalid patch");
@@ -177,4 +177,8 @@ function pathCmp(path1: string[], path2: string[]): ">" | "<" | null {
     if (path1[i] != path2[i]) return null;
   }
   return null;
+}
+
+function isPlainObject(obj: any): obj is { [key: string]: Obj } {
+  return typeof obj === "object" && obj !== null && !(obj instanceof Array) && obj.constructor === Object;
 }
