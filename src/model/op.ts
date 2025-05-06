@@ -77,7 +77,8 @@ export function applyOp(
     if (id == null)
       return null;
     const diff: StateDiff = {
-      layerDiffs: [{
+      type: "imageDiffs",
+      layers: [{
         id: layer.id,
         imageDiff: id,
       }],

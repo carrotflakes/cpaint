@@ -1,4 +1,4 @@
-type Obj = string | number | boolean | null | Obj[] | { [key: string]: Obj } | OffscreenCanvas;
+export type Obj = string | number | boolean | null | readonly Obj[] | { readonly [key: string]: Obj } | OffscreenCanvas;
 
 export type Patch = {
   op: "add",

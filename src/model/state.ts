@@ -1,4 +1,5 @@
 import { applyImageDiff, canvasToImageDiff, ImageDiff } from "../libs/canvasUtil";
+import { applyPatch, Obj, Patch, reversePatch } from "../libs/patch";
 import { applyOp, type Op } from "./op";
 
 export type State = Readonly<{
@@ -14,12 +15,16 @@ export type StateContainer = Readonly<{
   forward: readonly { op: Op; diff: StateDiff }[];
 }>;
 
-export type StateDiff = Readonly<{
-  layerDiffs: {
+export type StateDiff = {
+  type: "imageDiffs";
+  layers: {
     id: string;
     imageDiff: ImageDiff;
   }[];
-}>;
+} | {
+  type: "patch";
+  patches: Patch[];
+};
 
 export function StateContainerNew(
   width: number,
@@ -90,7 +95,7 @@ export function StateContainerDo(
     }
     return {
       state,
-      backward: [...sc.backward, { op, diff: { layerDiffs: [{ id: layer.id, imageDiff: diff }] } }],
+      backward: [...sc.backward, { op, diff: { type: "imageDiffs", layers: [{ id: layer.id, imageDiff: diff }] } }],
       forward: [],
     }
   } else {
@@ -141,6 +146,7 @@ export function StateContainerHasRedo(sc: StateContainer): boolean {
 }
 
 // This function applies the diff to the state and returns the new state and the reverse diff
+// ⚠ We cannot reuse the state because it is modified!
 function applyStateDiff(
   state: State,
   diff: StateDiff,
@@ -148,25 +154,44 @@ function applyStateDiff(
   state: State;
   diffRev: StateDiff;
 } {
-  const newState = { ...state };
-  const diffRev: StateDiff = {
-    layerDiffs: [],
-  };
-  for (const layerDiff of diff.layerDiffs) {
-    const layer = newState.layers.find(l => l.id === layerDiff.id);
-    if (!layer) {
-      continue;
+  if (diff.type === "imageDiffs") {
+    const newState = { ...state };
+    const diffRev: StateDiff = {
+      type: "imageDiffs",
+      layers: [],
+    };
+    for (const layerDiff of diff.layers) {
+      const layer = newState.layers.find(l => l.id === layerDiff.id);
+      if (!layer) {
+        continue;
+      }
+      const imageDiff = applyImageDiff(layer.canvas, layerDiff.imageDiff);
+      diffRev.layers.push({
+        id: layer.id,
+        imageDiff,
+      });
     }
-    const imageDiff = applyImageDiff(layer.canvas, layerDiff.imageDiff);
-    diffRev.layerDiffs.push({
-      id: layer.id,
-      imageDiff,
-    });
+    return {
+      state: newState,
+      diffRev,
+    };
+  } else if (diff.type === "patch") {
+    const revPatches: Patch[] = [];
+    let newState = state as Obj;
+    for (const patch of diff.patches) {
+      const revPatch = reversePatch(newState, patch);
+      newState = applyPatch(newState, patch);
+      revPatches.push(revPatch);
+    }
+    return {
+      state: newState as State,
+      diffRev: {
+        type: "patch",
+        patches: revPatches.reverse(),
+      },
+    };
   }
-  return {
-    state: newState,
-    diffRev,
-  };
+  throw new Error(`Unknown diff type: ${diff}`);
 }
 
 // Render the state to the canvas
