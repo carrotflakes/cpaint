@@ -37,8 +37,8 @@ export function StateContainerNew(
   if (!ctx) {
     throw new Error("Failed to get context");
   }
-  ctx.fillStyle = "white";
-  ctx.fillRect(0, 0, width, height);
+  // ctx.fillStyle = "white";
+  // ctx.fillRect(0, 0, width, height);
   return {
     state: {
       layers: [
@@ -207,6 +207,7 @@ export function StateRender(
       if (!layerCtx) {
         throw new Error("Failed to get context");
       }
+      layerCtx.clearRect(0, 0, canvas.width, canvas.height);
       layerCtx.drawImage(layer.canvas, 0, 0);
       touch.apply(layerCtx);
 
