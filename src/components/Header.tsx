@@ -1,5 +1,6 @@
 import logo from "../assets/cpaint.svg";
 import { storage } from "../libs/storage";
+import { StateRender } from "../model/state";
 import { useStore } from "../state";
 import { IconCaretLeft, IconFrameCorners, IconGear, IconSave } from "./icons";
 import { useSettingDialog } from "./SettingDialog";
@@ -82,9 +83,16 @@ async function save() {
   const thumbnail = await createThumbnail();
   const layers = [];
   for (const layer of state.stateContainer.state.layers) {
-    layers.push(await layer.canvas.convertToBlob());
+    const blob = await layer.canvas.convertToBlob();
+    layers.push({
+      id: layer.id,
+      canvas: blob,
+    });
   }
-  storage.putImage(meta, layers, thumbnail);
+  const imageData = {
+    layers,
+  };
+  await storage.putImage(meta, imageData, thumbnail);
 }
 
 function createThumbnail() {
@@ -92,8 +100,6 @@ function createThumbnail() {
   const c = state.stateContainer.state.layers[0].canvas;
   const canvas = new OffscreenCanvas(c.width, c.height);
   const ctx = canvas.getContext("2d")!;
-  for (const layer of state.stateContainer.state.layers) {
-    ctx.drawImage(layer.canvas, 0, 0);
-  }
+  StateRender(state.stateContainer.state, ctx, null);
   return canvas.convertToBlob();
 }

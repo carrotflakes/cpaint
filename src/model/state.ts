@@ -46,6 +46,16 @@ export function StateContainerNew(
   };
 }
 
+export function StateContainerFromState(
+  state: State,
+) {
+  return {
+    state,
+    backward: [],
+    forward: [],
+  };
+}
+
 export function StateContainerDo(
   sc: StateContainer,
   op: Op,
@@ -162,7 +172,7 @@ function applyStateDiff(
 // Render the state to the canvas
 export function StateRender(
   state: State,
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   touch: Touch | null,
 ) {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);

@@ -1,4 +1,22 @@
-// IndexedDB interface for storing image data
+/**
+ * IndexedDB interface for storing image data
+*/
+
+import { z } from 'zod';
+
+const ImageMetaSchema = z.object({ id: z.number(), name: z.string(), createdAt: z.number() });
+type ImageMeta = z.infer<typeof ImageMetaSchema>;
+
+const ImageDataSchema = z.object({
+  layers: z.array(
+    z.object({
+      id: z.string(),
+      canvas: z.instanceof(Blob),
+    })
+  ),
+});
+
+type ImageData = z.infer<typeof ImageDataSchema>;
 
 export class Storage {
   private db: IDBDatabase | null = null;
@@ -22,70 +40,91 @@ export class Storage {
   }
 
   getAllImageMetas() {
-    if (!this.db) return;
+    if (!this.db) throw new Error("Database not initialized");
     const transaction = this.db.transaction(["imageMetas"], "readonly");
     const store = transaction.objectStore("imageMetas");
     const request = store.getAll();
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        resolve(request.result);
+        try {
+          const results = request.result.map((item) => ImageMetaSchema.parse(item));
+          resolve(results);
+        } catch (error) {
+          reject(error);
+        }
       };
-    })
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
   }
 
   getImageMeta(id: number) {
-    if (!this.db) return;
+    if (!this.db) throw new Error("Database not initialized");
     const transaction = this.db.transaction(["imageMetas"], "readonly");
     const store = transaction.objectStore("imageMetas");
     const request = store.get(id);
     return new Promise((resolve) => {
       request.onsuccess = () => {
-        resolve(request.result);
+        const result = request.result;
+        if (result == null) {
+          resolve(result);
+          return;
+        }
+        const meta = ImageMetaSchema.parse(result);
+        resolve(meta);
       };
     });
   }
 
-  getThumbnail(id: number) {
-    if (!this.db) return;
+  getThumbnail(id: number): Promise<Blob | undefined> {
+    if (!this.db) throw new Error("Database not initialized");
     const transaction = this.db.transaction(["thumbnails"], "readonly");
     const store = transaction.objectStore("thumbnails");
     const request = store.get(id);
     return new Promise((resolve) => {
       request.onsuccess = () => {
-        resolve(request.result);
+        if (request.result instanceof Blob)
+          resolve(request.result);
       };
     });
   }
 
-  putImage(meta: {
-    id: number,
-    name: string,
-    createdAt: number,
-  }, data: any, thumbnails: any) {
-    if (!this.db) return;
+  putImage(meta: ImageMeta, data: ImageData, thumbnail: Blob) {
+    if (!this.db) throw new Error("Database not initialized");
     const transaction = this.db.transaction(["images", "imageMetas", "thumbnails"], "readwrite");
     const imageStore = transaction.objectStore("images");
     const imageMetaStore = transaction.objectStore("imageMetas");
     const thumbnailStore = transaction.objectStore("thumbnails");
     imageMetaStore.put(meta);
     imageStore.put(data, meta.id);
-    thumbnailStore.put(thumbnails, meta.id);
+    thumbnailStore.put(thumbnail, meta.id);
   }
 
-  getImage(id: number) {
-    if (!this.db) return;
+  getImage(id: number): Promise<ImageData | null> {
+    if (!this.db) throw new Error("Database not initialized");
     const transaction = this.db.transaction(["images"], "readonly");
     const store = transaction.objectStore("images");
     const request = store.get(id);
     return new Promise((resolve) => {
       request.onsuccess = () => {
-        resolve(request.result);
+        const result = request.result;
+        if (result == null) {
+          resolve(result);
+          return;
+        }
+        const imageData = ImageDataSchema.parse(result);
+        resolve(imageData);
       };
+      request.onerror = () => {
+        console.error("Failed to get image", request.error);
+        resolve(null);
+      }
     });
   }
 
   deleteImage(id: number) {
-    if (!this.db) return;
+    if (!this.db) throw new Error("Database not initialized");
     const transaction = this.db.transaction(["images", "imageMetas", "thumbnails"], "readwrite");
     const imageStore = transaction.objectStore("images");
     const imageMetaStore = transaction.objectStore("imageMetas");

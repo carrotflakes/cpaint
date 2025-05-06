@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
-import { useStore } from "../state";
 import { Storage } from "../libs/storage";
-import { StateContainerNew } from "../model/state";
+import { StateContainerFromState } from "../model/state";
+import { useStore } from "../state";
 
 export function Files() {
   const [files, setFiles] = useState(
@@ -92,31 +92,29 @@ async function loadImage(storage: Storage, id: number) {
   if (!imageMeta || !imageData) return;
 
   const layers: {
-    initial: OffscreenCanvas;
+    id: string;
     canvas: OffscreenCanvas;
   }[] = [];
-  for (const layerData of imageData as any) {
-    const image = await blobToImage(layerData);
-    const initialImage = new OffscreenCanvas(image.width, image.height);
-    {
-      const ctx = initialImage.getContext("2d")!;
-      ctx.drawImage(image, 0, 0);
-    }
+  for (const layerData of imageData.layers) {
+    const image = await blobToImage(layerData.canvas);
     const canvas = new OffscreenCanvas(image.width, image.height);
     {
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(image, 0, 0);
     }
     layers.push({
-      initial: initialImage,
+      id: layerData.id,
       canvas,
     });
   }
 
+  const state = {
+    layers,
+  };
   useStore.setState(() => {
     return {
       imageMeta,
-      stateContainer: StateContainerNew(400, 400),
+      stateContainer: StateContainerFromState(state),
     };
   });
 }
