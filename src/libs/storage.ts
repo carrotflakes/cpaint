@@ -13,6 +13,7 @@ const ImageDataSchema = z.object({
       id: z.string(),
       canvas: z.instanceof(Blob),
       opacity: z.number().min(0).max(1),
+      visible: z.boolean(),
     })
   ),
 });

@@ -95,6 +95,7 @@ async function loadImage(storage: Storage, id: number) {
     id: string;
     canvas: OffscreenCanvas;
     opacity: number;
+    visible: boolean;
   }[] = [];
   for (const layerData of imageData.layers) {
     const image = await blobToImage(layerData.canvas);
@@ -107,6 +108,7 @@ async function loadImage(storage: Storage, id: number) {
       id: layerData.id,
       canvas,
       opacity: layerData.opacity,
+      visible: layerData.visible,
     });
   }
 

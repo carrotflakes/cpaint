@@ -1,7 +1,7 @@
 import { State } from "../model/state";
 import { useStore } from "../state";
 import { useState } from "react";
-import { IconMenu } from "./icons";
+import { IconEye, IconEyeSlash, IconMenu } from "./icons";
 
 export function LayersBar() {
   const store = useStore();
@@ -30,6 +30,7 @@ export function LayersBar() {
               id: `${Date.now()}`,
               canvas,
               opacity: 1,
+              visible: true,
             } satisfies State["layers"][number],
           },
         ],
@@ -74,6 +75,23 @@ export function LayersBar() {
     );
   };
 
+  const toggleVisibility = (index: number) => {
+    const layer = store.stateContainer.state.layers[index];
+    store.apply(
+      {
+        type: "patch",
+        patches: [
+          {
+            op: "replace",
+            path: `/layers/${index}/visible`,
+            value: !layer.visible satisfies State["layers"][number]["visible"],
+          },
+        ],
+      },
+      null
+    );
+  };
+
   const handleContextMenu = (e: React.MouseEvent, index: number) => {
     e.preventDefault();
     if (contextMenu.visible) {
@@ -106,14 +124,20 @@ export function LayersBar() {
       <div className="flex flex-col items-stretch">
         <div className="p-2 border-b border-gray-300">Layers</div>
         <div className="flex-grow overflow-y-auto">
-          {store.stateContainer.state.layers.map((_, i) => (
-            <div key={i} className="p-2 flex items-center gap-2">
+          {store.stateContainer.state.layers.map((layer, i) => (
+            <div key={i} className={`p-2 flex items-center gap-2 ${
+              i === store.uiState.layerIndex
+                ? "bg-gray-200 dark:bg-gray-700"
+                : ""
+            }`}>
+              <button
+                className="mt-1 w-8 h-8 p-1 rounded"
+                onClick={() => toggleVisibility(i)}
+              >
+                {layer.visible ? <IconEye /> : <IconEyeSlash />}
+              </button>
               <div
-                className={`cursor-pointer ${
-                  i === store.uiState.layerIndex
-                    ? "bg-gray-100 dark:bg-gray-700"
-                    : ""
-                }`}
+                className="cursor-pointer"
                 onClick={() => {
                   store.update((draft) => {
                     draft.uiState.layerIndex = i;

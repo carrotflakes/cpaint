@@ -9,6 +9,7 @@ export type State = Readonly<{
     id: string;
     canvas: OffscreenCanvas;
     opacity: number;
+    visible: boolean;
   }[];
 }>
 
@@ -47,6 +48,7 @@ export function StateContainerNew(
           id: "0",
           canvas,
           opacity: 1,
+          visible: true,
         },
       ],
     },
@@ -240,6 +242,8 @@ export function StateRender(
 
   for (let i = 0; i < state.layers.length; i++) {
     const layer = state.layers[i];
+    if (!layer.visible) continue; // Skip rendering invisible layers
+
     if (layer.id === touch?.layerId) {
       const canvas = getTmpCanvas(layer.canvas.width, layer.canvas.height);
       const layerCtx = canvas.getContext("2d");

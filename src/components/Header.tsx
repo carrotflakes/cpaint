@@ -88,6 +88,7 @@ async function save() {
       id: layer.id,
       canvas: blob,
       opacity: layer.opacity,
+      visible: layer.visible,
     });
   }
   const imageData = {
