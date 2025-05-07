@@ -29,17 +29,22 @@ export default function Canvas() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    StateRender(store.stateContainer.state, ctx, {
-      layerId: store.stateContainer.state.layers[store.uiState.layerIndex].id,
-      apply: (ctx) => {
-        ctx.save();
-        if (store.uiState.tool === "eraser")
-          ctx.globalCompositeOperation = "destination-out";
-        ctx.globalAlpha = store.uiState.opacity;
-        ctx.drawImage(tmpCanvas.canvas, 0, 0);
-        ctx.restore();
-      }
-    });
+    const touch =
+      store.uiState.layerIndex < store.stateContainer.state.layers.length
+        ? {
+            layerId:
+              store.stateContainer.state.layers[store.uiState.layerIndex].id,
+            apply: (ctx: OffscreenCanvasRenderingContext2D) => {
+              ctx.save();
+              if (store.uiState.tool === "eraser")
+                ctx.globalCompositeOperation = "destination-out";
+              ctx.globalAlpha = store.uiState.opacity;
+              ctx.drawImage(tmpCanvas.canvas, 0, 0);
+              ctx.restore();
+            },
+          }
+        : null;
+    StateRender(store.stateContainer.state, ctx, touch);
   }, [store, canvasRef, tmpCanvas.canvas, updatedAt]);
 
   const canvasWidth = store.stateContainer.state.layers[0].canvas.width;
