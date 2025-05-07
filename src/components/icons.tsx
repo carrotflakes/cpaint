@@ -29,7 +29,6 @@ export function IconEraser() {
 export function IconFill() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <line
         x1="40"
         y1="112"
@@ -67,7 +66,6 @@ export function IconFill() {
 export function IconPlus() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <line
         x1="40"
         y1="128"
@@ -97,7 +95,6 @@ export function IconPlus() {
 export function IconMinus() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <line
         x1="40"
         y1="128"
@@ -116,7 +113,6 @@ export function IconMinus() {
 export function IconFrameCorners() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <polyline
         points="160 80 192 80 192 112"
         fill="none"
@@ -152,7 +148,6 @@ export function IconFrameCorners() {
 export function IconClose() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <line
         x1="200"
         y1="56"
@@ -180,7 +175,6 @@ export function IconClose() {
 export function IconUndo() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <polyline
         points="80 136 32 88 80 40"
         fill="none"
@@ -204,7 +198,6 @@ export function IconUndo() {
 export function IconRedo() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <polyline
         points="176 136 224 88 176 40"
         fill="none"
@@ -228,7 +221,6 @@ export function IconRedo() {
 export function IconGear() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <circle
         cx="128"
         cy="128"
@@ -254,7 +246,6 @@ export function IconGear() {
 export function IconDropper() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <path
         d="M182.43,113.17l4.88,4.89a16,16,0,0,1,0,22.63l-9,9a8,8,0,0,1-11.31,0L106.34,89a8,8,0,0,1,0-11.31l9-9a16,16,0,0,1,22.63,0l4.89,4.88,25-25.1c10.79-10.79,28.37-11.45,39.44-1a28,28,0,0,1,.57,40.15Z"
         fill="none"
@@ -278,7 +269,6 @@ export function IconDropper() {
 export function IconBucket() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <path
         d="M208,139.48l-79.83,79.83a16,16,0,0,1-22.63,0L20.69,134.46a16,16,0,0,1,0-22.63L116.52,16,232,131.48Z"
         fill="none"
@@ -323,7 +313,6 @@ export function IconBucket() {
 export function IconMagnifyingGlass() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <circle
         cx="112"
         cy="112"
@@ -352,7 +341,6 @@ export function IconMagnifyingGlass() {
 export function IconSave() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <path
         d="M208,216H48a8,8,0,0,1-8-8V72L56,40H200l16,32V208A8,8,0,0,1,208,216Z"
         fill="none"
@@ -398,7 +386,6 @@ export function IconSave() {
 export function IconCaretLeft() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <rect width="256" height="256" fill="none" />
       <polyline
         points="160 208 80 128 160 48"
         fill="none"
@@ -516,6 +503,60 @@ export function IconEyeSlash() {
       />
       <path
         d="M74,68.6C33.23,89.24,16,128,16,128s32,72,112,72a118.05,118.05,0,0,0,54-12.6"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="16"
+      />
+    </svg>
+  );
+}
+
+export function IconLock() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+      <rect
+        x="40"
+        y="88"
+        width="176"
+        height="128"
+        rx="8"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="16"
+      />
+      <path
+        d="M88,88V56a40,40,0,0,1,80,0V88"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="16"
+      />
+    </svg>
+  );
+}
+
+export function IconLockOpen() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+      <rect
+        x="40"
+        y="88"
+        width="176"
+        height="128"
+        rx="8"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="16"
+      />
+      <path
+        d="M88,88V56a40,40,0,0,1,40-40c19.35,0,36.29,13.74,40,32"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
