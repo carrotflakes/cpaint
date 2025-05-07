@@ -3,6 +3,7 @@
 */
 
 import { z } from 'zod';
+import { ALL_BLEND_MODES } from '../model/blendMode';
 
 const ImageMetaSchema = z.object({ id: z.number(), name: z.string(), createdAt: z.number() });
 type ImageMeta = z.infer<typeof ImageMetaSchema>;
@@ -12,8 +13,9 @@ const ImageDataSchema = z.object({
     z.object({
       id: z.string(),
       canvas: z.instanceof(Blob),
-      opacity: z.number().min(0).max(1),
       visible: z.boolean(),
+      opacity: z.number().min(0).max(1),
+      blendMode: z.enum(ALL_BLEND_MODES),
     })
   ),
 });

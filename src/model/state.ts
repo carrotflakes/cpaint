@@ -1,6 +1,7 @@
 import { applyPatches } from "../libs/applyPatches";
 import { applyImageDiff, canvasToImageDiff, ImageDiff } from "../libs/canvasUtil";
 import { Patch } from "../libs/patch";
+import { BlendMode } from "./blendMode";
 import { applyOp, mergeOp, shrinkPatches, type Op } from "./op";
 import { OpTs, OpTsNew } from "./opts";
 
@@ -8,8 +9,9 @@ export type State = Readonly<{
   layers: readonly {
     id: string;
     canvas: OffscreenCanvas;
-    opacity: number;
     visible: boolean;
+    opacity: number;
+    blendMode: BlendMode;
   }[];
 }>
 
@@ -47,8 +49,9 @@ export function StateContainerNew(
         {
           id: "0",
           canvas,
-          opacity: 1,
           visible: true,
+          opacity: 1,
+          blendMode: "source-over" as BlendMode,
         },
       ],
     },
@@ -255,9 +258,11 @@ export function StateRender(
       touch.apply(layerCtx);
 
       ctx.globalAlpha = layer.opacity;
+      ctx.globalCompositeOperation = layer.blendMode;
       ctx.drawImage(canvas, 0, 0);
     } else {
       ctx.globalAlpha = layer.opacity;
+      ctx.globalCompositeOperation = layer.blendMode;
       ctx.drawImage(layer.canvas, 0, 0);
     }
   }

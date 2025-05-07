@@ -3,6 +3,7 @@ import { useStorage } from "../hooks/useStorage";
 import { Storage } from "../libs/storage";
 import { StateContainerFromState } from "../model/state";
 import { useStore } from "../state";
+import { BlendMode } from "../model/blendMode";
 
 export function Files() {
   const [files, setFiles] = useState(
@@ -94,8 +95,9 @@ async function loadImage(storage: Storage, id: number) {
   const layers: {
     id: string;
     canvas: OffscreenCanvas;
-    opacity: number;
     visible: boolean;
+    opacity: number;
+    blendMode: BlendMode;
   }[] = [];
   for (const layerData of imageData.layers) {
     const image = await blobToImage(layerData.canvas);
@@ -107,8 +109,9 @@ async function loadImage(storage: Storage, id: number) {
     layers.push({
       id: layerData.id,
       canvas,
-      opacity: layerData.opacity,
       visible: layerData.visible,
+      opacity: layerData.opacity,
+      blendMode: layerData.blendMode,
     });
   }
 
