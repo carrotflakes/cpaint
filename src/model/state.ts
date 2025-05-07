@@ -1,7 +1,8 @@
 import { applyPatches } from "../libs/applyPatches";
 import { applyImageDiff, canvasToImageDiff, ImageDiff } from "../libs/canvasUtil";
 import { Patch } from "../libs/patch";
-import { applyOp, type Op } from "./op";
+import { applyOp, mergeOp, shrinkPatches, type Op } from "./op";
+import { OpTs, OpTsNew } from "./opts";
 
 export type State = Readonly<{
   layers: readonly {
@@ -13,8 +14,8 @@ export type State = Readonly<{
 
 export type StateContainer = Readonly<{
   state: State;
-  backward: readonly { op: Op; diff: StateDiff }[];
-  forward: readonly { op: Op; diff: StateDiff }[];
+  backward: readonly { op: OpTs; diff: StateDiff }[];
+  forward: readonly { op: OpTs; diff: StateDiff }[];
 }>;
 
 export type StateDiff = {
@@ -69,6 +70,7 @@ export function StateContainerDo(
   op: Op,
   touch: Touch | null,
 ): StateContainer {
+  const opts = OpTsNew(op);
   if ((op.type === "stroke" || op.type === "fill") && touch) {
     const layer = sc.state.layers.find(l => l.id === touch.layerId);
     if (!layer) {
@@ -98,7 +100,7 @@ export function StateContainerDo(
     }
     return {
       state,
-      backward: [...sc.backward, { op, diff: { type: "imageDiffs", layers: [{ id: layer.id, imageDiff: diff }] } }],
+      backward: newBackward(sc.backward, { op: opts, diff: { type: "imageDiffs", layers: [{ id: layer.id, imageDiff: diff }] } }),
       forward: [],
     }
   } else {
@@ -107,9 +109,46 @@ export function StateContainerDo(
       return sc;
     return {
       state: ao.state,
-      backward: [...sc.backward, { op, diff: ao.diff }],
+      backward: newBackward(sc.backward, { op: opts, diff: ao.diff }),
       forward: [],
     };
+  }
+}
+
+// Add onDiff to backward. If it is possible to merge, merge it.
+function newBackward(
+  backward: readonly { op: OpTs; diff: StateDiff }[],
+  opDiff: { op: OpTs; diff: StateDiff },
+): readonly { op: OpTs; diff: StateDiff }[] {
+  const last = backward[backward.length - 1];
+  if (!last)
+    return [opDiff];
+
+  const merged = mergeOpTs(last.op, opDiff.op);
+  if (merged && last.diff.type === "patch" && opDiff.diff.type === "patch") {
+    const patches = [...opDiff.diff.patches, ...last.diff.patches];
+    const shrinked = shrinkPatches(patches) ?? patches;
+    return [
+      ...backward.slice(0, backward.length - 1),
+      { op: merged, diff: { type: "patch", patches: shrinked } },
+    ];
+  }
+
+  return [...backward, opDiff];
+}
+
+function mergeOpTs(
+  op1: OpTs,
+  op2: OpTs,
+  graceTime: number = 1000,
+): OpTs | null {
+  if (op2.timestamp - op1.timestamp > graceTime)
+    return null;
+
+  const merged = mergeOp(op1, op2);
+  return merged && {
+    ...merged,
+    timestamp: op2.timestamp,
   }
 }
 

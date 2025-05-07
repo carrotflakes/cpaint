@@ -102,3 +102,37 @@ export function applyOp(
   }
   return null;
 }
+
+// Merge two operations into one
+// Returns null if the operations cannot be merged
+export function mergeOp(
+  op1: Op,
+  op2: Op,
+): Op | null {
+  if (op1.type === "patch" && op2.type === "patch") {
+    const patches = shrinkPatches([...op1.patches, ...op2.patches]);
+    if (patches)
+      return {
+        type: "patch",
+        patches,
+      };
+  }
+  return null;
+}
+
+export function shrinkPatches(patches: Patch[]): Patch[] | null {
+  patches = patches.slice();
+  let shrinked = false;
+  iterate: do {
+    for (let i = 0; i < patches.length; i++) {
+      const current = patches[i];
+      const next = patches[i + 1];
+      if (next && current.op === "replace" && next.op === "replace" && current.path === next.path) {
+        patches.splice(i, 1);
+        shrinked = true;
+        continue iterate;
+      }
+    }
+  } while (false);
+  return shrinked ? patches : null;
+}
