@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useDisableScroll } from "../hooks/useDisableScroll";
 import { useStore } from "../state";
-import { State } from "../model/state";
 import Canvas from "./Canvas";
 import { Files } from "./Files";
 import { Header } from "./Header";
 import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
+import { LayersBar } from "./LayersBar";
 
 function App() {
   useDisableScroll();
@@ -69,89 +69,3 @@ function App() {
 }
 
 export default App;
-
-function LayersBar() {
-  const store = useStore();
-
-  const addLayer = () => {
-    const layers = store.stateContainer.state.layers;
-    const firstLayer = layers[0];
-    const canvas = new OffscreenCanvas(
-      firstLayer.canvas.width,
-      firstLayer.canvas.height
-    );
-    store.apply(
-      {
-        type: "patch",
-        patches: [
-          {
-            op: "add",
-            path: `/layers/${layers.length}`,
-            value: {
-              id: `${Date.now()}`,
-              canvas,
-              opacity: 1,
-            } satisfies State["layers"][number],
-          },
-        ],
-      },
-      null
-    );
-  };
-
-  const updateOpacity = (index: number, opacity: number) => {
-    store.apply(
-      {
-        type: "patch",
-        patches: [
-          {
-            op: "replace",
-            path: `/layers/${index}/opacity`,
-            value: opacity satisfies State["layers"][number]["opacity"],
-          },
-        ],
-      },
-      null
-    );
-  };
-
-  return (
-    <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
-      <div className="flex flex-col items-stretch">
-        <div className="p-2 border-b border-gray-300">Layers</div>
-        <div className="flex-grow overflow-y-auto">
-          {store.stateContainer.state.layers.map((layer, i) => (
-            <div key={i} className="p-2">
-              <div
-                className={`cursor-pointer ${
-                  i === store.uiState.layerIndex
-                    ? "bg-gray-100 dark:bg-gray-700"
-                    : ""
-                }`}
-                onClick={() => {
-                  store.update((draft) => {
-                    draft.uiState.layerIndex = i;
-                  });
-                }}
-              >
-                Layer {i}
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={layer.opacity}
-                onChange={(e) => updateOpacity(i, parseFloat(e.target.value))}
-                className="w-full mt-1"
-              />
-            </div>
-          ))}
-          <div className="p-2 cursor-pointer" onClick={addLayer}>
-            New Layer
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
