@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useViewControl } from "../hooks/useViewControl";
+import {
+  startTouchFill,
+  startTouchHard,
+  startTouchSoft,
+  Touch,
+} from "../libs/brash";
 import { createCheckCanvas } from "../libs/check";
-import { TmpCanvas } from "../libs/tmpCanvas";
+import { Op } from "../model/op";
 import { StateRender } from "../model/state";
 import { useGlobalSettings, useStore } from "../state";
-import { Op } from "../model/op";
 
 export default function Canvas() {
   const store = useStore();
-  const tmpCanvas = useMemo(() => new TmpCanvas(), []);
+  const touchRef = useRef<Touch | null>(null);
   const [updatedAt, setUpdatedAt] = useState(0);
 
   const containerRef = useRef<null | HTMLDivElement>(null);
@@ -17,7 +22,7 @@ export default function Canvas() {
   const redraw = useCallback(() => {
     setUpdatedAt(Date.now());
   }, []);
-  useControl(canvasRef, containerRef, tmpCanvas, redraw);
+  useControl(canvasRef, containerRef, touchRef, redraw);
   useViewControl(containerRef);
 
   const checkPat = useMemo(() => {
@@ -29,23 +34,20 @@ export default function Canvas() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
+    const touch_ = touchRef.current;
     const touch =
+      touch_ &&
       store.uiState.layerIndex < store.stateContainer.state.layers.length
         ? {
             layerId:
               store.stateContainer.state.layers[store.uiState.layerIndex].id,
             apply: (ctx: OffscreenCanvasRenderingContext2D) => {
-              ctx.save();
-              if (store.uiState.tool === "eraser")
-                ctx.globalCompositeOperation = "destination-out";
-              ctx.globalAlpha = store.uiState.opacity;
-              ctx.drawImage(tmpCanvas.canvas, 0, 0);
-              ctx.restore();
+              touch_.transfer(ctx);
             },
           }
         : null;
     StateRender(store.stateContainer.state, ctx, touch);
-  }, [store, canvasRef, tmpCanvas.canvas, updatedAt]);
+  }, [store, canvasRef, touchRef, updatedAt]);
 
   const canvasWidth = store.stateContainer.state.layers[0].canvas.width;
   const canvasHeight = store.stateContainer.state.layers[0].canvas.height;
@@ -84,7 +86,7 @@ export default function Canvas() {
 function useControl(
   canvasRef: { current: HTMLCanvasElement | null },
   containerRef: { current: HTMLDivElement | null },
-  tmpCanvas: TmpCanvas,
+  touchRef: { current: Touch | null },
   redraw: () => void
 ) {
   const { fingerOperations } = useGlobalSettings((state) => state);
@@ -144,18 +146,31 @@ function useControl(
         e.button === 0 &&
         !(fingerOperations && e.pointerType === "touch")
       ) {
-        const size = store.uiState.penSize * e.pressure;
-        const path = [{ pos, size }];
+        const path = [{ pos, size: e.pressure }];
         const firstCanvas = store.stateContainer.state.layers[0].canvas;
-        tmpCanvas.begin({
-          size: [firstCanvas.width, firstCanvas.height],
-          style: {
-            pen: store.uiState.color,
-            eraser: "#fff",
-            fill: "#f00",
-          }[store.uiState.tool],
-          soft: store.uiState.softPen,
-        });
+        if (store.uiState.tool === "fill") {
+          touchRef.current = startTouchFill({
+            color: store.uiState.color,
+            opacity: store.uiState.opacity,
+          });
+        } else if (store.uiState.softPen) {
+          touchRef.current = startTouchSoft({
+            width: store.uiState.penSize,
+            color: store.uiState.color,
+            opacity: store.uiState.opacity,
+            erace: store.uiState.tool === "eraser",
+            canvasSize: [firstCanvas.width, firstCanvas.height],
+          });
+        } else {
+          touchRef.current = startTouchHard({
+            width: store.uiState.penSize,
+            color: store.uiState.color,
+            opacity: store.uiState.opacity,
+            erace: store.uiState.tool === "eraser",
+            canvasSize: [firstCanvas.width, firstCanvas.height],
+          });
+        }
+        touchRef.current.stroke(pos[0], pos[1], e.pressure);
 
         state.current = {
           type: "drawing",
@@ -201,17 +216,10 @@ function useControl(
         if (e.pointerId !== state.current.pointerId) return;
         const pos = computePos(e);
 
-        const store = useStore.getState();
-
         const { path, lastPos } = state.current;
         if (dist(lastPos, pos) > 3) {
-          const size = store.uiState.penSize * e.pressure;
-          path.push({ pos, size });
-          const lineWidth = store.uiState.tool === "fill" ? 1 : size;
-          tmpCanvas.addLine({
-            line: [...lastPos, ...pos],
-            lineWidth,
-          });
+          path.push({ pos, size: e.pressure });
+          touchRef.current?.stroke(pos[0], pos[1], e.pressure);
           state.current.lastPos = pos;
           redraw();
         }
@@ -305,14 +313,12 @@ function useControl(
       const store = useStore.getState();
 
       if (state.current.type === "drawing") {
-        if (e.pointerId !== state.current.pointerId) return;
+        if (e.pointerId !== state.current.pointerId || touchRef.current == null)
+          return;
         const { path } = state.current;
         apply: {
+          touchRef.current.end();
           if (store.uiState.tool === "fill") {
-            tmpCanvas.style = store.uiState.color;
-            tmpCanvas.fill(path);
-            if (!tmpCanvas.isDirty()) break apply;
-
             const op: Op = {
               type: "fill",
               fillColor: store.uiState.color,
@@ -320,25 +326,24 @@ function useControl(
               path,
               layerIndex: store.uiState.layerIndex,
             };
-            store.apply(op, tmpCanvas.canvas);
+            store.apply(op, touchRef.current.transfer);
           } else {
-            if (!tmpCanvas.isDirty()) break apply;
-
             const op: Op = {
               type: "stroke",
               erase: store.uiState.tool === "eraser",
               strokeStyle: {
-                color: tmpCanvas.style,
+                color: store.uiState.color,
                 soft: store.uiState.softPen,
+                width: store.uiState.penSize,
               },
               opacity: store.uiState.opacity,
               path,
               layerIndex: store.uiState.layerIndex,
             };
-            store.apply(op, tmpCanvas.canvas);
+            store.apply(op, touchRef.current.transfer);
           }
         }
-        tmpCanvas.finish();
+        touchRef.current = null;
         state.current = null;
         return;
       }
@@ -370,7 +375,7 @@ function useControl(
       window.removeEventListener("pointerup", onPointerUp);
       window.addEventListener("pointercancel", onPointerUp);
     };
-  }, [canvasRef, containerRef, tmpCanvas, redraw, fingerOperations]);
+  }, [canvasRef, containerRef, touchRef, redraw, fingerOperations]);
 }
 
 function dist(a: [number, number], b: [number, number]) {

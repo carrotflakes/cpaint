@@ -1,8 +1,8 @@
 import { produce } from "immer";
 import { applyPatches } from "../libs/applyPatches";
+import { startTouchFill, startTouchHard, startTouchSoft } from "../libs/brash";
 import { canvasToImageDiff } from "../libs/canvasUtil";
 import { Patch } from "../libs/patch";
-import { TmpCanvas } from "../libs/tmpCanvas";
 import type { State, StateDiff } from "./state";
 
 export type Op = {
@@ -11,9 +11,10 @@ export type Op = {
   strokeStyle: {
     color: string
     soft: boolean
+    width: number
   };
   opacity: number;
-  path: { pos: [number, number], size: number }[];
+  path: { pos: [number, number], pressure: number }[];
   layerIndex: number;
 } | {
   type: "fill";
@@ -35,7 +36,24 @@ export function applyOp(
 } | null {
   if (op.type === "stroke" || op.type === "fill") {
     const layer = state.layers[op.layerIndex];
-    const tmpCanvas = new TmpCanvas();
+    const touch = op.type === "stroke" ?
+      (op.strokeStyle.soft ? startTouchSoft({
+        width: op.strokeStyle.width,
+        color: op.strokeStyle.color,
+        opacity: op.opacity,
+        erace: op.erase,
+        canvasSize: [layer.canvas.width, layer.canvas.height],
+      }) : startTouchHard({
+        width: op.strokeStyle.width,
+        color: op.strokeStyle.color,
+        opacity: op.opacity,
+        erace: op.erase,
+        canvasSize: [layer.canvas.width, layer.canvas.height],
+      })) :
+      startTouchFill({
+        color: op.fillColor,
+        opacity: op.opacity,
+      });
     const newCanvas = new OffscreenCanvas(
       layer.canvas.width,
       layer.canvas.height,
@@ -47,33 +65,17 @@ export function applyOp(
     ctx.drawImage(layer.canvas, 0, 0);
 
     if (op.type === "stroke") {
-      tmpCanvas.begin({
-        size: [layer.canvas.width, layer.canvas.height],
-        style: op.strokeStyle.color,
-        soft: op.strokeStyle.soft,
-      });
-      for (let i = 0; i < op.path.length - 1; i++) {
-        const p1 = op.path[i];
-        const p2 = op.path[i + 1];
-        tmpCanvas.addLine({
-          line: [...p1.pos, ...p2.pos],
-          lineWidth: p2.size,
-        });
+      for (const p of op.path) {
+        touch.stroke(p.pos[0], p.pos[1], p.pressure);
       }
-      if (op.erase)
-        ctx.globalCompositeOperation = "destination-out";
     } else if (op.type === "fill") {
-      tmpCanvas.begin({
-        size: [layer.canvas.width, layer.canvas.height],
-        style: op.fillColor,
-        soft: false,
-      });
-      tmpCanvas.fill(op.path);
+      for (const p of op.path) {
+        touch.stroke(p.pos[0], p.pos[1], 1);
+      }
     }
 
-    ctx.globalAlpha = op.opacity;
-    ctx.drawImage(tmpCanvas.canvas, 0, 0);
-    tmpCanvas.finish();
+    touch.end();
+    touch.transfer(ctx);
 
     const id = canvasToImageDiff(
       newCanvas,
