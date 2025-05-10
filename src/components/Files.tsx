@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { Storage } from "../libs/storage";
 import { StateContainerFromState } from "../model/state";
-import { useAppState } from "../state";
+import { useAppState } from "../store/appState";
 import { BlendMode } from "../model/blendMode";
 
 export function Files() {

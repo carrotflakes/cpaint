@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { useGlobalSettings } from "../state";
+import { useGlobalSettings } from "../store/globalSetting";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
 import { storage } from "../libs/storage";

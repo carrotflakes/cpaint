@@ -1,5 +1,5 @@
 import { State } from "../model/state";
-import { useAppState, AppState } from "../state";
+import { useAppState, AppState } from "../store/appState";
 import { useState } from "react";
 import { IconEye, IconEyeSlash, IconMenu } from "./icons";
 import { BlendMode } from "../model/blendMode";

@@ -1,6 +1,6 @@
 import { produce } from "immer";
 import { applyPatches } from "../libs/applyPatches";
-import { startTouchFill, startTouchHard, startTouchSoft } from "../libs/brash";
+import { startTouchFill, startTouchHard, startTouchSoft } from "../libs/brush";
 import { canvasToImageDiff } from "../libs/canvasUtil";
 import { Patch } from "../libs/patch";
 import type { State, StateDiff } from "./state";

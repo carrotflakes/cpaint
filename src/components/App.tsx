@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useDisableScroll } from "../hooks/useDisableScroll";
-import { useAppState } from "../state";
+import { useAppState } from "../store/appState";
 import Canvas from "./Canvas";
 import { Files } from "./Files";
 import { Header } from "./Header";
+import { LayersBar } from "./LayersBar";
 import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
-import { LayersBar } from "./LayersBar";
 
 function App() {
   useDisableScroll();

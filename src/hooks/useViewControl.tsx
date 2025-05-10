@@ -1,12 +1,13 @@
 import { useEffect } from "react";
-import { useGlobalSettings, useAppState } from "../state";
+import { useAppState } from "../store/appState";
+import { useGlobalSettings } from "../store/globalSetting";
 
 export type Pos = [number, number];
 
 export function useViewControl(containerRef: {
   current: HTMLDivElement | null;
 }) {
-  const { wheelZoom } = useGlobalSettings((state) => state);
+  const { wheelZoom } = useGlobalSettings();
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
@@ -24,7 +25,7 @@ export function useViewControl(containerRef: {
           e.clientY - bbox.top - bbox.height / 2,
         ] as Pos;
 
-        useAppState.getState().update(draft => {
+        useAppState.getState().update((draft) => {
           draft.uiState.canvasView.scale *= scaleFactor;
           draft.uiState.canvasView.pan[0] =
             (draft.uiState.canvasView.pan[0] - pos[0]) * scaleFactor + pos[0];
@@ -34,7 +35,7 @@ export function useViewControl(containerRef: {
       } else {
         if (e.deltaMode !== 0) return;
 
-        useAppState.getState().update(draft => {
+        useAppState.getState().update((draft) => {
           draft.uiState.canvasView.pan[0] -= e.deltaX;
           draft.uiState.canvasView.pan[1] -= e.deltaY;
         });

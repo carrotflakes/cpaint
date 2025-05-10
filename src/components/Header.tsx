@@ -1,7 +1,7 @@
 import logo from "../assets/cpaint.svg";
 import { storage } from "../libs/storage";
 import { StateRender } from "../model/state";
-import { useAppState } from "../state";
+import { useAppState } from "../store/appState";
 import { IconCaretLeft, IconFrameCorners, IconGear, IconSave } from "./icons";
 import { useSettingDialog } from "./SettingDialog";
 import { pushToast } from "./Toasts";

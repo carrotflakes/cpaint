@@ -1,8 +1,7 @@
 import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo, StateContainerUndo } from './model/state';
-import { Op } from './model/op';
+import { Op } from '../model/op';
+import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
 
 type ToolType = "pen" | "eraser" | "fill";
 
@@ -84,16 +83,3 @@ export const useAppState = create<AppState>()((set) => {
     },
   })
 });
-
-export type GlobalSettings = {
-  fingerOperations: boolean
-  wheelZoom: boolean
-}
-
-export const useGlobalSettings = create<GlobalSettings>()(
-  persist((_set) => ({
-    fingerOperations: false,
-    wheelZoom: false,
-  }), {
-    name: 'cpaint',
-  }));

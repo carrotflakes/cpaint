@@ -5,11 +5,12 @@ import {
   startTouchHard,
   startTouchSoft,
   Touch,
-} from "../libs/brash";
+} from "../libs/brush";
 import { createCheckCanvas } from "../libs/check";
 import { Op } from "../model/op";
 import { StateRender } from "../model/state";
-import { useGlobalSettings, useAppState } from "../state";
+import { useAppState } from "../store/appState";
+import { useGlobalSettings } from "../store/globalSetting";
 
 export default function Canvas() {
   const store = useAppState();
