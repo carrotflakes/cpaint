@@ -1,7 +1,9 @@
+export type CanvasContext = OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D;
+
 export type Touch = {
   stroke: (x: number, y: number, pressure: number) => void;
   end: () => void;
-  transfer: (ctx: OffscreenCanvasRenderingContext2D) => void;
+  transfer: (ctx: CanvasContext) => void;
 }
 
 export function startTouchSoft({ width, color, opacity, erace, canvasSize }:
@@ -43,9 +45,8 @@ export function startTouchSoft({ width, color, opacity, erace, canvasSize }:
       prev = { x, y, pressure };
     },
     end() {
-
     },
-    transfer(ctx: OffscreenCanvasRenderingContext2D) {
+    transfer(ctx: CanvasContext) {
       {
         const ctx2 = canvas.getContext("2d")!;
         ctx2.putImageData(imageData, 0, 0);
@@ -74,7 +75,7 @@ export function startTouchHard({ width, color, opacity, erace, canvasSize }:
     },
     end() {
     },
-    transfer(ctx: OffscreenCanvasRenderingContext2D) {
+    transfer(ctx: CanvasContext) {
       {
         const ctx2 = canvas.getContext("2d")!;
         ctx2.clearRect(0, 0, canvasSize[0], canvasSize[1]);
@@ -112,7 +113,7 @@ export function startTouchFill({ color, opacity }:
     end() {
       finished = true;
     },
-    transfer(ctx: OffscreenCanvasRenderingContext2D) {
+    transfer(ctx: CanvasContext) {
       ctx.save();
 
       if (finished) {
@@ -157,6 +158,7 @@ export function drawSoftLine(imageData: ImageData, x0: number, y0: number, x1: n
       const alpha = f(d);
       const i = (y * imageData.width + x) * 4;
       imageData.data[i + 3] = Math.max(imageData.data[i + 3], Math.round(alpha * 255));
+      // imageData.data[i + 3] = imageData.data[i + 3]+ Math.round(alpha * 255);
     }
   }
 }
