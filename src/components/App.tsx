@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDisableScroll } from "../hooks/useDisableScroll";
-import { useStore } from "../state";
+import { useAppState } from "../state";
 import Canvas from "./Canvas";
 import { Files } from "./Files";
 import { Header } from "./Header";
@@ -12,16 +12,16 @@ import { LayersBar } from "./LayersBar";
 function App() {
   useDisableScroll();
 
-  const store = useStore();
+  const store = useAppState();
 
   useEffect(() => {
     const keyDown = (e: KeyboardEvent) => {
       if (e.key === "p")
-        useStore.setState({ uiState: { ...store.uiState, tool: "pen" } });
+        useAppState.setState({ uiState: { ...store.uiState, tool: "pen" } });
       if (e.key === "e")
-        useStore.setState({ uiState: { ...store.uiState, tool: "eraser" } });
+        useAppState.setState({ uiState: { ...store.uiState, tool: "eraser" } });
       if (e.key === "f")
-        useStore.setState({ uiState: { ...store.uiState, tool: "fill" } });
+        useAppState.setState({ uiState: { ...store.uiState, tool: "fill" } });
       if (e.ctrlKey && e.key === "z") store.undo();
       if (e.ctrlKey && e.key === "Z") store.redo();
     };

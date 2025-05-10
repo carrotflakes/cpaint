@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useGlobalSettings, useStore } from "../state";
+import { useGlobalSettings, useAppState } from "../state";
 
 export type Pos = [number, number];
 
@@ -24,7 +24,7 @@ export function useViewControl(containerRef: {
           e.clientY - bbox.top - bbox.height / 2,
         ] as Pos;
 
-        useStore.getState().update(draft => {
+        useAppState.getState().update(draft => {
           draft.uiState.canvasView.scale *= scaleFactor;
           draft.uiState.canvasView.pan[0] =
             (draft.uiState.canvasView.pan[0] - pos[0]) * scaleFactor + pos[0];
@@ -34,7 +34,7 @@ export function useViewControl(containerRef: {
       } else {
         if (e.deltaMode !== 0) return;
 
-        useStore.getState().update(draft => {
+        useAppState.getState().update(draft => {
           draft.uiState.canvasView.pan[0] -= e.deltaX;
           draft.uiState.canvasView.pan[1] -= e.deltaY;
         });

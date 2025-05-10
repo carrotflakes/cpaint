@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { usePointer } from "../hooks/usePointer";
-import { useStore } from "../state";
+import { useAppState } from "../state";
 import { ColorPalette } from "./ColorPalette";
 import {
   IconEraser,
@@ -18,7 +18,7 @@ const penWidthMax = 50;
 const scaleFactor = 2 ** (1 / 4);
 
 export function ToolBar() {
-  const store = useStore();
+  const store = useAppState();
   const {uiState} = store;
   const [showCp, setShowCp] = useState(false);
 

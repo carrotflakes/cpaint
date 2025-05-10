@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { Storage } from "../libs/storage";
 import { StateContainerFromState } from "../model/state";
-import { useStore } from "../state";
+import { useAppState } from "../state";
 import { BlendMode } from "../model/blendMode";
 
 export function Files() {
@@ -23,14 +23,14 @@ export function Files() {
   }, [load]);
 
   const newFile = useCallback(() => {
-    useStore.setState({
+    useAppState.setState({
       imageMeta: {
         id: Date.now(),
         name: new Date().toISOString().split(".")[0].replace(/:/g, "-"),
         createdAt: Date.now(),
       },
     });
-    useStore.getState().clearAll();
+    useAppState.getState().clearAll();
   }, []);
 
   return (
@@ -118,7 +118,7 @@ async function loadImage(storage: Storage, id: number) {
   const state = {
     layers,
   };
-  useStore.setState(() => {
+  useAppState.setState(() => {
     return {
       imageMeta,
       stateContainer: StateContainerFromState(state),

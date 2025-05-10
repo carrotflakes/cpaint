@@ -1,13 +1,13 @@
 import logo from "../assets/cpaint.svg";
 import { storage } from "../libs/storage";
 import { StateRender } from "../model/state";
-import { useStore } from "../state";
+import { useAppState } from "../state";
 import { IconCaretLeft, IconFrameCorners, IconGear, IconSave } from "./icons";
 import { useSettingDialog } from "./SettingDialog";
 import { pushToast } from "./Toasts";
 
 export function Header() {
-  const imageMeta = useStore((store) => store.imageMeta);
+  const imageMeta = useAppState((store) => store.imageMeta);
 
   return (
     <div className="p-2 flex gap-2 overflow-x-auto">
@@ -15,7 +15,7 @@ export function Header() {
         <div
           className="basis-6 cursor-pointer"
           onClick={() => {
-            useStore.setState({
+            useAppState.setState({
               imageMeta: null,
             });
           }}
@@ -75,7 +75,7 @@ export function Header() {
 }
 
 async function save() {
-  const state = useStore.getState();
+  const state = useAppState.getState();
   const meta = state.imageMeta;
 
   if (!meta) return;
@@ -99,7 +99,7 @@ async function save() {
 }
 
 function createThumbnail() {
-  const state = useStore.getState();
+  const state = useAppState.getState();
   const c = state.stateContainer.state.layers[0].canvas;
   const canvas = new OffscreenCanvas(c.width, c.height);
   const ctx = canvas.getContext("2d")!;

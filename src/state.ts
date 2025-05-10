@@ -6,7 +6,7 @@ import { Op } from './model/op';
 
 type ToolType = "pen" | "eraser" | "fill";
 
-export type State = {
+export type AppState = {
   imageMeta: null | {
     id: number,
     name: string,
@@ -31,10 +31,10 @@ export type State = {
 
   undo: () => void
   redo: () => void
-  update: (update: (draft: WritableDraft<State>) => void) => void
+  update: (update: (draft: WritableDraft<AppState>) => void) => void
 };
 
-export const useStore = create<State>()((set) => {
+export const useAppState = create<AppState>()((set) => {
   return ({
     imageMeta: null,
     uiState: {

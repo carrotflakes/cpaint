@@ -9,10 +9,10 @@ import {
 import { createCheckCanvas } from "../libs/check";
 import { Op } from "../model/op";
 import { StateRender } from "../model/state";
-import { useGlobalSettings, useStore } from "../state";
+import { useGlobalSettings, useAppState } from "../state";
 
 export default function Canvas() {
-  const store = useStore();
+  const store = useAppState();
   const touchRef = useRef<Touch | null>(null);
   const [updatedAt, setUpdatedAt] = useState(0);
 
@@ -119,7 +119,7 @@ function useControl(
         state: { layers },
       },
       uiState: { canvasView: cv },
-    } = useStore.getState();
+    } = useAppState.getState();
     const firstCanvas = layers[0].canvas;
     const pos_ = [
       (e.clientX - (bbox.left + bbox.width / 2) - cv.pan[0]) / cv.scale,
@@ -139,7 +139,7 @@ function useControl(
       if (!canvasRef.current || !containerRef.current) return;
       const pos = computePos(e);
 
-      const store = useStore.getState();
+      const store = useAppState.getState();
 
       if (
         state.current?.type !== "drawing" &&
@@ -253,7 +253,7 @@ function useControl(
             const angleUnnormalized =
               (state.current.angleUnnormalized + (a2 - a1)) % (2 * Math.PI);
             state.current.angleUnnormalized = angleUnnormalized;
-            useStore.setState((state) => {
+            useAppState.setState((state) => {
               const prevPan_ = [
                 state.uiState.canvasView.pan[0] + panOffset[0],
                 state.uiState.canvasView.pan[1] + panOffset[1],
@@ -290,7 +290,7 @@ function useControl(
 
       if (state.current.type === "translate") {
         if (e.pointerId === state.current.pointerId) {
-          useStore.setState((state) => ({
+          useAppState.setState((state) => ({
             uiState: {
               ...state.uiState,
               canvasView: {
@@ -310,7 +310,7 @@ function useControl(
     const onPointerUp = (e: PointerEvent) => {
       if (!canvasRef.current || !containerRef.current || !state.current) return;
 
-      const store = useStore.getState();
+      const store = useAppState.getState();
 
       if (state.current.type === "drawing") {
         if (e.pointerId !== state.current.pointerId || touchRef.current == null)

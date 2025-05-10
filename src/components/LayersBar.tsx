@@ -1,11 +1,11 @@
 import { State } from "../model/state";
-import { useStore, State as SState } from "../state";
+import { useAppState, AppState } from "../state";
 import { useState } from "react";
 import { IconEye, IconEyeSlash, IconMenu } from "./icons";
 import { BlendMode } from "../model/blendMode";
 
 export function LayersBar() {
-  const store = useStore();
+  const store = useAppState();
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -142,7 +142,7 @@ function ContextMenu({
     layerIndex: number;
   };
   closeContextMenu: () => void;
-  store: SState;
+  store: AppState;
 }) {
   const updateOpacity = (index: number, opacity: number) => {
     store.apply(
