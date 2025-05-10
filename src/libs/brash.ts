@@ -77,6 +77,7 @@ export function startTouchHard({ width, color, opacity, erace, canvasSize }:
     transfer(ctx: OffscreenCanvasRenderingContext2D) {
       {
         const ctx2 = canvas.getContext("2d")!;
+        ctx2.clearRect(0, 0, canvasSize[0], canvasSize[1]);
         ctx2.strokeStyle = color;
         ctx2.lineWidth = width;
         ctx2.lineCap = "round";
