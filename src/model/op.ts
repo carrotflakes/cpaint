@@ -1,6 +1,6 @@
 import { produce } from "immer";
 import { applyPatches } from "../libs/applyPatches";
-import { startTouchFill, startTouchHard, startTouchSoft } from "../libs/brush";
+import { startTouchBrush, startTouchFill } from "../libs/brush";
 import { canvasToImageDiff } from "../libs/canvasUtil";
 import { Patch } from "../libs/patch";
 import type { State, StateDiff } from "./state";
@@ -10,7 +10,7 @@ export type Op = {
   erase: boolean;
   strokeStyle: {
     color: string
-    soft: boolean
+    brushType: string
     width: number
   };
   opacity: number;
@@ -20,6 +20,7 @@ export type Op = {
   type: "fill";
   fillColor: string;
   opacity: number;
+  erace: boolean;
   path: { pos: [number, number] }[];
   layerIndex: number;
 } | {
@@ -37,22 +38,18 @@ export function applyOp(
   if (op.type === "stroke" || op.type === "fill") {
     const layer = state.layers[op.layerIndex];
     const touch = op.type === "stroke" ?
-      (op.strokeStyle.soft ? startTouchSoft({
+      startTouchBrush({
+        brushType: op.strokeStyle.brushType,
         width: op.strokeStyle.width,
         color: op.strokeStyle.color,
         opacity: op.opacity,
         erace: op.erase,
         canvasSize: [layer.canvas.width, layer.canvas.height],
-      }) : startTouchHard({
-        width: op.strokeStyle.width,
-        color: op.strokeStyle.color,
-        opacity: op.opacity,
-        erace: op.erase,
-        canvasSize: [layer.canvas.width, layer.canvas.height],
-      })) :
+      }) :
       startTouchFill({
         color: op.fillColor,
         opacity: op.opacity,
+        erace: op.erace,
       });
     const newCanvas = new OffscreenCanvas(
       layer.canvas.width,

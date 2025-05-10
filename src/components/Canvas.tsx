@@ -1,16 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useViewControl } from "../hooks/useViewControl";
-import {
-  startTouchFill,
-  startTouchHard,
-  startTouchSoft,
-  Touch,
-} from "../libs/brush";
 import { createCheckCanvas } from "../libs/check";
 import { Op } from "../model/op";
 import { StateRender } from "../model/state";
-import { useAppState } from "../store/appState";
+import { createTouch, useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
+import { Touch } from "../libs/brush";
 
 export default function Canvas() {
   const store = useAppState();
@@ -148,29 +143,8 @@ function useControl(
         !(fingerOperations && e.pointerType === "touch")
       ) {
         const path = [{ pos, size: e.pressure }];
-        const firstCanvas = store.stateContainer.state.layers[0].canvas;
-        if (store.uiState.tool === "fill") {
-          touchRef.current = startTouchFill({
-            color: store.uiState.color,
-            opacity: store.uiState.opacity,
-          });
-        } else if (store.uiState.softPen) {
-          touchRef.current = startTouchSoft({
-            width: store.uiState.penSize,
-            color: store.uiState.color,
-            opacity: store.uiState.opacity,
-            erace: store.uiState.tool === "eraser",
-            canvasSize: [firstCanvas.width, firstCanvas.height],
-          });
-        } else {
-          touchRef.current = startTouchHard({
-            width: store.uiState.penSize,
-            color: store.uiState.color,
-            opacity: store.uiState.opacity,
-            erace: store.uiState.tool === "eraser",
-            canvasSize: [firstCanvas.width, firstCanvas.height],
-          });
-        }
+        touchRef.current = createTouch(store);
+        if (touchRef.current == null) return;
         touchRef.current.stroke(pos[0], pos[1], e.pressure);
 
         state.current = {
@@ -333,6 +307,7 @@ function useControl(
               type: "fill",
               fillColor: store.uiState.color,
               opacity: store.uiState.opacity,
+              erace: store.uiState.erase,
               path,
               layerIndex: store.uiState.layerIndex,
             };
@@ -340,10 +315,10 @@ function useControl(
           } else {
             const op: Op = {
               type: "stroke",
-              erase: store.uiState.tool === "eraser",
+              erase: store.uiState.erase,
               strokeStyle: {
                 color: store.uiState.color,
-                soft: store.uiState.softPen,
+                brushType: store.uiState.brushType,
                 width: store.uiState.penSize,
               },
               opacity: store.uiState.opacity,

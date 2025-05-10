@@ -6,6 +6,18 @@ export type Touch = {
   transfer: (ctx: CanvasContext) => void;
 }
 
+export function startTouchBrush({ brushType, width, color, opacity, erace, canvasSize }:
+  { brushType: string, width: number, color: string, opacity: number, erace: boolean, canvasSize: [number, number] }
+): Touch {
+  switch (brushType) {
+    case "soft":
+      return startTouchSoft({ width, color, opacity, erace, canvasSize });
+    case "hard":
+    default:
+      return startTouchHard({ width, color, opacity, erace, canvasSize });
+  }
+}
+
 export function startTouchSoft({ width, color, opacity, erace, canvasSize }:
   { width: number, color: string, opacity: number, erace: boolean, canvasSize: [number, number] }
 ): Touch {
@@ -100,8 +112,8 @@ export function startTouchHard({ width, color, opacity, erace, canvasSize }:
   }
 }
 
-export function startTouchFill({ color, opacity }:
-  { color: string, opacity: number }
+export function startTouchFill({ color, opacity, erace }:
+  { color: string, opacity: number, erace: boolean }
 ): Touch {
   const path: { x: number, y: number }[] = [];
   let finished = false;
@@ -119,6 +131,8 @@ export function startTouchFill({ color, opacity }:
       if (finished) {
         ctx.fillStyle = color;
         ctx.globalAlpha = opacity;
+        if (erace)
+          ctx.globalCompositeOperation = "destination-out";
         ctx.beginPath();
         for (let i = 0; i < path.length; i++) {
           const p = path[i];

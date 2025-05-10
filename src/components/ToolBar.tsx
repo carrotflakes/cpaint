@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { usePointer } from "../hooks/usePointer";
-import { useAppState } from "../state";
+import { useAppState } from "../store/appState";
 import { ColorPalette } from "./ColorPalette";
 import {
   IconEraser,
@@ -13,20 +13,25 @@ import {
   IconUndo,
 } from "./icons";
 import { StateContainerHasRedo, StateContainerHasUndo } from "../model/state";
+import { BrushPreview } from "./BrushPreview";
 
 const penWidthMax = 50;
 const scaleFactor = 2 ** (1 / 4);
 
 export function ToolBar() {
   const store = useAppState();
-  const {uiState} = store;
+  const { uiState } = store;
   const [showCp, setShowCp] = useState(false);
+  const [showBrushPreview, setShowBrushPreview] = useState(false);
 
   const controlPenWidth = useControl({
     getValue: () => uiState.penSize,
     setValue: (v) =>
       store.update((draft) => {
-        draft.uiState.penSize = Math.max(Math.min(Math.round(v), penWidthMax), 1);
+        draft.uiState.penSize = Math.max(
+          Math.min(Math.round(v), penWidthMax),
+          1
+        );
       }),
     sensitivity: 1 / 5,
   });
@@ -109,42 +114,52 @@ export function ToolBar() {
         <div
           className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
           onClick={() => {
-            store.update((draft) => {
-              draft.uiState.softPen = !uiState.softPen;
-            });
+            setShowBrushPreview((showBrushPreview) => !showBrushPreview);
           }}
-          title="Soft/Hard pen"
+          title="Brush type"
         >
-          {uiState.softPen ? "S" : "H"}
+          B
         </div>
+        {showBrushPreview && (
+          <div className="absolute p-2 bg-white dark:bg-black shadow z-10">
+            <BrushSelector
+              brushType={uiState.brushType}
+              onChange={(brushType) => {
+                store.update((draft) => {
+                  draft.uiState.brushType = brushType;
+                });
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      <div
+        className="cursor-pointer data-[selected=false]:opacity-50"
+        data-selected={uiState.erase}
+        onClick={() => {
+          store.update((draft) => {
+            draft.uiState.erase = !draft.uiState.erase;
+          });
+        }}
+        title="Eraser"
+      >
+        <IconEraser />
       </div>
 
       <hr />
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={uiState.tool === "pen"}
+        data-selected={uiState.tool === "brush"}
         onClick={() => {
           store.update((draft) => {
-            draft.uiState.tool = "pen";
+            draft.uiState.tool = "brush";
           });
         }}
-        title="Pen"
+        title="Brush"
       >
         <IconPencil />
-      </div>
-
-      <div
-        className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={uiState.tool === "eraser"}
-        onClick={() => {
-          store.update((draft) => {
-            draft.uiState.tool = "eraser";
-          });
-        }}
-        title="Eraser"
-      >
-        <IconEraser />
       </div>
 
       <div
@@ -192,7 +207,7 @@ export function ToolBar() {
           store.update((draft) => {
             draft.uiState.canvasView.scale = roundFloat(
               draft.uiState.canvasView.scale * scaleFactor,
-              4,
+              4
             );
           })
         }
@@ -207,7 +222,7 @@ export function ToolBar() {
           store.update((draft) => {
             draft.uiState.canvasView.scale = roundFloat(
               draft.uiState.canvasView.scale / scaleFactor,
-              4,
+              4
             );
           })
         }
@@ -317,4 +332,27 @@ function useControl({
 
 function roundFloat(x: number, n: number) {
   return Math.round(x * 10 ** n) / 10 ** n;
+}
+
+function BrushSelector({
+  brushType,
+  onChange,
+}: {
+  brushType: string;
+  onChange: (brushType: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      {["soft", "hard"].map((type) => (
+        <button
+          key={type}
+          className="p-2"
+          onClick={() => onChange(type)}
+          data-selected={brushType === type}
+        >
+          <BrushPreview brushType={type} />
+        </button>
+      ))}
+    </div>
+  );
 }

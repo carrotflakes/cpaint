@@ -1,9 +1,13 @@
 import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
+import {
+  startTouchBrush,
+  startTouchFill
+} from "../libs/brush";
 import { Op } from '../model/op';
 import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
 
-type ToolType = "pen" | "eraser" | "fill";
+type ToolType = "brush" | "fill";
 
 export type AppState = {
   imageMeta: null | {
@@ -14,9 +18,10 @@ export type AppState = {
   uiState: {
     tool: ToolType
     color: string
+    erase: boolean
     penSize: number
     opacity: number
-    softPen: boolean
+    brushType: string
     layerIndex: number
     canvasView: {
       angle: number
@@ -37,12 +42,14 @@ export const useAppState = create<AppState>()((set) => {
   return ({
     imageMeta: null,
     uiState: {
+      tool: "brush" as ToolType,
       color: "#000",
+      erase: false,
       penSize: 5,
       opacity: 1,
       softPen: false,
+      brushType: "soft",
       layerIndex: 0,
-      tool: "pen" as ToolType,
       canvasView: {
         angle: 0,
         scale: 1,
@@ -58,7 +65,6 @@ export const useAppState = create<AppState>()((set) => {
         } : null),
       }))
     },
-    updatedAt: new Date(),
     clearAll() {
       set(() => ({
         stateContainer: StateContainerNew(400, 400),
@@ -83,3 +89,26 @@ export const useAppState = create<AppState>()((set) => {
     },
   })
 });
+
+export function createTouch(store: AppState) {
+  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize: [number, number] = [firstCanvas.width, firstCanvas.height];
+
+  if (store.uiState.tool === "fill") {
+    return startTouchFill({
+      color: store.uiState.color,
+      opacity: store.uiState.opacity,
+      erace: store.uiState.erase,
+    });
+  } else if (store.uiState.tool === "brush") {
+    return startTouchBrush({
+      brushType: store.uiState.brushType,
+      width: store.uiState.penSize,
+      color: store.uiState.color,
+      opacity: store.uiState.opacity,
+      erace: store.uiState.erase,
+      canvasSize,
+    });
+  }
+  return null;
+}
