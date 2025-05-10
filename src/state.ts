@@ -34,38 +34,6 @@ export type State = {
   update: (update: (draft: WritableDraft<State>) => void) => void
 };
 
-// export type Op = {
-//   type: "init";
-//   layerCanvases: OffscreenCanvas[];
-// } | {
-//   type: "stroke";
-//   erase: boolean;
-//   strokeStyle: {
-//     color: string
-//     soft: boolean
-//   };
-//   opacity: number;
-//   path: { pos: [number, number], size: number }[];
-//   layerIndex: number;
-// } | {
-//   type: "fill";
-//   fillColor: string;
-//   opacity: number;
-//   path: { pos: [number, number] }[];
-//   layerIndex: number;
-// // } | {
-// //   type: "addLayer";
-// // } | {
-// //   type: "removeLayer";
-// //   layerIndex: number;
-// //   initial: OffscreenCanvas;
-// //   canvas: OffscreenCanvas;
-// // } | {
-// //   type: "moveLayer";
-// //   fromIndex: number;
-// //   toIndex: number;
-// };
-
 export const useStore = create<State>()((set) => {
   return ({
     imageMeta: null,
@@ -90,36 +58,6 @@ export const useStore = create<State>()((set) => {
           apply: transfer
         } : null),
       }))
-      // set((state) => {
-      //   if (op.type === "stroke" || op.type === "fill") {
-      //     const layer = state.layers[op.layerIndex];
-      //     const ctx = layer.canvas.getContext("2d")!;
-      //     ctx.save();
-      //     ctx.globalAlpha = state.uiState.opacity;
-      //     if (state.uiState.tool === "eraser")
-      //       ctx.globalCompositeOperation = "destination-out";
-      //     ctx.drawImage(canvas, 0, 0);
-      //     ctx.restore();
-      //   }
-      //   // else if (op.type === "addLayer") {
-      //   //   const canvas = new OffscreenCanvas(
-      //   //     state.layers[0].canvas.width,
-      //   //     state.layers[0].canvas.height
-      //   //   );
-      //   //   const initial = new OffscreenCanvas(
-      //   //     state.layers[0].canvas.width,
-      //   //     state.layers[0].canvas.height
-      //   //   );
-      //   //   state.layers.push({ initial, canvas });
-      //   // } else if (op.type === "removeLayer") {
-      //   //   state.layers.splice(op.layerIndex, 1);
-      //   //   if (state.layerIndex >= state.layers.length)
-      //   //     state.layerIndex = state.layers.length - 1;
-      //   // }
-      //   const history = state.history.clone();
-      //   history.push(op);
-      //   return { history, updatedAt: new Date() }
-      // })
     },
     updatedAt: new Date(),
     clearAll() {
@@ -129,18 +67,16 @@ export const useStore = create<State>()((set) => {
     },
 
     undo() {
-      set((state) => {
-        return {
-          stateContainer: StateContainerUndo(state.stateContainer),
-        }
+      set((state) => ({
+        stateContainer: StateContainerUndo(state.stateContainer),
       })
+      )
     },
     redo() {
-      set((state) => {
-        return {
-          stateContainer: StateContainerRedo(state.stateContainer),
-        }
+      set((state) => ({
+        stateContainer: StateContainerRedo(state.stateContainer),
       })
+      )
     },
 
     update(update) {
