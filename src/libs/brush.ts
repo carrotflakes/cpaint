@@ -1,3 +1,5 @@
+import { mulberry32 } from "./rand";
+
 export type CanvasContext = OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D;
 
 export type Touch = {
@@ -12,6 +14,8 @@ export function startTouchBrush({ brushType, width, color, opacity, erace, canva
   switch (brushType) {
     case "soft":
       return startTouchSoft({ width, color, opacity, erace, canvasSize });
+    case "particle":
+      return startTouchParticle({ width, color, opacity, erace, canvasSize });
     case "hard":
     default:
       return startTouchHard({ width, color, opacity, erace, canvasSize });
@@ -75,6 +79,47 @@ export function startTouchSoft({ width, color, opacity, erace, canvasSize }:
 }
 
 export function startTouchHard({ width, color, opacity, erace, canvasSize }:
+  { width: number, color: string, opacity: number, erace: boolean, canvasSize: [number, number] }
+): Touch {
+  const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
+
+  const path: { x: number, y: number, pressure: number }[] = [];
+  const rng = mulberry32(1);
+
+  return {
+    stroke(x: number, y: number, pressure: number) {
+      const prev = path[path.length - 1];
+      if (prev) {
+        const dist = Math.sqrt((prev.x - x) ** 2 + (prev.y - y) ** 2);
+
+        const ctx = canvas.getContext("2d")!;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = opacity;
+        for (let i = 0; i < dist; i += 1) {
+          const t = i / dist;
+          const x2 = prev.x + (x - prev.x) * t + (rng() * 2 - 1) * width * 0.5;
+          const y2 = prev.y + (y - prev.y) * t + (rng() * 2 - 1) * width * 0.5;
+          const p2 = prev.pressure + (pressure - prev.pressure) * t;
+          ctx.beginPath();
+          ctx.arc(x2, y2, width * p2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      path.push({ x, y, pressure });
+    },
+    end() {
+    },
+    transfer(ctx: CanvasContext) {
+      ctx.save();
+      if (erace)
+        ctx.globalCompositeOperation = "destination-out";
+      ctx.drawImage(canvas, 0, 0);
+      ctx.restore();
+    },
+  }
+}
+
+export function startTouchParticle({ width, color, opacity, erace, canvasSize }:
   { width: number, color: string, opacity: number, erace: boolean, canvasSize: [number, number] }
 ): Touch {
   const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
