@@ -315,7 +315,16 @@ function useControl(
       if (state.current.type === "drawing") {
         if (e.pointerId !== state.current.pointerId || touchRef.current == null)
           return;
-        const { path } = state.current;
+
+        const { path, lastPos } = state.current;
+        const pos = computePos(e);
+
+        // If the pointer is moved, we need to add the last position
+        if (dist(lastPos, pos) > 0) {
+          path.push({ pos, size: e.pressure });
+          touchRef.current.stroke(pos[0], pos[1], 0);
+        }
+
         apply: {
           touchRef.current.end();
           if (store.uiState.tool === "fill") {
