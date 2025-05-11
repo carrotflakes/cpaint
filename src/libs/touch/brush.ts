@@ -1,5 +1,5 @@
 import { CanvasContext, Touch } from ".";
-import { startTouchParticle1, startTouchParticle2 } from "./particle";
+import { startTouchParticle1, startTouchParticle2, startTouchParticle3 } from "./particle";
 
 export function startTouchBrush({ brushType, width, color, opacity, erace, canvasSize }:
   { brushType: string, width: number, color: string, opacity: number, erace: boolean, canvasSize: [number, number] }
@@ -11,6 +11,8 @@ export function startTouchBrush({ brushType, width, color, opacity, erace, canva
       return startTouchParticle1({ width, color, opacity, erace, canvasSize });
     case "particle2":
       return startTouchParticle2({ width, color, opacity, erace, canvasSize });
+    case "particle3":
+      return startTouchParticle3({ width, color, opacity, erace, canvasSize });
     case "hard":
     default:
       return startTouchHard({ width, color, opacity, erace, canvasSize });

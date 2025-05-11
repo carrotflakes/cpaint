@@ -346,7 +346,7 @@ function BrushSelector({
 }) {
   return (
     <div className="h-full flex flex-col gap-2">
-      {["soft", "hard", "particle1", "particle2"].map((type) => (
+      {["soft", "hard", "particle1", "particle2", "particle3"].map((type) => (
         <button
           key={type}
           className="p-1 data-[selected=true]:bg-blue-400"

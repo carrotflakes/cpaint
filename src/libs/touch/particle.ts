@@ -72,6 +72,40 @@ export function startTouchParticle2({ width, color, opacity, erace, canvasSize }
   };
 }
 
+export function startTouchParticle3({ width, color, opacity, erace, canvasSize }: { width: number; color: string; opacity: number; erace: boolean; canvasSize: [number, number]; }
+): Touch {
+  const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
+
+  const path = pathToDots();
+
+  return {
+    stroke(x: number, y: number, pressure: number) {
+      path.path.push({ x, y, pressure });
+
+      const ctx = canvas.getContext("2d")!;
+      ctx.fillStyle = color;
+      while (true) {
+        const d = path.current();
+        if (!d) break;
+        ctx.globalAlpha = opacity * d.pressure;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, width, 0, Math.PI * 2);
+        ctx.fill();
+        path.next(1);
+      }
+    },
+    end() {
+    },
+    transfer(ctx: CanvasContext) {
+      ctx.save();
+      if (erace)
+        ctx.globalCompositeOperation = "destination-out";
+      ctx.drawImage(canvas, 0, 0);
+      ctx.restore();
+    },
+  };
+}
+
 function pathToDots() {
   return {
     path: [] as { x: number, y: number, pressure: number }[],
