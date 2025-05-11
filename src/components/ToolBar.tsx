@@ -121,7 +121,10 @@ export function ToolBar() {
           B
         </div>
         {showBrushPreview && (
-          <div className="absolute h-[70%] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto">
+          <div
+            className="absolute h-[70%] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto"
+            data-scroll={true}
+          >
             <BrushSelector
               brushType={uiState.brushType}
               onChange={(brushType) => {
