@@ -22,7 +22,7 @@ export function Files() {
     load();
   }, [load]);
 
-  const newFile = useCallback(() => {
+  const newFile = useCallback((size: [number, number]) => {
     useAppState.setState({
       imageMeta: {
         id: Date.now(),
@@ -30,17 +30,31 @@ export function Files() {
         createdAt: Date.now(),
       },
     });
-    useAppState.getState().clearAll();
+    useAppState.getState().clearAll(size);
   }, []);
 
   return (
     <div className="p-4">
-      <button
-        className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200"
-        onClick={newFile}
-      >
-        New file
-      </button>
+      <div className="flex gap-2">
+        <button
+          className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200"
+          onClick={() => newFile([400, 400])}
+        >
+          New file 400x400
+        </button>
+        <button
+          className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200"
+          onClick={() => newFile([2000, 2000])}
+        >
+          New file 2000x2000
+        </button>
+        <button
+          className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200"
+          onClick={() => newFile([4000, 4000])}
+        >
+          New file 4000x4000
+        </button>
+      </div>
       <div className="flex flex-wrap">
         {files?.map((file) => (
           <div

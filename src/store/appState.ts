@@ -32,7 +32,7 @@ export type AppState = {
   }
   stateContainer: StateContainer
   apply: (op: Op, transfer: ((ctx: OffscreenCanvasRenderingContext2D) => void) | null) => void
-  clearAll: () => void
+  clearAll: (size: [number, number]) => void
 
   undo: () => void
   redo: () => void
@@ -66,9 +66,9 @@ export const useAppState = create<AppState>()((set) => {
         } : null),
       }))
     },
-    clearAll() {
+    clearAll(size: [number, number]) {
       set(() => ({
-        stateContainer: StateContainerNew(400, 400),
+        stateContainer: StateContainerNew(size[0], size[1]),
       }))
     },
 
