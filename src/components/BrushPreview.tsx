@@ -1,7 +1,17 @@
 import { useEffect, useRef } from "react";
 import { startTouchBrush } from "../libs/touch/brush";
 
-export function BrushPreview({ brushType }: { brushType: string }) {
+export function BrushPreview({
+  brushType,
+  overwriteProps,
+}: {
+  brushType: string;
+  overwriteProps?: {
+    width?: number;
+    color?: string;
+    opacity?: number;
+  };
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null!);
 
   useEffect(() => {
@@ -18,6 +28,7 @@ export function BrushPreview({ brushType }: { brushType: string }) {
       opacity: 1,
       erace: false,
       canvasSize: [canvas.width, canvas.height],
+      ...overwriteProps,
     });
 
     const startX = 20;
@@ -32,7 +43,7 @@ export function BrushPreview({ brushType }: { brushType: string }) {
     }
     touch.end();
     touch.transfer(ctx);
-  }, [brushType]);
+  }, [brushType, JSON.stringify(overwriteProps)]);
 
   return <canvas ref={canvasRef} width={300} height={100}></canvas>;
 }

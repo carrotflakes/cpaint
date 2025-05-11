@@ -63,6 +63,14 @@ export function ToolBar() {
                 });
               }}
             />
+            <BrushPreview
+              brushType={uiState.brushType}
+              overwriteProps={{
+                color: uiState.color,
+                width: uiState.penSize,
+                opacity: uiState.opacity,
+              }}
+            />
           </div>
         )}
       </div>
@@ -76,7 +84,7 @@ export function ToolBar() {
           {uiState.penSize}
         </div>
         {controlPenWidth.show && (
-          <div className="absolute p-2 bg-white dark:bg-black shadow z-10">
+          <div className="absolute p-2 flex bg-white dark:bg-black shadow z-10">
             <SliderV
               value={uiState.penSize / penWidthMax}
               onChange={(value) =>
@@ -84,6 +92,14 @@ export function ToolBar() {
                   draft.uiState.penSize = Math.round(value * penWidthMax);
                 })
               }
+            />
+            <BrushPreview
+              brushType={uiState.brushType}
+              overwriteProps={{
+                color: uiState.color,
+                width: uiState.penSize,
+                opacity: uiState.opacity,
+              }}
             />
           </div>
         )}
@@ -98,13 +114,21 @@ export function ToolBar() {
           {Math.round(uiState.opacity * 255)}
         </div>
         {controlOpacity.show && (
-          <div className="absolute p-2 bg-white dark:bg-black shadow z-10">
+          <div className="absolute p-2 flex bg-white dark:bg-black shadow z-10">
             <SliderV
               value={uiState.opacity}
               onChange={(value) => {
                 store.update((draft) => {
                   draft.uiState.opacity = value;
                 });
+              }}
+            />
+            <BrushPreview
+              brushType={uiState.brushType}
+              overwriteProps={{
+                color: uiState.color,
+                width: uiState.penSize,
+                opacity: uiState.opacity,
               }}
             />
           </div>
