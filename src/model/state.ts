@@ -76,7 +76,7 @@ export function StateContainerDo(
   touch: Touch | null,
 ): StateContainer {
   const opts = OpTsNew(op);
-  if ((op.type === "stroke" || op.type === "fill") && touch) {
+  if ((op.type === "stroke" || op.type === "fill" || op.type === "bucketFill") && touch) {
     const layer = sc.state.layers.find(l => l.id === touch.layerId);
     if (!layer) {
       throw new Error(`Layer ${touch.layerId} not found`);

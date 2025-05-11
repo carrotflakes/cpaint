@@ -2,8 +2,8 @@ import { CanvasContext, Touch } from ".";
 import { bucketFill, bucketFillEstimate } from "../bucket";
 import * as cc from "color-convert";
 
-export function startTouchBucketFill({ color, imageData }:
-  { color: string, imageData: ImageData }
+export function startTouchBucketFill({ color, opacity, erace, imageData }:
+  { color: string, opacity: number, erace: boolean, imageData: ImageData }
 ): Touch {
   // TODO: I believe that this canvas is not needed.
   const canvas = new OffscreenCanvas(imageData.width, imageData.height);
@@ -43,7 +43,14 @@ export function startTouchBucketFill({ color, imageData }:
         ctx2.putImageData(imageDataDst, 0, 0);
       }
 
+      ctx.save();
+      if (finished) {
+        if (erace)
+          ctx.globalCompositeOperation = "destination-out";
+        ctx.globalAlpha = opacity;
+      }
       ctx.drawImage(canvas, 0, 0);
+      ctx.restore();
     },
   }
 }

@@ -27,6 +27,8 @@ export type Op = {
 } | {
   type: "bucketFill";
   fillColor: string;
+  opacity: number;
+  erace: boolean;
   pos: [number, number];
   layerIndex: number;
 } | {

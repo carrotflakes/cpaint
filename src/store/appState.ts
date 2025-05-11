@@ -114,6 +114,8 @@ export function createTouch(store: AppState) {
     case "bucketFill":
       return startTouchBucketFill({
         color: store.uiState.color,
+        opacity: store.uiState.opacity,
+        erace: store.uiState.erase,
         imageData: canvas.getContext("2d", { willReadFrequently: true })!.getImageData(0, 0, canvas.width, canvas.height),
       });
     default:

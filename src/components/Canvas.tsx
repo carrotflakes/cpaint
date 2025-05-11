@@ -312,7 +312,7 @@ function useControl(
               layerIndex: store.uiState.layerIndex,
             };
             store.apply(op, touchRef.current.transfer);
-          } else {
+          } else if (store.uiState.tool === "brush") {
             const op: Op = {
               type: "stroke",
               erase: store.uiState.erase,
@@ -323,6 +323,16 @@ function useControl(
               },
               opacity: store.uiState.opacity,
               path,
+              layerIndex: store.uiState.layerIndex,
+            };
+            store.apply(op, touchRef.current.transfer);
+          } else if (store.uiState.tool === "bucketFill") {
+            const op: Op = {
+              type: "bucketFill",
+              fillColor: store.uiState.color,
+              opacity: store.uiState.opacity,
+              erace: store.uiState.erase,
+              pos: [pos[0], pos[1]],
               layerIndex: store.uiState.layerIndex,
             };
             store.apply(op, touchRef.current.transfer);
