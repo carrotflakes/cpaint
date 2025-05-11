@@ -84,8 +84,8 @@ function pathToDots() {
         this.i++;
         this.progress -= this.distance;
         this.distance = Math.sqrt(
-          (this.path[this.i].x - this.path[this.i - 1].x) ** 2) +
-          ((this.path[this.i].y - this.path[this.i - 1].y) ** 2);
+          (this.path[this.i].x - this.path[this.i - 1].x) ** 2 +
+          (this.path[this.i].y - this.path[this.i - 1].y) ** 2);
       }
 
       const prev = this.path[this.i - 1];
