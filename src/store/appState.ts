@@ -6,8 +6,9 @@ import {
 import { Op } from '../model/op';
 import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
 import { startTouchFill } from '../libs/touch/fill';
+import { startTouchBucketFill } from '../libs/touch/bucketFill';
 
-type ToolType = "brush" | "fill";
+type ToolType = "brush" | "fill" | "bucketFill";
 
 export type AppState = {
   imageMeta: null | {
@@ -91,24 +92,31 @@ export const useAppState = create<AppState>()((set) => {
 });
 
 export function createTouch(store: AppState) {
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
-  const canvasSize: [number, number] = [firstCanvas.width, firstCanvas.height];
+  const canvas = store.stateContainer.state.layers[store.uiState.layerIndex].canvas;
+  const canvasSize: [number, number] = [canvas.width, canvas.height];
 
-  if (store.uiState.tool === "fill") {
-    return startTouchFill({
-      color: store.uiState.color,
-      opacity: store.uiState.opacity,
-      erace: store.uiState.erase,
-    });
-  } else if (store.uiState.tool === "brush") {
-    return startTouchBrush({
-      brushType: store.uiState.brushType,
-      width: store.uiState.penSize,
-      color: store.uiState.color,
-      opacity: store.uiState.opacity,
-      erace: store.uiState.erase,
-      canvasSize,
-    });
+  switch (store.uiState.tool) {
+    case "fill":
+      return startTouchFill({
+        color: store.uiState.color,
+        opacity: store.uiState.opacity,
+        erace: store.uiState.erase,
+      });
+    case "brush":
+      return startTouchBrush({
+        brushType: store.uiState.brushType,
+        width: store.uiState.penSize,
+        color: store.uiState.color,
+        opacity: store.uiState.opacity,
+        erace: store.uiState.erase,
+        canvasSize,
+      });
+    case "bucketFill":
+      return startTouchBucketFill({
+        color: store.uiState.color,
+        imageData: canvas.getContext("2d", { willReadFrequently: true })!.getImageData(0, 0, canvas.width, canvas.height),
+      });
+    default:
+      return null;
   }
-  return null;
 }

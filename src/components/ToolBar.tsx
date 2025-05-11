@@ -3,6 +3,7 @@ import { usePointer } from "../hooks/usePointer";
 import { useAppState } from "../store/appState";
 import { ColorPalette } from "./ColorPalette";
 import {
+  IconBucket,
   IconEraser,
   IconFill,
   IconMagnifyingGlass,
@@ -176,6 +177,19 @@ export function ToolBar() {
         title="Fill"
       >
         <IconFill />
+      </div>
+
+      <div
+        className="cursor-pointer data-[selected=false]:opacity-50"
+        data-selected={uiState.tool === "bucketFill"}
+        onClick={() => {
+          store.update((draft) => {
+            draft.uiState.tool = "bucketFill";
+          });
+        }}
+        title="Bucket Fill"
+      >
+        <IconBucket />
       </div>
 
       <hr />

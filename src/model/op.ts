@@ -25,6 +25,11 @@ export type Op = {
   path: { pos: [number, number] }[];
   layerIndex: number;
 } | {
+  type: "bucketFill";
+  fillColor: string;
+  pos: [number, number];
+  layerIndex: number;
+} | {
   type: "patch";
   patches: Patch[];
 };
@@ -95,6 +100,9 @@ export function applyOp(
       };
     });
     return { state: newState, diff };
+  }
+  if (op.type === "bucketFill") {
+    // TODO
   }
   if (op.type === "patch") {
     const aps = applyPatches(state, op.patches);
