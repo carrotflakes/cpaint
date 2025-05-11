@@ -121,7 +121,7 @@ export function ToolBar() {
           B
         </div>
         {showBrushPreview && (
-          <div className="absolute p-2 bg-white dark:bg-black shadow z-10">
+          <div className="absolute h-[70%] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto">
             <BrushSelector
               brushType={uiState.brushType}
               onChange={(brushType) => {
@@ -342,11 +342,11 @@ function BrushSelector({
   onChange: (brushType: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="h-full flex flex-col gap-2">
       {["soft", "hard", "particle1", "particle2"].map((type) => (
         <button
           key={type}
-          className="p-2"
+          className="p-1 data-[selected=true]:bg-blue-400"
           onClick={() => onChange(type)}
           data-selected={brushType === type}
         >
