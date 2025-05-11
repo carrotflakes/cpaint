@@ -14,14 +14,14 @@ export function startTouchParticle1({ width, color, opacity, erace, canvasSize }
       const ctx = canvas.getContext("2d")!;
       ctx.fillStyle = color;
       ctx.globalAlpha = opacity;
+      ctx.beginPath();
       while (true) {
         const d = path.current();
         if (!d) break;
-        ctx.beginPath();
         ctx.arc(d.x, d.y, width * d.pressure, 0, Math.PI * 2);
-        ctx.fill();
         path.next(1);
       }
+      ctx.fill();
     },
     end() {
     },
@@ -49,16 +49,16 @@ export function startTouchParticle2({ width, color, opacity, erace, canvasSize }
       const ctx = canvas.getContext("2d")!;
       ctx.fillStyle = color;
       ctx.globalAlpha = opacity;
+      ctx.beginPath();
       while (true) {
         const d = path.current();
         if (!d) break;
-        ctx.beginPath();
         const a = rng() * Math.PI * 2;
         const r = Math.sqrt(rng()) * d.pressure;
         ctx.arc(d.x + Math.cos(a) * r * width * 0.5, d.y + Math.sin(a) * r * width * 0.5, width * 0.1, 0, Math.PI * 2);
-        ctx.fill();
         path.next(0.5);
       }
+      ctx.fill();
     },
     end() {
     },
