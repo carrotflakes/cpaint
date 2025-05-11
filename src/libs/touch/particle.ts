@@ -1,0 +1,106 @@
+import { Touch, CanvasContext } from ".";
+import { mulberry32 } from "../rand";
+
+export function startTouchParticle1({ width, color, opacity, erace, canvasSize }: { width: number; color: string; opacity: number; erace: boolean; canvasSize: [number, number]; }
+): Touch {
+  const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
+
+  const path = pathToDots();
+
+  return {
+    stroke(x: number, y: number, pressure: number) {
+      path.path.push({ x, y, pressure });
+
+      const ctx = canvas.getContext("2d")!;
+      ctx.fillStyle = color;
+      ctx.globalAlpha = opacity;
+      while (true) {
+        const d = path.current();
+        if (!d) break;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, width * d.pressure, 0, Math.PI * 2);
+        ctx.fill();
+        path.next(1);
+      }
+    },
+    end() {
+    },
+    transfer(ctx: CanvasContext) {
+      ctx.save();
+      if (erace)
+        ctx.globalCompositeOperation = "destination-out";
+      ctx.drawImage(canvas, 0, 0);
+      ctx.restore();
+    },
+  };
+}
+
+export function startTouchParticle2({ width, color, opacity, erace, canvasSize }: { width: number; color: string; opacity: number; erace: boolean; canvasSize: [number, number]; }
+): Touch {
+  const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
+
+  const path = pathToDots();
+  const rng = mulberry32(1);
+
+  return {
+    stroke(x: number, y: number, pressure: number) {
+      path.path.push({ x, y, pressure });
+
+      const ctx = canvas.getContext("2d")!;
+      ctx.fillStyle = color;
+      ctx.globalAlpha = opacity;
+      while (true) {
+        const d = path.current();
+        if (!d) break;
+        ctx.beginPath();
+        const a = rng() * Math.PI * 2;
+        const r = Math.sqrt(rng()) * d.pressure;
+        ctx.arc(d.x + Math.cos(a) * r * width * 0.5, d.y + Math.sin(a) * r * width * 0.5, width * 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        path.next(0.5);
+      }
+    },
+    end() {
+    },
+    transfer(ctx: CanvasContext) {
+      ctx.save();
+      if (erace)
+        ctx.globalCompositeOperation = "destination-out";
+      ctx.drawImage(canvas, 0, 0);
+      ctx.restore();
+    },
+  };
+}
+
+function pathToDots() {
+  return {
+    path: [] as { x: number, y: number, pressure: number }[],
+    i: 0,
+    distance: 1,
+    progress: 1,
+    current() {
+      while (this.progress >= this.distance) {
+        if (this.path.length <= this.i + 1) return null;
+        this.i++;
+        this.progress -= this.distance;
+        this.distance = Math.sqrt(
+          (this.path[this.i].x - this.path[this.i - 1].x) ** 2) +
+          ((this.path[this.i].y - this.path[this.i - 1].y) ** 2);
+      }
+
+      const prev = this.path[this.i - 1];
+      const next = this.path[this.i];
+      if (!next) return null;
+
+      const t = this.progress / this.distance;
+      return {
+        x: prev.x + (next.x - prev.x) * t,
+        y: prev.y + (next.y - prev.y) * t,
+        pressure: prev.pressure + (next.pressure - prev.pressure) * t,
+      }
+    },
+    next(step: number) {
+      this.progress += step;
+    },
+  }
+}

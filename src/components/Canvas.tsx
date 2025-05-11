@@ -5,7 +5,7 @@ import { Op } from "../model/op";
 import { StateRender } from "../model/state";
 import { createTouch, useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
-import { Touch } from "../libs/brush";
+import { Touch } from "../libs/touch";
 
 export default function Canvas() {
   const store = useAppState();

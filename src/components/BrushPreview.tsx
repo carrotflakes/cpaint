@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { startTouchBrush } from "../libs/brush";
+import { startTouchBrush } from "../libs/touch/brush";
 
 export function BrushPreview({ brushType }: { brushType: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null!);

@@ -1,9 +1,10 @@
 import { produce } from "immer";
 import { applyPatches } from "../libs/applyPatches";
-import { startTouchBrush, startTouchFill } from "../libs/brush";
+import { startTouchBrush } from "../libs/touch/brush";
 import { canvasToImageDiff } from "../libs/canvasUtil";
 import { Patch } from "../libs/patch";
 import type { State, StateDiff } from "./state";
+import { startTouchFill } from "../libs/touch/fill";
 
 export type Op = {
   type: "stroke";

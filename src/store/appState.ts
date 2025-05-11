@@ -2,10 +2,10 @@ import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
 import {
   startTouchBrush,
-  startTouchFill
-} from "../libs/brush";
+} from "../libs/touch/brush";
 import { Op } from '../model/op';
 import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
+import { startTouchFill } from '../libs/touch/fill';
 
 type ToolType = "brush" | "fill";
 
