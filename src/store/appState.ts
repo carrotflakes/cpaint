@@ -8,7 +8,7 @@ import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo
 import { startTouchFill } from '../libs/touch/fill';
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
 
-type ToolType = "brush" | "fill" | "bucketFill";
+type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper";
 
 export type AppState = {
   imageMeta: null | {

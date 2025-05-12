@@ -216,6 +216,19 @@ export function ToolBar() {
         <IconBucket />
       </div>
 
+      {/* <div
+        className="cursor-pointer data-[selected=false]:opacity-50"
+        data-selected={uiState.tool === "eyeDropper"}
+        onClick={() => {
+          store.update((draft) => {
+            draft.uiState.tool = "eyeDropper";
+          });
+        }}
+        title="Eye dropper"
+      >
+        <IconDropper />
+      </div> */}
+
       <hr />
 
       <div
