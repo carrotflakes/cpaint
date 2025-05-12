@@ -45,7 +45,7 @@ function App() {
         <Header />
       </div>
       {store.imageMeta && (
-        <div className="relative grow flex items-stretch">
+        <div className="relative grow flex items-stretch min-h-0">
           <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
             <ToolBar />
           </div>

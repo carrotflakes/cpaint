@@ -58,6 +58,7 @@ export function ToolBar() {
           <Popover.Content
             className="p-2 bg-gray-50 dark:bg-gray-950 shadow z-10"
             sideOffset={5}
+            collisionPadding={8}
           >
             <ColorPalette
               initialColor={uiState.color}
@@ -96,6 +97,7 @@ export function ToolBar() {
           <Popover.Content
             className="p-2 flex bg-white dark:bg-black shadow z-10"
             sideOffset={5}
+            collisionPadding={8}
             onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
           >
             <SliderV
@@ -135,6 +137,7 @@ export function ToolBar() {
           <Popover.Content
             className="p-2 flex bg-white dark:bg-black shadow z-10"
             sideOffset={5}
+            collisionPadding={8}
             onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
           >
             <SliderV
@@ -168,9 +171,13 @@ export function ToolBar() {
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content
-            className="h-[70%] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto"
+            className="max-h-[calc(100dvh-16px)] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto"
             data-scroll={true}
+            side="right"
+            align="start"
             sideOffset={5}
+            collisionPadding={8}
+            forceMount
           >
             <BrushSelector
               brushType={uiState.brushType}
@@ -413,7 +420,7 @@ function BrushSelector({
   onChange: (brushType: string) => void;
 }) {
   return (
-    <div className="h-full flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       {["soft", "hard", "particle1", "particle2", "particle3"].map((type) => (
         <button
           key={type}

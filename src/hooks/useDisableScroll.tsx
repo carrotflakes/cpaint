@@ -10,7 +10,10 @@ export function useDisableScroll() {
     const f = (e: TouchEvent) => {
       let target = e.target as HTMLElement | null;
       while (target) {
-        if (target.dataset.scroll === "true") {
+        if (
+          target.dataset.scroll === "true" &&
+          target.scrollHeight > target.clientHeight
+        ) {
           return;
         }
         target = target.parentElement;
