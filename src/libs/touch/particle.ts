@@ -13,7 +13,6 @@ export function startTouchParticle1({ width, color, opacity, erace, canvasSize }
 
       const ctx = canvas.getContext("2d")!;
       ctx.fillStyle = color;
-      ctx.globalAlpha = opacity;
       ctx.beginPath();
       while (true) {
         const d = path.current();
@@ -27,6 +26,7 @@ export function startTouchParticle1({ width, color, opacity, erace, canvasSize }
     },
     transfer(ctx: CanvasContext) {
       ctx.save();
+      ctx.globalAlpha = opacity;
       if (erace)
         ctx.globalCompositeOperation = "destination-out";
       ctx.drawImage(canvas, 0, 0);
@@ -49,16 +49,16 @@ export function startTouchParticle2({ width, color, opacity, erace, canvasSize }
       const ctx = canvas.getContext("2d")!;
       ctx.fillStyle = color;
       ctx.globalAlpha = opacity;
-      ctx.beginPath();
       while (true) {
         const d = path.current();
         if (!d) break;
         const a = rng() * Math.PI * 2;
         const r = Math.sqrt(rng()) * d.pressure;
+        ctx.beginPath();
         ctx.arc(d.x + Math.cos(a) * r * width * 0.5, d.y + Math.sin(a) * r * width * 0.5, width * 0.1, 0, Math.PI * 2);
+        ctx.fill();
         path.next(0.5);
       }
-      ctx.fill();
     },
     end() {
     },
