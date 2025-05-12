@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import * as Popover from "@radix-ui/react-popover";
 import { usePointer } from "../hooks/usePointer";
 import { useAppState } from "../store/appState";
 import { ColorPalette } from "./ColorPalette";
@@ -22,7 +23,6 @@ const scaleFactor = 2 ** (1 / 4);
 export function ToolBar() {
   const store = useAppState();
   const { uiState } = store;
-  const [showCp, setShowCp] = useState(false);
   const [showBrushPreview, setShowBrushPreview] = useState(false);
 
   const controlPenWidth = useControl({
@@ -47,14 +47,18 @@ export function ToolBar() {
 
   return (
     <div className="h-full p-2 flex flex-col gap-2 overflow-y-auto">
-      <div>
-        <div
-          className="relative w-6 h-6 rounded-full shadow cursor-pointer"
-          style={{ background: uiState.color }}
-          onClick={() => setShowCp((showCp) => !showCp)}
-        ></div>
-        {showCp && (
-          <div className="absolute p-2 bg-gray-50 dark:bg-gray-950 shadow z-10">
+      <Popover.Root>
+        <Popover.Trigger asChild>
+          <div
+            className="relative w-6 h-6 rounded-full shadow cursor-pointer"
+            style={{ background: uiState.color }}
+          ></div>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="p-2 bg-gray-50 dark:bg-gray-950 shadow z-10"
+            sideOffset={5}
+          >
             <ColorPalette
               initialColor={uiState.color}
               onChanged={(color: string) => {
@@ -71,20 +75,29 @@ export function ToolBar() {
                 opacity: uiState.opacity,
               }}
             />
-          </div>
-        )}
-      </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
-      <div>
-        <div
-          className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
-          title="Pen width"
-          {...controlPenWidth.props}
-        >
-          {uiState.penSize}
-        </div>
-        {controlPenWidth.show && (
-          <div className="absolute p-2 flex bg-white dark:bg-black shadow z-10">
+      <Popover.Root
+        open={controlPenWidth.show}
+        onOpenChange={controlPenWidth.setShow}
+      >
+        <Popover.Trigger asChild>
+          <div
+            className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
+            title="Pen width"
+            {...controlPenWidth.props}
+          >
+            {uiState.penSize}
+          </div>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="p-2 flex bg-white dark:bg-black shadow z-10"
+            sideOffset={5}
+            onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
+          >
             <SliderV
               value={uiState.penSize / penWidthMax}
               onChange={(value) =>
@@ -101,20 +114,29 @@ export function ToolBar() {
                 opacity: uiState.opacity,
               }}
             />
-          </div>
-        )}
-      </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
-      <div>
-        <div
-          className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
-          title="Opacity"
-          {...controlOpacity.props}
-        >
-          {Math.round(uiState.opacity * 255)}
-        </div>
-        {controlOpacity.show && (
-          <div className="absolute p-2 flex bg-white dark:bg-black shadow z-10">
+      <Popover.Root
+        open={controlOpacity.show}
+        onOpenChange={controlOpacity.setShow}
+      >
+        <Popover.Trigger asChild>
+          <div
+            className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
+            title="Opacity"
+            {...controlOpacity.props}
+          >
+            {Math.round(uiState.opacity * 255)}
+          </div>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="p-2 flex bg-white dark:bg-black shadow z-10"
+            sideOffset={5}
+            onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
+          >
             <SliderV
               value={uiState.opacity}
               onChange={(value) => {
@@ -131,24 +153,24 @@ export function ToolBar() {
                 opacity: uiState.opacity,
               }}
             />
-          </div>
-        )}
-      </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
-      <div>
-        <div
-          className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
-          onClick={() => {
-            setShowBrushPreview((showBrushPreview) => !showBrushPreview);
-          }}
-          title="Brush type"
-        >
-          B
-        </div>
-        {showBrushPreview && (
+      <Popover.Root open={showBrushPreview} onOpenChange={setShowBrushPreview}>
+        <Popover.Trigger asChild>
           <div
-            className="absolute h-[70%] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto"
+            className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
+            title="Brush type"
+          >
+            B
+          </div>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="h-[70%] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto"
             data-scroll={true}
+            sideOffset={5}
           >
             <BrushSelector
               brushType={uiState.brushType}
@@ -156,11 +178,12 @@ export function ToolBar() {
                 store.update((draft) => {
                   draft.uiState.brushType = brushType;
                 });
+                setShowBrushPreview(false); // Close popover on select
               }}
             />
-          </div>
-        )}
-      </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
@@ -339,8 +362,6 @@ function SliderV({
   );
 }
 
-const clickTime = 200;
-
 function useControl({
   getValue,
   setValue,
@@ -359,19 +380,15 @@ function useControl({
     onPointerDown(pos) {
       setTemporalShow(true);
       const initValue = getValue();
-      let moved = false;
-      const startAt = Date.now();
 
       return {
         onMove(pos_) {
           const dy = pos_[1] - pos[1];
           const value = initValue - dy * sensitivity;
           setValue(value);
-          moved = true;
         },
         onUp() {
           setTemporalShow(false);
-          if (!moved || Date.now() - startAt <= clickTime) setShow((x) => !x);
         },
       };
     },

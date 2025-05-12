@@ -3,15 +3,14 @@ import { useAppState, AppState } from "../store/appState";
 import { useState } from "react";
 import { IconEye, IconEyeSlash, IconMenu } from "./icons";
 import { BlendMode } from "../model/blendMode";
+import * as Popover from "@radix-ui/react-popover";
 
 export function LayersBar() {
   const store = useAppState();
-  const [contextMenu, setContextMenu] = useState({
-    visible: false,
-    x: 0,
-    y: 0,
-    layerIndex: 0,
-  });
+  const [popoverOpen, setPopoverOpen] = useState<{
+    open: boolean;
+    layerIndex: number;
+  }>({ open: false, layerIndex: 0 });
 
   const addLayer = () => {
     const layers = store.stateContainer.state.layers;
@@ -58,24 +57,6 @@ export function LayersBar() {
     );
   };
 
-  const handleContextMenu = (e: React.MouseEvent, index: number) => {
-    e.preventDefault();
-    if (contextMenu.visible) {
-      closeContextMenu();
-      return;
-    }
-    setContextMenu({
-      visible: true,
-      x: e.clientX,
-      y: e.clientY,
-      layerIndex: index,
-    });
-  };
-
-  const closeContextMenu = () => {
-    setContextMenu({ visible: false, x: 0, y: 0, layerIndex: 0 });
-  };
-
   return (
     <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
       <div className="flex flex-col items-stretch">
@@ -106,12 +87,39 @@ export function LayersBar() {
               >
                 Layer {i}
               </div>
-              <button
-                className="mt-1 w-8 h-8 p-1 rounded"
-                onClick={(e) => handleContextMenu(e, i)}
+              <Popover.Root
+                open={popoverOpen.open && popoverOpen.layerIndex === i}
+                onOpenChange={(open) => setPopoverOpen({ open, layerIndex: i })}
               >
-                <IconMenu />
-              </button>
+                <Popover.Trigger asChild>
+                  <button
+                    className="mt-1 w-8 h-8 p-1 rounded"
+                    onClick={() => {
+                      setPopoverOpen({ open: true, layerIndex: i });
+                    }}
+                  >
+                    <IconMenu />
+                  </button>
+                </Popover.Trigger>
+                <Popover.Portal>
+                  <Popover.Content
+                    className="min-w-20 bg-white border border-gray-300 shadow-md z-50"
+                    sideOffset={5}
+                    align="end"
+                    onInteractOutside={() =>
+                      setPopoverOpen({ open: false, layerIndex: 0 })
+                    }
+                  >
+                    <ContextMenuPopover
+                      layerIndex={i}
+                      store={store}
+                      closePopover={() =>
+                        setPopoverOpen({ open: false, layerIndex: 0 })
+                      }
+                    />
+                  </Popover.Content>
+                </Popover.Portal>
+              </Popover.Root>
             </div>
           ))}
           <div className="p-2 cursor-pointer" onClick={addLayer}>
@@ -119,29 +127,17 @@ export function LayersBar() {
           </div>
         </div>
       </div>
-      {contextMenu.visible && (
-        <ContextMenu
-          contextMenu={contextMenu}
-          closeContextMenu={closeContextMenu}
-          store={store}
-        />
-      )}
     </div>
   );
 }
 
-function ContextMenu({
-  contextMenu,
-  closeContextMenu,
+function ContextMenuPopover({
+  layerIndex,
+  closePopover,
   store,
 }: {
-  contextMenu: {
-    visible: boolean;
-    x: number;
-    y: number;
-    layerIndex: number;
-  };
-  closeContextMenu: () => void;
+  layerIndex: number;
+  closePopover: () => void;
   store: AppState;
 }) {
   const updateOpacity = (index: number, opacity: number) => {
@@ -178,33 +174,14 @@ function ContextMenu({
       },
       null
     );
-  };
-
-  const handleMenuAction = (action: string) => {
-    if (contextMenu.layerIndex !== null) {
-      if (action === "delete") {
-        deleteLayer(contextMenu.layerIndex);
-      }
-    }
-    closeContextMenu();
+    closePopover();
   };
 
   return (
-    <div
-      className="fixed min-w-20 bg-white border border-gray-300 shadow-md"
-      style={{ top: contextMenu.y, left: contextMenu.x - 100 }}
-    >
-      <div
-        className="p-2 cursor-pointer hover:bg-gray-100"
-        onClick={() => closeContextMenu()}
-      >
-        Close
-      </div>
+    <div>
       <div className="p-2 hover:bg-gray-100">
         <select
-          value={
-            store.stateContainer.state.layers[contextMenu.layerIndex].blendMode
-          }
+          value={store.stateContainer.state.layers[layerIndex].blendMode}
           onChange={(e) =>
             store.apply(
               {
@@ -212,7 +189,7 @@ function ContextMenu({
                 patches: [
                   {
                     op: "replace",
-                    path: `/layers/${contextMenu.layerIndex}/blendMode`,
+                    path: `/layers/${layerIndex}/blendMode`,
                     value: e.target
                       .value as any satisfies State["layers"][number]["blendMode"],
                   },
@@ -236,18 +213,16 @@ function ContextMenu({
           min="0"
           max="1"
           step="0.01"
-          value={
-            store.stateContainer.state.layers[contextMenu.layerIndex].opacity
-          }
+          value={store.stateContainer.state.layers[layerIndex].opacity}
           onChange={(e) =>
-            updateOpacity(contextMenu.layerIndex, parseFloat(e.target.value))
+            updateOpacity(layerIndex, parseFloat(e.target.value))
           }
           className="w-full mt-1"
         />
       </div>
       <div
         className="p-2 cursor-pointer hover:bg-gray-100"
-        onClick={() => handleMenuAction("delete")}
+        onClick={() => deleteLayer(layerIndex)}
       >
         Delete Layer
       </div>
