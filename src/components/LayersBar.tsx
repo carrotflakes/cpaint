@@ -61,7 +61,7 @@ export function LayersBar() {
     <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
       <div className="flex flex-col items-stretch">
         <div className="p-2 border-b border-gray-300">Layers</div>
-        <div className="flex-grow overflow-y-auto">
+        <div className="grow overflow-y-auto">
           {store.stateContainer.state.layers.map((layer, i) => (
             <div
               key={i}
@@ -72,7 +72,7 @@ export function LayersBar() {
               }`}
             >
               <button
-                className="mt-1 w-8 h-8 p-1 rounded"
+                className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
                 onClick={() => toggleVisibility(i)}
               >
                 {layer.visible ? <IconEye /> : <IconEyeSlash />}
@@ -93,7 +93,7 @@ export function LayersBar() {
               >
                 <Popover.Trigger asChild>
                   <button
-                    className="mt-1 w-8 h-8 p-1 rounded"
+                    className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
                     onClick={() => {
                       setPopoverOpen({ open: true, layerIndex: i });
                     }}

@@ -86,7 +86,7 @@ export function ToolBar() {
       >
         <Popover.Trigger asChild>
           <div
-            className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
+            className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
             title="Pen width"
             {...controlPenWidth.props}
           >
@@ -126,7 +126,7 @@ export function ToolBar() {
       >
         <Popover.Trigger asChild>
           <div
-            className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
+            className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
             title="Opacity"
             {...controlOpacity.props}
           >
@@ -163,7 +163,7 @@ export function ToolBar() {
       <Popover.Root open={showBrushPreview} onOpenChange={setShowBrushPreview}>
         <Popover.Trigger asChild>
           <div
-            className="w-6 h-6 flex justify-center items-center rounded border-2 bg-white dark:bg-black cursor-pointer"
+            className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
             title="Brush type"
           >
             B
@@ -205,7 +205,7 @@ export function ToolBar() {
         <IconEraser />
       </div>
 
-      <hr />
+      <hr className="opacity-20" />
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
@@ -259,7 +259,7 @@ export function ToolBar() {
         <IconDropper />
       </div> */}
 
-      <hr />
+      <hr className="opacity-20" />
 
       <div
         className="cursor-pointer data-[enabled=false]:opacity-50"
@@ -283,7 +283,7 @@ export function ToolBar() {
         <IconRedo />
       </div>
 
-      <hr />
+      <hr className="opacity-20" />
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
@@ -360,9 +360,9 @@ function SliderV({
   });
 
   return (
-    <div className="relative w-4 h-32 rounded border-2" ref={ref}>
+    <div className="relative w-4 h-32 rounded border-2 border-gray-300" ref={ref}>
       <div
-        className="absolute w-3 h-[1px] bg-gray-400"
+        className="absolute w-3 h-px bg-gray-400"
         style={{ top: `${(1 - value) * 100}%` }}
       />
     </div>
@@ -424,7 +424,7 @@ function BrushSelector({
       {["soft", "hard", "particle1", "particle2", "particle3"].map((type) => (
         <button
           key={type}
-          className="p-1 data-[selected=true]:bg-blue-400"
+          className="p-1 data-[selected=true]:bg-blue-400 cursor-pointer"
           onClick={() => onChange(type)}
           data-selected={brushType === type}
         >

@@ -37,24 +37,25 @@ export function Files() {
     <div className="p-4">
       <div className="flex gap-2">
         <button
-          className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200"
+          className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => newFile([400, 400])}
         >
           New file 400x400
         </button>
         <button
-          className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200"
+          className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => newFile([2000, 2000])}
         >
           New file 2000x2000
         </button>
         <button
-          className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200"
+          className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => newFile([4000, 4000])}
         >
           New file 4000x4000
         </button>
       </div>
+
       <div className="flex flex-wrap">
         {files?.map((file) => (
           <div
@@ -65,7 +66,7 @@ export function Files() {
             {file.name}
             <Thumbnail id={file.id} />
             <button
-              className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200"
+              className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
               onClick={() => {
                 storage?.deleteImage(file.id);
                 load();

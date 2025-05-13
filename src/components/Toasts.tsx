@@ -12,7 +12,7 @@ export function Toasts() {
         >
           <div className="grow select-text">{message.text}</div>
           <div
-            className="shrink-0 w-5 opacity-50 hover:opacity-100 cursor-pointer"
+            className="shrink-0 w-5 text-black/50 hover:text-black/100 cursor-pointer"
             onClick={() => store.removeMessage(message.id)}
           >
             <IconClose />

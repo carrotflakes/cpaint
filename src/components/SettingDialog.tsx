@@ -27,7 +27,7 @@ export function SettingDialog() {
       <ModalDialog onClickOutside={() => settingDialog.setShow(false)}>
         <div className="flex flex-col gap-2">
           <div className="text-lg">Settings</div>
-          <hr />
+          <hr className="opacity-20" />
 
           <div className="flex gap-2">
             <input
@@ -59,7 +59,7 @@ export function SettingDialog() {
             <label htmlFor="wheelZoom">Wheel zoom</label>
           </div>
 
-          <hr />
+          <hr className="opacity-20" />
 
           <button
             onClick={() => {
