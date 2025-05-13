@@ -24,6 +24,7 @@ export type AppState = {
     opacity: number
     brushType: string
     layerIndex: number
+    bucketFillTolerance: number
     canvasView: {
       angle: number
       scale: number
@@ -51,6 +52,7 @@ export const useAppState = create<AppState>()((set) => {
       softPen: false,
       brushType: "soft",
       layerIndex: 0,
+      bucketFillTolerance: 0,
       canvasView: {
         angle: 0,
         scale: 1,
@@ -122,6 +124,7 @@ export function createTouch(store: AppState) {
         color: store.uiState.color,
         opacity: store.uiState.opacity,
         erace: store.uiState.erase,
+        tolerance: store.uiState.bucketFillTolerance,
         imageData: canvas.getContext("2d", { willReadFrequently: true })!.getImageData(0, 0, canvas.width, canvas.height),
       });
     default:

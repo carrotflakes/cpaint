@@ -29,6 +29,7 @@ export type Op = {
   fillColor: string;
   opacity: number;
   erace: boolean;
+  tolerance: number;
   pos: [number, number];
   layerIndex: number;
 } | {

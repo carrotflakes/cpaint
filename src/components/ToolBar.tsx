@@ -44,6 +44,14 @@ export function ToolBar() {
       }),
     sensitivity: 0.01,
   });
+  const controlBFTolerance = useControl({
+    getValue: () => uiState.bucketFillTolerance,
+    setValue: (v) =>
+      store.update((draft) => {
+        draft.uiState.bucketFillTolerance = Math.max(Math.min(v, 1), 0);
+      }),
+    sensitivity: 0.01,
+  });
 
   return (
     <div className="h-full p-2 flex flex-col gap-2 overflow-y-auto">
@@ -204,6 +212,38 @@ export function ToolBar() {
       >
         <IconEraser />
       </div>
+
+      <Popover.Root
+        open={controlBFTolerance.show}
+        onOpenChange={controlBFTolerance.setShow}
+      >
+        <Popover.Trigger asChild>
+          <div
+            className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
+            title="Tolerance"
+            {...controlBFTolerance.props}
+          >
+            {Math.round(uiState.bucketFillTolerance * 255)}
+          </div>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="p-2 flex bg-white dark:bg-black shadow z-10"
+            sideOffset={5}
+            collisionPadding={8}
+            onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
+          >
+            <SliderV
+              value={uiState.bucketFillTolerance}
+              onChange={(value) => {
+                store.update((draft) => {
+                  draft.uiState.bucketFillTolerance = value;
+                });
+              }}
+            />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
       <hr className="opacity-20" />
 

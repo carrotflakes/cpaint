@@ -332,6 +332,7 @@ function useControl(
               fillColor: store.uiState.color,
               opacity: store.uiState.opacity,
               erace: store.uiState.erase,
+              tolerance: store.uiState.bucketFillTolerance,
               pos: [pos[0], pos[1]],
               layerIndex: store.uiState.layerIndex,
             };

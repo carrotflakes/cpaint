@@ -11,6 +11,7 @@ export function bucketFill(
   startX: number,
   startY: number,
   fillColor: RGBAColor,
+  tolerance: number = 0,
 ): void {
   const canvasWidth = imageDataSrc.width;
   const canvasHeight = imageDataSrc.height;
@@ -28,6 +29,10 @@ export function bucketFill(
     return; // Target color is same as fill color, no action needed
   }
 
+  const match = tolerance > 0
+    ? (color: RGBAColor) => colorsDistance(color, targetColor) <= tolerance
+    : (color: RGBAColor) => colorsMatch(color, targetColor);
+
   const queue: [number, number][] = [[sX, sY]];
 
   while (queue.length > 0) {
@@ -42,7 +47,7 @@ export function bucketFill(
 
     const currentColor = getColorAtPixel(imageDataSrc, x, y);
 
-    if (colorsMatch(currentColor, targetColor)) {
+    if (match(currentColor)) {
       setColorAtPixel(imageDataDst, x, y, fillColor);
 
       // Add neighbors to the queue
@@ -60,6 +65,7 @@ export function bucketFillEstimate(
   startX: number,
   startY: number,
   fillColor: RGBAColor,
+  tolerance: number = 0,
 ): void {
   const canvasWidth = imageDataSrc.width;
   const canvasHeight = imageDataSrc.height;
@@ -77,31 +83,35 @@ export function bucketFillEstimate(
     return; // Target color is same as fill color, no action needed
   }
 
+  const match = tolerance > 0
+    ? (color: RGBAColor) => colorsDistance(color, targetColor) <= tolerance
+    : (color: RGBAColor) => colorsMatch(color, targetColor);
+
   // Up
   for (let y = sY - 1; y >= 0; y--) {
     const currentColor = getColorAtPixel(imageDataSrc, sX, y);
-    if (colorsMatch(currentColor, targetColor))
+    if (match(currentColor))
       setColorAtPixel(imageDataDst, sX, y, fillColor);
     else break;
   }
   // Down
   for (let y = sY + 1; y < canvasHeight; y++) {
     const currentColor = getColorAtPixel(imageDataSrc, sX, y);
-    if (colorsMatch(currentColor, targetColor))
+    if (match(currentColor))
       setColorAtPixel(imageDataDst, sX, y, fillColor);
     else break;
   }
   // Left
   for (let x = sX - 1; x >= 0; x--) {
     const currentColor = getColorAtPixel(imageDataSrc, x, sY);
-    if (colorsMatch(currentColor, targetColor))
+    if (match(currentColor))
       setColorAtPixel(imageDataDst, x, sY, fillColor);
     else break;
   }
   // Right
   for (let x = sX + 1; x < canvasWidth; x++) {
     const currentColor = getColorAtPixel(imageDataSrc, x, sY);
-    if (colorsMatch(currentColor, targetColor))
+    if (match(currentColor))
       setColorAtPixel(imageDataDst, x, sY, fillColor);
     else break;
   }
@@ -134,4 +144,12 @@ function colorsMatch(color1: RGBAColor, color2: RGBAColor): boolean {
     color1.b === color2.b &&
     color1.a === color2.a
   );
+}
+
+function colorsDistance(color1: RGBAColor, color2: RGBAColor): number {
+  return Math.sqrt(
+    (((color1.r - color2.r) / 255) ** 2 +
+    ((color1.g - color2.g) / 255) ** 2 +
+    ((color1.b - color2.b) / 255) ** 2) / 3
+  ) * (color1.a + color2.a) / (2 * 255);
 }
