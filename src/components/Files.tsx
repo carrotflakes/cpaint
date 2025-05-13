@@ -23,14 +23,7 @@ export function Files() {
   }, [load]);
 
   const newFile = useCallback((size: [number, number]) => {
-    useAppState.setState({
-      imageMeta: {
-        id: Date.now(),
-        name: new Date().toISOString().split(".")[0].replace(/:/g, "-"),
-        createdAt: Date.now(),
-      },
-    });
-    useAppState.getState().clearAll(size);
+    useAppState.getState().new(size);
   }, []);
 
   return (

@@ -31,9 +31,9 @@ export type AppState = {
     }
   }
   stateContainer: StateContainer
-  apply: (op: Op, transfer: ((ctx: OffscreenCanvasRenderingContext2D) => void) | null) => void
-  clearAll: (size: [number, number]) => void
 
+  apply: (op: Op, transfer: ((ctx: OffscreenCanvasRenderingContext2D) => void) | null) => void
+  new: (size: [number, number]) => void
   undo: () => void
   redo: () => void
   update: (update: (draft: WritableDraft<AppState>) => void) => void
@@ -58,6 +58,7 @@ export const useAppState = create<AppState>()((set) => {
       },
     },
     stateContainer: StateContainerNew(400, 400),
+
     apply(op, transfer) {
       set(state => ({
         stateContainer: StateContainerDo(state.stateContainer, op, transfer && op.type !== "patch" ? {
@@ -66,8 +67,13 @@ export const useAppState = create<AppState>()((set) => {
         } : null),
       }))
     },
-    clearAll(size: [number, number]) {
+    new(size: [number, number]) {
       set(() => ({
+        imageMeta: {
+          id: Date.now(),
+          name: new Date().toISOString().split(".")[0].replace(/:/g, "-"),
+          createdAt: Date.now(),
+        },
         stateContainer: StateContainerNew(size[0], size[1]),
       }))
     },
