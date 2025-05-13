@@ -13,7 +13,7 @@ export function Header() {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   return (
-    <div className="p-2 flex gap-2 overflow-x-auto">
+    <div className="h-10 px-2 flex items-center gap-2 overflow-x-auto">
       {imageMeta ? (
         <div
           className="basis-6 cursor-pointer"
