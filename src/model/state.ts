@@ -37,12 +37,6 @@ export function StateContainerNew(
   height: number,
 ) {
   const canvas = new OffscreenCanvas(width, height);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Failed to get context");
-  }
-  // ctx.fillStyle = "white";
-  // ctx.fillRect(0, 0, width, height);
   return {
     state: {
       layers: [
@@ -85,7 +79,7 @@ export function StateContainerDo(
       layer.canvas.width,
       layer.canvas.height,
     );
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) {
       throw new Error("Failed to get context");
     }

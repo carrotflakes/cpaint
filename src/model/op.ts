@@ -63,7 +63,7 @@ export function applyOp(
       layer.canvas.width,
       layer.canvas.height,
     );
-    const ctx = newCanvas.getContext("2d");
+    const ctx = newCanvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) {
       throw new Error("Failed to get context");
     }

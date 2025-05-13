@@ -52,8 +52,8 @@ export function canvasToImageDiff(
     throw new Error("Canvas sizes do not match");
   }
 
-  const ctx1 = canvas1.getContext("2d");
-  const ctx2 = canvas2.getContext("2d");
+  const ctx1 = canvas1.getContext("2d", { willReadFrequently: true });
+  const ctx2 = canvas2.getContext("2d", { willReadFrequently: true });
   if (!ctx1 || !ctx2) {
     throw new Error("Failed to get context");
   }
@@ -96,7 +96,7 @@ export function canvasToImageDiff(
 }
 
 export function canvasRect(canvas: OffscreenCanvas) {
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) {
     throw new Error("Failed to get context");
   }
