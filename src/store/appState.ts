@@ -106,7 +106,7 @@ export const useAppState = create<AppState>()((set) => {
         }),
       }));
     },
-    importAsLayer(image: HTMLImageElement) {
+    importAsLayer(_image: HTMLImageElement) {
       // TODO
     },
     undo() {
