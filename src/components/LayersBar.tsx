@@ -12,6 +12,10 @@ export function LayersBar() {
     layerIndex: number;
   }>({ open: false, layerIndex: 0 });
 
+  // D&D state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   const addLayer = () => {
     const layers = store.stateContainer.state.layers;
     const firstLayer = layers[0];
@@ -57,6 +61,23 @@ export function LayersBar() {
     );
   };
 
+  const moveLayer = (from: number, to: number) => {
+    if (from === to) return;
+    store.apply(
+      {
+        type: "patch",
+        patches: [
+          {
+            op: "move",
+            from: `/layers/${from}`,
+            to: `/layers/${to > from ? to + 1 : to}`,
+          },
+        ],
+      },
+      null
+    );
+  };
+
   return (
     <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
       <div className="flex flex-col items-stretch">
@@ -64,16 +85,37 @@ export function LayersBar() {
         <div className="grow overflow-y-auto">
           {store.stateContainer.state.layers.map((layer, i) => (
             <div
-              key={i}
-              className={`p-2 flex items-center gap-2 ${
+              key={layer.id}
+              className={`relative p-2 flex items-center gap-2 cursor-grab ${
                 i === store.uiState.layerIndex
                   ? "bg-gray-200 dark:bg-gray-700"
+                  : dragOverIndex === i && draggedIndex !== null
+                  ? "bg-blue-100 dark:bg-blue-900"
                   : ""
               }`}
+              draggable
+              onDragStart={() => setDraggedIndex(i)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOverIndex(i);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedIndex !== null) {
+                  moveLayer(draggedIndex, i);
+                }
+                setDraggedIndex(null);
+                setDragOverIndex(null);
+              }}
+              onDragEnd={() => {
+                setDraggedIndex(null);
+                setDragOverIndex(null);
+              }}
             >
               <button
                 className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
                 onClick={() => toggleVisibility(i)}
+                tabIndex={-1}
               >
                 {layer.visible ? <IconEye /> : <IconEyeSlash />}
               </button>
@@ -85,7 +127,7 @@ export function LayersBar() {
                   });
                 }}
               >
-                Layer {i}
+                {layer.id}
               </div>
               <Popover.Root
                 open={popoverOpen.open && popoverOpen.layerIndex === i}
@@ -94,9 +136,11 @@ export function LayersBar() {
                 <Popover.Trigger asChild>
                   <button
                     className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setPopoverOpen({ open: true, layerIndex: i });
                     }}
+                    tabIndex={-1}
                   >
                     <IconMenu />
                   </button>

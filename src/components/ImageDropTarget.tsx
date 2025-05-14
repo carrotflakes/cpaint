@@ -25,7 +25,13 @@ export function ImageDropTarget() {
 
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
-      setIsDraggingOver(true);
+      // Check if the dragged item is a file
+      if (
+        e.dataTransfer?.items.length &&
+        e.dataTransfer.items[0].kind === "file"
+      ) {
+        setIsDraggingOver(true);
+      }
     };
 
     const handleDragLeave = (e: DragEvent) => {
