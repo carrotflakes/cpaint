@@ -16,6 +16,8 @@ export function LayersBar() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  const [layersVisible, setLayersVisible] = useState(true);
+
   const addLayer = () => {
     const layers = store.stateContainer.state.layers;
     const firstLayer = layers[0];
@@ -81,95 +83,104 @@ export function LayersBar() {
   return (
     <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
       <div className="flex flex-col items-stretch">
-        <div className="p-2 border-b border-gray-300">Layers</div>
-        <div className="grow overflow-y-auto">
-          {store.stateContainer.state.layers.map((layer, i) => (
-            <div
-              key={layer.id}
-              className={`relative p-2 flex items-center gap-2 cursor-grab ${
-                i === store.uiState.layerIndex
-                  ? "bg-gray-200 dark:bg-gray-700"
-                  : dragOverIndex === i && draggedIndex !== null
-                  ? "bg-blue-100 dark:bg-blue-900"
-                  : ""
-              }`}
-              draggable
-              onDragStart={() => setDraggedIndex(i)}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOverIndex(i);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                if (draggedIndex !== null) {
-                  moveLayer(draggedIndex, i);
-                }
-                setDraggedIndex(null);
-                setDragOverIndex(null);
-              }}
-              onDragEnd={() => {
-                setDraggedIndex(null);
-                setDragOverIndex(null);
-              }}
-            >
-              <button
-                className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
-                onClick={() => toggleVisibility(i)}
-                tabIndex={-1}
-              >
-                {layer.visible ? <IconEye /> : <IconEyeSlash />}
-              </button>
+        <div
+          className="p-2 border-b border-gray-300 cursor-pointer"
+          onClick={() => setLayersVisible((v) => !v)}
+        >
+          Layers
+        </div>
+        {layersVisible && (
+          <div className="grow overflow-y-auto">
+            {store.stateContainer.state.layers.map((layer, i) => (
               <div
-                className="cursor-pointer"
-                onClick={() => {
-                  store.update((draft) => {
-                    draft.uiState.layerIndex = i;
-                  });
+                key={layer.id}
+                className={`relative p-2 flex items-center gap-2 cursor-grab ${
+                  i === store.uiState.layerIndex
+                    ? "bg-gray-200 dark:bg-gray-700"
+                    : dragOverIndex === i && draggedIndex !== null
+                    ? "bg-blue-100 dark:bg-blue-900"
+                    : ""
+                }`}
+                draggable
+                onDragStart={() => setDraggedIndex(i)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOverIndex(i);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedIndex !== null) {
+                    moveLayer(draggedIndex, i);
+                  }
+                  setDraggedIndex(null);
+                  setDragOverIndex(null);
+                }}
+                onDragEnd={() => {
+                  setDraggedIndex(null);
+                  setDragOverIndex(null);
                 }}
               >
-                {layer.id}
-              </div>
-              <Popover.Root
-                open={popoverOpen.open && popoverOpen.layerIndex === i}
-                onOpenChange={(open) => setPopoverOpen({ open, layerIndex: i })}
-              >
-                <Popover.Trigger asChild>
-                  <button
-                    className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPopoverOpen({ open: true, layerIndex: i });
-                    }}
-                    tabIndex={-1}
-                  >
-                    <IconMenu />
-                  </button>
-                </Popover.Trigger>
-                <Popover.Portal>
-                  <Popover.Content
-                    className="min-w-20 bg-white border border-gray-300 shadow-md z-50"
-                    sideOffset={5}
-                    align="end"
-                    onInteractOutside={() =>
-                      setPopoverOpen({ open: false, layerIndex: 0 })
-                    }
-                  >
-                    <ContextMenuPopover
-                      layerIndex={i}
-                      store={store}
-                      closePopover={() =>
+                <button
+                  className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
+                  onClick={() => toggleVisibility(i)}
+                  tabIndex={-1}
+                >
+                  {layer.visible ? <IconEye /> : <IconEyeSlash />}
+                </button>
+                <div
+                  className="cursor-pointer"
+                  onClick={() => {
+                    store.update((draft) => {
+                      draft.uiState.layerIndex = i;
+                    });
+                  }}
+                >
+                  {layer.id}
+                </div>
+                <Popover.Root
+                  open={popoverOpen.open && popoverOpen.layerIndex === i}
+                  onOpenChange={(open) =>
+                    setPopoverOpen({ open, layerIndex: i })
+                  }
+                >
+                  <Popover.Trigger asChild>
+                    <button
+                      className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPopoverOpen({ open: true, layerIndex: i });
+                      }}
+                      tabIndex={-1}
+                    >
+                      <IconMenu />
+                    </button>
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Content
+                      className="min-w-20 bg-white border border-gray-300 shadow-md z-50"
+                      sideOffset={5}
+                      align="end"
+                      onInteractOutside={() =>
                         setPopoverOpen({ open: false, layerIndex: 0 })
                       }
-                    />
-                  </Popover.Content>
-                </Popover.Portal>
-              </Popover.Root>
+                    >
+                      <ContextMenuPopover
+                        layerIndex={i}
+                        store={store}
+                        closePopover={() =>
+                          setPopoverOpen({ open: false, layerIndex: 0 })
+                        }
+                      />
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover.Root>
+              </div>
+            ))}
+            <div className="p-2 cursor-pointer" onClick={addLayer}>
+              New Layer
             </div>
-          ))}
-          <div className="p-2 cursor-pointer" onClick={addLayer}>
-            New Layer
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
