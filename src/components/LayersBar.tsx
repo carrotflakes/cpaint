@@ -33,7 +33,7 @@ export function LayersBar() {
             op: "add",
             path: `/layers/${layers.length}`,
             value: {
-              id: `${Date.now()}`,
+              id: `${Date.now() % 1000000}`,
               canvas,
               visible: true,
               opacity: 1,
