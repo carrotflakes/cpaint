@@ -27,28 +27,48 @@ export function Files() {
   }, []);
 
   return (
-    <div className="p-4">
+    <div className="p-4 flex flex-col gap-4 text-gray-800 dark:text-gray-200">
+      <h2 className="text-2xl">New</h2>
       <div className="flex gap-2">
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => newFile([400, 400])}
         >
-          New file 400x400
+          New File 400x400
         </button>
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => newFile([2000, 2000])}
         >
-          New file 2000x2000
+          New File 2000x2000
         </button>
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => newFile([4000, 4000])}
         >
-          New file 4000x4000
+          New File 4000x4000
         </button>
+        <label className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer">
+          Open Local File
+          <input
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const { loadImageFromFile } = await import(
+                "../libs/loadImageFile"
+              );
+              const img = await loadImageFromFile(file);
+              useAppState.getState().openAsNewFile(img);
+              load();
+            }}
+          />
+        </label>
       </div>
 
+      <h2 className="text-2xl">Files</h2>
       <div className="flex flex-wrap">
         {files?.map((file) => (
           <div
