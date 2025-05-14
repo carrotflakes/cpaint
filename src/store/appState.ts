@@ -4,9 +4,10 @@ import {
   startTouchBrush,
 } from "../libs/touch/brush";
 import { Op } from '../model/op';
-import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
+import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo, StateContainerUndo, StateContainerFromState } from '../model/state';
 import { startTouchFill } from '../libs/touch/fill';
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
+import { BlendMode } from "../model/blendMode";
 
 type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper";
 
@@ -38,6 +39,8 @@ export type AppState = {
   undo: () => void
   redo: () => void
   update: (update: (draft: WritableDraft<AppState>) => void) => void
+  openAsNewFile: (image: HTMLImageElement) => void
+  importAsLayer: (image: HTMLImageElement) => void
 };
 
 export const useAppState = create<AppState>()((set) => {
@@ -79,7 +82,33 @@ export const useAppState = create<AppState>()((set) => {
         stateContainer: StateContainerNew(size[0], size[1]),
       }))
     },
-
+    openAsNewFile(image: HTMLImageElement) {
+      const { width, height } = image;
+      const canvas = new OffscreenCanvas(width, height);
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(image, 0, 0);
+      set(() => ({
+        imageMeta: {
+          id: Date.now(),
+          name: "Imported Image",
+          createdAt: Date.now(),
+        },
+        stateContainer: StateContainerFromState({
+          layers: [
+            {
+              id: "0",
+              canvas,
+              visible: true,
+              opacity: 1,
+              blendMode: "source-over" as BlendMode,
+            },
+          ],
+        }),
+      }));
+    },
+    importAsLayer(image: HTMLImageElement) {
+      // TODO
+    },
     undo() {
       set((state) => ({
         stateContainer: StateContainerUndo(state.stateContainer),

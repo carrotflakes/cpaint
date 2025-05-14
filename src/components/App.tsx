@@ -8,6 +8,7 @@ import { LayersBar } from "./LayersBar";
 import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
+import { ImageDropTarget } from "./ImageDropTarget";
 
 function App() {
   useDisableScroll();
@@ -40,7 +41,7 @@ function App() {
   }, []);
 
   return (
-    <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden touch-none text-gray-800 dark:text-gray-100">
+    <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden touch-none text-gray-800 dark:text-gray-100 relative">
       <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-300">
         <Header />
       </div>
@@ -66,6 +67,8 @@ function App() {
       <Toasts />
 
       <SettingDialog />
+
+      <ImageDropTarget />
     </div>
   );
 }
