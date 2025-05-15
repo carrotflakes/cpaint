@@ -11,3 +11,6 @@ export function createCheckCanvas() {
   ctx.fillRect(size / 2, size / 2, size / 2, size / 2);
   return canvas;
 }
+
+export const CHECK_PATTERN =
+  `url(${createCheckCanvas().toDataURL()})`;

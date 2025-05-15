@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useViewControl } from "../hooks/useViewControl";
-import { createCheckCanvas } from "../libs/check";
+import { CHECK_PATTERN } from "../libs/check";
+import { Touch } from "../libs/touch";
 import { Op } from "../model/op";
 import { StateRender } from "../model/state";
 import { createTouch, useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
-import { Touch } from "../libs/touch";
 
 export default function Canvas() {
   const store = useAppState();
@@ -20,11 +20,6 @@ export default function Canvas() {
   }, []);
   useControl(canvasRef, containerRef, touchRef, redraw);
   useViewControl(containerRef);
-
-  const checkPat = useMemo(() => {
-    const url = createCheckCanvas().toDataURL();
-    return `url(${url})`;
-  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -52,7 +47,7 @@ export default function Canvas() {
       className="relative w-full h-full overflow-hidden"
       ref={containerRef}
       style={{
-        backgroundImage: checkPat,
+        backgroundImage: CHECK_PATTERN,
       }}
     >
       <canvas
