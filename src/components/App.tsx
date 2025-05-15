@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useDisableScroll } from "../hooks/useDisableScroll";
 import { useAppState } from "../store/appState";
-import Canvas from "./Canvas";
+import MainCanvasArea from "./MainCanvasArea";
 import { Files } from "./Files";
 import { Header } from "./Header";
 import { LayersBar } from "./LayersBar";
@@ -51,7 +51,7 @@ function App() {
             <ToolBar />
           </div>
           <div className="grow bg-gray-200 dark:bg-gray-800">
-            <Canvas />
+            <MainCanvasArea />
           </div>
           <div className="absolute top-0 right-0">
             <LayersBar />

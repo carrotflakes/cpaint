@@ -7,7 +7,7 @@ import { StateRender } from "../model/state";
 import { createTouch, useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
 
-export default function Canvas() {
+export default function MainCanvasArea() {
   const store = useAppState();
   const touchRef = useRef<Touch | null>(null);
   const [updatedAt, setUpdatedAt] = useState(0);
@@ -42,6 +42,7 @@ export default function Canvas() {
 
   const canvasWidth = store.stateContainer.state.layers[0].canvas.width;
   const canvasHeight = store.stateContainer.state.layers[0].canvas.height;
+  const canvasView = store.uiState.canvasView;
   return (
     <div
       className="relative w-full h-full overflow-hidden"
@@ -56,16 +57,14 @@ export default function Canvas() {
         height={canvasHeight}
         style={{
           top: `calc(50% + ${
-            -(canvasWidth * store.uiState.canvasView.scale) / 2 +
-            store.uiState.canvasView.pan[1]
+            -(canvasWidth * canvasView.scale) / 2 + canvasView.pan[1]
           }px)`,
           left: `calc(50% + ${
-            -(canvasHeight * store.uiState.canvasView.scale) / 2 +
-            store.uiState.canvasView.pan[0]
+            -(canvasHeight * canvasView.scale) / 2 + canvasView.pan[0]
           }px)`,
-          width: canvasWidth * store.uiState.canvasView.scale,
-          height: canvasHeight * store.uiState.canvasView.scale,
-          transform: `rotate(${store.uiState.canvasView.angle}rad)`,
+          width: canvasWidth * canvasView.scale,
+          height: canvasHeight * canvasView.scale,
+          transform: `rotate(${canvasView.angle}rad)`,
           imageRendering: "pixelated",
         }}
         ref={canvasRef}
