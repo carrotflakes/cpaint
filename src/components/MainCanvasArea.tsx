@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useViewControl } from "../hooks/useViewControl";
-import { CHECK_PATTERN } from "../libs/check";
 import { Touch } from "../libs/touch";
 import { Op } from "../model/op";
 import { StateRender } from "../model/state";
 import { createTouch, useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
+import CanvasArea, { computePos } from "./CanvasArea";
 
 export default function MainCanvasArea() {
   const store = useAppState();
@@ -40,36 +40,14 @@ export default function MainCanvasArea() {
     StateRender(store.stateContainer.state, ctx, touch);
   }, [store, canvasRef, touchRef, updatedAt]);
 
-  const canvasWidth = store.stateContainer.state.layers[0].canvas.width;
-  const canvasHeight = store.stateContainer.state.layers[0].canvas.height;
-  const canvasView = store.uiState.canvasView;
+  const firstCanvas = store.stateContainer.state.layers[0].canvas;
   return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      ref={containerRef}
-      style={{
-        backgroundImage: CHECK_PATTERN,
-      }}
-    >
-      <canvas
-        className="absolute shadow-[0_0_0_99999px_#f3f4f6] dark:shadow-gray-950"
-        width={canvasWidth}
-        height={canvasHeight}
-        style={{
-          top: `calc(50% + ${
-            -(canvasWidth * canvasView.scale) / 2 + canvasView.pan[1]
-          }px)`,
-          left: `calc(50% + ${
-            -(canvasHeight * canvasView.scale) / 2 + canvasView.pan[0]
-          }px)`,
-          width: canvasWidth * canvasView.scale,
-          height: canvasHeight * canvasView.scale,
-          transform: `rotate(${canvasView.angle}rad)`,
-          imageRendering: "pixelated",
-        }}
-        ref={canvasRef}
-      />
-    </div>
+    <CanvasArea
+      canvas={firstCanvas}
+      canvasView={store.uiState.canvasView}
+      containerRef={containerRef}
+      canvasRef={canvasRef}
+    />
   );
 }
 
@@ -100,34 +78,11 @@ function useControl(
       }
   >(null);
 
-  const computePos = useCallback((e: MouseEvent): [number, number] => {
-    if (!containerRef.current) return [0, 0];
-    const bbox = containerRef.current.getBoundingClientRect();
-
-    const {
-      stateContainer: {
-        state: { layers },
-      },
-      uiState: { canvasView: cv },
-    } = useAppState.getState();
-    const firstCanvas = layers[0].canvas;
-    const pos_ = [
-      (e.clientX - (bbox.left + bbox.width / 2) - cv.pan[0]) / cv.scale,
-      (e.clientY - (bbox.top + bbox.height / 2) - cv.pan[1]) / cv.scale,
-    ];
-    const sin = Math.sin(-cv.angle);
-    const cos = Math.cos(-cv.angle);
-    return [
-      pos_[0] * cos - pos_[1] * sin + firstCanvas.width / 2,
-      pos_[0] * sin + pos_[1] * cos + firstCanvas.height / 2,
-    ];
-  }, []);
-
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
       e.preventDefault();
       if (!canvasRef.current || !containerRef.current) return;
-      const pos = computePos(e);
+      const pos = computePos(e, containerRef.current);
 
       const store = useAppState.getState();
 
@@ -183,7 +138,7 @@ function useControl(
 
       if (state.current.type === "drawing") {
         if (e.pointerId !== state.current.pointerId) return;
-        const pos = computePos(e);
+        const pos = computePos(e, containerRef.current);
 
         const { path, lastPos } = state.current;
         if (dist(lastPos, pos) > 3) {
@@ -286,7 +241,7 @@ function useControl(
           return;
 
         const { path, lastPos } = state.current;
-        const pos = computePos(e);
+        const pos = computePos(e, containerRef.current);
 
         // If the pointer is moved, we need to add the last position
         if (dist(lastPos, pos) > 0) {
