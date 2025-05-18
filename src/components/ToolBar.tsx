@@ -18,7 +18,8 @@ import {
 import { StateContainerHasRedo, StateContainerHasUndo } from "../model/state";
 import { BrushPreview } from "./BrushPreview";
 
-const penWidthMax = 50;
+const penWidthExp = 2;
+const penWidthMax = 1000;
 const scaleFactor = 2 ** (1 / 4);
 
 export function ToolBar() {
@@ -27,15 +28,15 @@ export function ToolBar() {
   const [showBrushPreview, setShowBrushPreview] = useState(false);
 
   const controlPenWidth = useControl({
-    getValue: () => uiState.penSize,
+    getValue: () => (uiState.penSize / penWidthMax) ** (1 / penWidthExp),
     setValue: (v) =>
       store.update((draft) => {
         draft.uiState.penSize = Math.max(
-          Math.min(Math.round(v), penWidthMax),
+          Math.min(Math.round(Math.max(0, v) ** penWidthExp * penWidthMax), penWidthMax),
           1
         );
       }),
-    sensitivity: 1 / 5,
+    sensitivity: 1 / 100,
   });
   const controlOpacity = useControl({
     getValue: () => uiState.opacity,
@@ -110,10 +111,12 @@ export function ToolBar() {
             onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
           >
             <SliderV
-              value={uiState.penSize / penWidthMax}
+              value={(uiState.penSize / penWidthMax) ** (1 / penWidthExp)}
               onChange={(value) =>
                 store.update((draft) => {
-                  draft.uiState.penSize = Math.round(value * penWidthMax);
+                  draft.uiState.penSize = Math.round(
+                    value ** penWidthExp * penWidthMax
+                  );
                 })
               }
             />

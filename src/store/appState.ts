@@ -52,10 +52,10 @@ export const useAppState = create<AppState>()((set) => {
       tool: "brush" as ToolType,
       color: "#000",
       erase: false,
-      penSize: 5,
+      penSize: 10,
       opacity: 1,
       softPen: false,
-      brushType: "soft",
+      brushType: "particle1",
       layerIndex: 0,
       bucketFillTolerance: 0,
       canvasView: {
