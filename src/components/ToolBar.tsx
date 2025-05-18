@@ -4,6 +4,7 @@ import { usePointer } from "../hooks/usePointer";
 import { useAppState } from "../store/appState";
 import { ColorPalette } from "./ColorPalette";
 import {
+  IconArrowsOutCardinal,
   IconBucket,
   IconEraser,
   IconFill,
@@ -299,6 +300,31 @@ export function ToolBar() {
         <IconDropper />
       </div> */}
 
+      <div
+        className="cursor-pointer data-[selected=false]:opacity-50"
+        data-selected={!!uiState.layerTransform}
+        onClick={() => {
+          store.update((draft) => {
+            const canvas =
+              draft.stateContainer.state.layers[draft.uiState.layerIndex]
+                .canvas;
+            draft.uiState.layerTransform = {
+              layerIndex: draft.uiState.layerIndex,
+              rect: {
+                cx: canvas.width / 2,
+                cy: canvas.height / 2,
+                hw: canvas.width / 2,
+                hh: canvas.height / 2,
+                angle: 0,
+              },
+            };
+          });
+        }}
+        title="Layer Transform"
+      >
+        <IconArrowsOutCardinal />
+      </div>
+
       <hr className="opacity-20" />
 
       <div
@@ -400,7 +426,10 @@ function SliderV({
   });
 
   return (
-    <div className="relative w-4 h-32 rounded border-2 border-gray-300" ref={ref}>
+    <div
+      className="relative w-4 h-32 rounded border-2 border-gray-300"
+      ref={ref}
+    >
       <div
         className="absolute w-3 h-px bg-gray-400"
         style={{ top: `${(1 - value) * 100}%` }}

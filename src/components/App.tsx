@@ -1,14 +1,15 @@
 import { useEffect } from "react";
 import { useDisableScroll } from "../hooks/useDisableScroll";
 import { useAppState } from "../store/appState";
-import MainCanvasArea from "./MainCanvasArea";
 import { Files } from "./Files";
 import { Header } from "./Header";
+import { ImageDropTarget } from "./ImageDropTarget";
 import { LayersBar } from "./LayersBar";
+import MainCanvasArea from "./MainCanvasArea";
 import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
-import { ImageDropTarget } from "./ImageDropTarget";
+import Transform from "./Transform";
 
 function App() {
   useDisableScroll();
@@ -51,7 +52,7 @@ function App() {
             <ToolBar />
           </div>
           <div className="grow bg-gray-200 dark:bg-gray-800">
-            <MainCanvasArea />
+            {store.uiState.layerTransform ? <Transform /> : <MainCanvasArea />}
           </div>
           <div className="absolute top-0 right-0">
             <LayersBar />

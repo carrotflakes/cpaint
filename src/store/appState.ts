@@ -8,6 +8,7 @@ import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo
 import { startTouchFill } from '../libs/touch/fill';
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
 import { BlendMode } from "../model/blendMode";
+import { Rect as TransformRect } from '../components/TransformRectHandles';
 
 type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper";
 
@@ -31,6 +32,7 @@ export type AppState = {
       scale: number
       pan: [number, number]
     }
+    layerTransform: { layerIndex: number, rect: TransformRect } | null
   }
   stateContainer: StateContainer
 
@@ -61,6 +63,7 @@ export const useAppState = create<AppState>()((set) => {
         scale: 1,
         pan: [0, 0],
       },
+      layerTransform: null,
     },
     stateContainer: StateContainerNew(400, 400),
 

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { CHECK_PATTERN } from "../libs/check";
 import { useAppState } from "../store/appState";
 
@@ -6,6 +7,7 @@ export default function CanvasArea({
   canvasView,
   containerRef,
   canvasRef,
+  children,
 }: {
   canvas: { width: number; height: number };
   canvasView: {
@@ -15,8 +17,29 @@ export default function CanvasArea({
   };
   containerRef: { current: HTMLDivElement | null };
   canvasRef: { current: HTMLCanvasElement | null };
+  children?: React.ReactNode;
 }) {
-  const transform = `translate(${canvasView.pan[0]}px, ${canvasView.pan[1]}px) rotate(${canvasView.angle}rad) scale(${canvasView.scale})`;
+  const [containerSize, setContainerSize] = useState({
+    width: 0,
+    height: 0,
+  });
+
+  const handleResize = () => {
+    if (containerRef.current) {
+      setContainerSize({
+        width: containerRef.current.clientWidth,
+        height: containerRef.current.clientHeight,
+      });
+    }
+  };
+  useEffect(() => {
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [containerRef]);
+
   return (
     <div
       className="relative w-full h-full grid place-items-center overflow-hidden"
@@ -30,13 +53,34 @@ export default function CanvasArea({
         width={canvas.width}
         height={canvas.height}
         style={{
-          transform,
+          transform: viewToTransform(canvasView),
           imageRendering: "pixelated",
         }}
         ref={canvasRef}
       />
+      <svg
+        width={containerSize.width}
+        height={containerSize.height}
+        className="absolute top-0 left-0"
+      >
+        <g
+          transform={`translate(${containerSize.width / 2}, ${
+            containerSize.height / 2
+          })`}
+        >
+          {children}
+        </g>
+      </svg>
     </div>
   );
+}
+
+export function viewToTransform(canvasView: {
+  angle: number;
+  scale: number;
+  pan: [number, number];
+}): string {
+  return `translate(${canvasView.pan[0]}px, ${canvasView.pan[1]}px) rotate(${canvasView.angle}rad) scale(${canvasView.scale})`;
 }
 
 export function computePos(

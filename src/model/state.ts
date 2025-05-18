@@ -70,7 +70,7 @@ export function StateContainerDo(
   touch: Touch | null,
 ): StateContainer {
   const opts = OpTsNew(op);
-  if ((op.type === "stroke" || op.type === "fill" || op.type === "bucketFill") && touch) {
+  if ((op.type === "stroke" || op.type === "fill" || op.type === "bucketFill" || op.type === "layerTransform") && touch) {
     const layer = sc.state.layers.find(l => l.id === touch.layerId);
     if (!layer) {
       throw new Error(`Layer ${touch.layerId} not found`);
@@ -84,7 +84,9 @@ export function StateContainerDo(
       throw new Error("Failed to get context");
     }
     ctx.drawImage(layer.canvas, 0, 0);
+    ctx.save();
     touch.apply(ctx);
+    ctx.restore();
     const diff = canvasToImageDiff(canvas, layer.canvas);
     if (!diff) {
       // No difference found
@@ -249,7 +251,9 @@ export function StateRender(
       }
       layerCtx.clearRect(0, 0, canvas.width, canvas.height);
       layerCtx.drawImage(layer.canvas, 0, 0);
+      layerCtx.save();
       touch.apply(layerCtx);
+      layerCtx.restore();
 
       ctx.globalAlpha = layer.opacity;
       ctx.globalCompositeOperation = layer.blendMode;

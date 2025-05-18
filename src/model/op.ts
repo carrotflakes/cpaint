@@ -5,6 +5,7 @@ import { canvasToImageDiff } from "../libs/canvasUtil";
 import { Patch } from "../libs/patch";
 import type { State, StateDiff } from "./state";
 import { startTouchFill } from "../libs/touch/fill";
+import { Rect as TransformRect } from "../components/TransformRectHandles";
 
 export type Op = {
   type: "stroke";
@@ -32,6 +33,10 @@ export type Op = {
   tolerance: number;
   pos: [number, number];
   layerIndex: number;
+} | {
+  type: "layerTransform";
+  layerIndex: number;
+  rect: TransformRect;
 } | {
   type: "patch";
   patches: Patch[];
@@ -105,6 +110,9 @@ export function applyOp(
     return { state: newState, diff };
   }
   if (op.type === "bucketFill") {
+    // TODO
+  }
+  if (op.type === "layerTransform") {
     // TODO
   }
   if (op.type === "patch") {

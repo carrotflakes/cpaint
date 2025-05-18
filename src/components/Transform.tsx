@@ -1,72 +1,113 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useViewControl } from "../hooks/useViewControl";
-import { Touch } from "../libs/touch";
-import { Op } from "../model/op";
 import { StateRender } from "../model/state";
-import { createTouch, useAppState } from "../store/appState";
-import { useGlobalSettings } from "../store/globalSetting";
-import CanvasArea, { computePos } from "./CanvasArea";
+import { useAppState } from "../store/appState";
+import CanvasArea from "./CanvasArea";
+import { Rect, TransformRectHandles } from "./TransformRectHandles";
 
-export default function MainCanvasArea() {
+export default function Transform() {
   const store = useAppState();
-  const touchRef = useRef<Touch | null>(null);
-  const [updatedAt, setUpdatedAt] = useState(0);
+  const layerTransform = store.uiState.layerTransform;
 
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
-  const redraw = useCallback(() => {
-    setUpdatedAt(Date.now());
-  }, []);
-  useControl(canvasRef, containerRef, touchRef, redraw);
+  useControl(canvasRef, containerRef);
   useViewControl(containerRef);
 
   useEffect(() => {
+    if (!layerTransform) return;
+
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    const touch_ = touchRef.current;
-    const touch =
-      touch_ &&
-      store.uiState.layerIndex < store.stateContainer.state.layers.length
-        ? {
-            layerId:
-              store.stateContainer.state.layers[store.uiState.layerIndex].id,
-            apply: (ctx: OffscreenCanvasRenderingContext2D) => {
-              touch_.transfer(ctx);
-            },
-          }
-        : null;
+    const layer =
+      store.stateContainer.state.layers[layerTransform.layerIndex ?? 0];
+    const touch = {
+      layerId: layer.id,
+      apply: makeApply(layer.canvas, layerTransform.rect),
+    };
     StateRender(store.stateContainer.state, ctx, touch);
-  }, [store, canvasRef, touchRef, updatedAt]);
+  }, [store, canvasRef]);
 
   const firstCanvas = store.stateContainer.state.layers[0].canvas;
   return (
-    <CanvasArea
-      canvas={firstCanvas}
-      canvasView={store.uiState.canvasView}
-      containerRef={containerRef}
-      canvasRef={canvasRef}
-    />
+    <div className="relative w-full h-full">
+      <CanvasArea
+        canvas={firstCanvas}
+        canvasView={store.uiState.canvasView}
+        containerRef={containerRef}
+        canvasRef={canvasRef}
+      >
+        {layerTransform && (
+          <TransformRectHandles
+            rect={layerTransform.rect}
+            onRectChange={(rect) => {
+              store.update((draft) => {
+                if (draft.uiState.layerTransform)
+                  draft.uiState.layerTransform.rect = rect;
+              });
+            }}
+            canvasSize={firstCanvas}
+          />
+        )}
+      </CanvasArea>
+
+      <div className="absolute top-2 left-2 flex gap-2">
+        <div
+          className="p-2 rounded bg-gray-200 cursor-pointer"
+          onClick={() => {
+            store.update((draft) => {
+              draft.uiState.layerTransform = null;
+            });
+          }}
+        >
+          Cancel
+        </div>
+        <div
+          className="p-2 rounded bg-gray-200 cursor-pointer"
+          onClick={() => {
+            if (!layerTransform) return;
+            const op = {
+              type: "layerTransform" as const,
+              layerIndex: layerTransform.layerIndex,
+              rect: layerTransform.rect,
+            };
+
+            const layer =
+              store.stateContainer.state.layers[layerTransform.layerIndex ?? 0];
+            store.apply(op, makeApply(layer.canvas, layerTransform.rect));
+            store.update((draft) => {
+              draft.uiState.layerTransform = null;
+            });
+          }}
+        >
+          Apply
+        </div>
+      </div>
+    </div>
   );
+}
+
+function makeApply(canvas: OffscreenCanvas, rect: Rect) {
+  return (ctx: OffscreenCanvasRenderingContext2D) => {
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(rect.cx, rect.cy);
+    ctx.rotate(rect.angle);
+    ctx.scale((rect.hw * 2) / canvas.width, (rect.hh * 2) / canvas.height);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  };
 }
 
 function useControl(
   canvasRef: { current: HTMLCanvasElement | null },
-  containerRef: { current: HTMLDivElement | null },
-  touchRef: { current: Touch | null },
-  redraw: () => void
+  containerRef: { current: HTMLDivElement | null }
 ) {
-  const { fingerOperations } = useGlobalSettings((state) => state);
-
   const state = useRef<
     | null
-    | {
-        type: "drawing";
-        path: any[];
-        lastPos: [number, number];
-        pointerId: number;
-      }
     | {
         type: "panning";
         pointers: { id: number; pos: [number, number] }[];
@@ -82,28 +123,7 @@ function useControl(
     const onPointerDown = (e: PointerEvent) => {
       e.preventDefault();
       if (!canvasRef.current || !containerRef.current) return;
-      const pos = computePos(e, containerRef.current);
-
       const store = useAppState.getState();
-
-      if (
-        state.current?.type !== "drawing" &&
-        e.button === 0 &&
-        !(fingerOperations && e.pointerType === "touch")
-      ) {
-        const path = [{ pos, size: e.pressure }];
-        touchRef.current = createTouch(store);
-        if (touchRef.current == null) return;
-        touchRef.current.stroke(pos[0], pos[1], e.pressure);
-
-        state.current = {
-          type: "drawing",
-          path,
-          lastPos: pos,
-          pointerId: e.pointerId,
-        };
-        return;
-      }
 
       if (state.current == null) {
         // Middle button to pan
@@ -135,20 +155,6 @@ function useControl(
 
     const onPointerMove = (e: PointerEvent) => {
       if (!canvasRef.current || !containerRef.current || !state.current) return;
-
-      if (state.current.type === "drawing") {
-        if (e.pointerId !== state.current.pointerId) return;
-        const pos = computePos(e, containerRef.current);
-
-        const { path, lastPos } = state.current;
-        if (dist(lastPos, pos) > 3) {
-          path.push({ pos, size: e.pressure });
-          touchRef.current?.stroke(pos[0], pos[1], e.pressure);
-          state.current.lastPos = pos;
-          redraw();
-        }
-        return;
-      }
 
       if (state.current.type === "panning") {
         const pi = state.current.pointers.findIndex(
@@ -234,65 +240,6 @@ function useControl(
     const onPointerUp = (e: PointerEvent) => {
       if (!canvasRef.current || !containerRef.current || !state.current) return;
 
-      const store = useAppState.getState();
-
-      if (state.current.type === "drawing") {
-        if (e.pointerId !== state.current.pointerId || touchRef.current == null)
-          return;
-
-        const { path, lastPos } = state.current;
-        const pos = computePos(e, containerRef.current);
-
-        // If the pointer is moved, we need to add the last position
-        if (dist(lastPos, pos) > 0) {
-          path.push({ pos, size: e.pressure });
-          touchRef.current.stroke(pos[0], pos[1], 0);
-        }
-
-        apply: {
-          touchRef.current.end();
-          if (store.uiState.tool === "fill") {
-            const op: Op = {
-              type: "fill",
-              fillColor: store.uiState.color,
-              opacity: store.uiState.opacity,
-              erace: store.uiState.erase,
-              path,
-              layerIndex: store.uiState.layerIndex,
-            };
-            store.apply(op, touchRef.current.transfer);
-          } else if (store.uiState.tool === "brush") {
-            const op: Op = {
-              type: "stroke",
-              erase: store.uiState.erase,
-              strokeStyle: {
-                color: store.uiState.color,
-                brushType: store.uiState.brushType,
-                width: store.uiState.penSize,
-              },
-              opacity: store.uiState.opacity,
-              path,
-              layerIndex: store.uiState.layerIndex,
-            };
-            store.apply(op, touchRef.current.transfer);
-          } else if (store.uiState.tool === "bucketFill") {
-            const op: Op = {
-              type: "bucketFill",
-              fillColor: store.uiState.color,
-              opacity: store.uiState.opacity,
-              erace: store.uiState.erase,
-              tolerance: store.uiState.bucketFillTolerance,
-              pos: [pos[0], pos[1]],
-              layerIndex: store.uiState.layerIndex,
-            };
-            store.apply(op, touchRef.current.transfer);
-          }
-        }
-        touchRef.current = null;
-        state.current = null;
-        return;
-      }
-
       if (state.current.type === "panning") {
         state.current.pointers = state.current.pointers.filter(
           (p) => p.id !== e.pointerId
@@ -320,7 +267,7 @@ function useControl(
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, [canvasRef, containerRef, touchRef, redraw, fingerOperations]);
+  }, [canvasRef, containerRef]);
 }
 
 function dist(a: [number, number], b: [number, number]) {
