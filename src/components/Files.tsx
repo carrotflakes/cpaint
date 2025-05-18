@@ -29,7 +29,7 @@ export function Files() {
   return (
     <div className="p-4 flex flex-col gap-4 text-gray-800 dark:text-gray-200">
       <h2 className="text-2xl">New</h2>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => newFile([400, 400])}
