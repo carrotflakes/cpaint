@@ -81,16 +81,16 @@ export function LayersBar() {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
+    <div className="bg-gray-50 dark:bg-gray-800 border-l border-b border-gray-300">
       <div className="flex flex-col items-stretch">
         <div
-          className="p-2 border-b border-gray-300 cursor-pointer"
+          className="p-2 cursor-pointer"
           onClick={() => setLayersVisible((v) => !v)}
         >
           Layers
         </div>
         {layersVisible && (
-          <div className="grow overflow-y-auto">
+          <div className="grow border-t border-gray-300 overflow-y-auto">
             {store.stateContainer.state.layers.map((layer, i) => (
               <div
                 key={layer.id}
@@ -128,7 +128,7 @@ export function LayersBar() {
                   {layer.visible ? <IconEye /> : <IconEyeSlash />}
                 </button>
                 <div
-                  className="cursor-pointer"
+                  className="grow cursor-pointer"
                   onClick={() => {
                     store.update((draft) => {
                       draft.uiState.layerIndex = i;
@@ -157,7 +157,7 @@ export function LayersBar() {
                   </Popover.Trigger>
                   <Popover.Portal>
                     <Popover.Content
-                      className="min-w-20 bg-white border border-gray-300 shadow-md z-50"
+                      className="min-w-20 bg-gray-50 border border-gray-300 shadow-sm z-50"
                       sideOffset={5}
                       align="end"
                       onInteractOutside={() =>
@@ -233,7 +233,7 @@ function ContextMenuPopover({
   };
 
   return (
-    <div>
+    <div className="flex flex-col">
       <div className="p-2 hover:bg-gray-100">
         <select
           value={store.stateContainer.state.layers[layerIndex].blendMode}
@@ -253,7 +253,7 @@ function ContextMenuPopover({
               null
             )
           }
-          className="w-full mt-1"
+          className="w-full"
         >
           {BLEND_MODES.map(([value, label]) => (
             <option key={value} value={value}>
@@ -272,7 +272,7 @@ function ContextMenuPopover({
           onChange={(e) =>
             updateOpacity(layerIndex, parseFloat(e.target.value))
           }
-          className="w-full mt-1"
+          className="w-full"
         />
       </div>
       <div
