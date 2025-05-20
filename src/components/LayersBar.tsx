@@ -95,10 +95,10 @@ export function LayersBar() {
               <div
                 key={layer.id}
                 className={`relative p-2 flex items-center gap-2 cursor-grab ${
-                  i === store.uiState.layerIndex
-                    ? "bg-gray-200 dark:bg-gray-700"
-                    : dragOverIndex === i && draggedIndex !== null
+                  dragOverIndex === i && draggedIndex !== null
                     ? "bg-blue-100 dark:bg-blue-900"
+                    : i === store.uiState.layerIndex
+                    ? "bg-gray-200 dark:bg-gray-700"
                     : ""
                 }`}
                 draggable
@@ -116,6 +116,31 @@ export function LayersBar() {
                   setDragOverIndex(null);
                 }}
                 onDragEnd={() => {
+                  setDraggedIndex(null);
+                  setDragOverIndex(null);
+                }}
+                onTouchStart={() => {
+                  setDraggedIndex(i);
+                }}
+                onTouchMove={(e) => {
+                  if (draggedIndex === null) return;
+                  const touchY = e.touches[0].clientY;
+                  // Calculate the index of the layer being dragged over
+                  const parent = e.currentTarget.parentElement;
+                  if (!parent) return;
+                  const children = Array.from(parent.children);
+                  for (let idx = 0; idx < children.length; idx++) {
+                    const rect = children[idx].getBoundingClientRect();
+                    if (touchY >= rect.top && touchY <= rect.bottom) {
+                      setDragOverIndex(idx);
+                      break;
+                    }
+                  }
+                }}
+                onTouchEnd={() => {
+                  if (draggedIndex !== null && dragOverIndex !== null) {
+                    moveLayer(draggedIndex, dragOverIndex);
+                  }
                   setDraggedIndex(null);
                   setDragOverIndex(null);
                 }}
