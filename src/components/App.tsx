@@ -46,19 +46,26 @@ function App() {
       <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-300">
         <Header />
       </div>
-      {store.imageMeta && (
-        <div className="relative grow flex items-stretch min-h-0">
-          <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
-            <ToolBar />
-          </div>
+
+      {store.imageMeta &&
+        (store.uiState.layerTransform ? (
           <div className="grow bg-gray-200 dark:bg-gray-800">
-            {store.uiState.layerTransform ? <Transform /> : <MainCanvasArea />}
+            <Transform />
           </div>
-          <div className="absolute top-0 right-0">
-            <LayersBar />
+        ) : (
+          <div className="relative grow flex items-stretch min-h-0">
+            <div className="bg-gray-50 dark:bg-gray-800 border-r border-gray-300">
+              <ToolBar />
+            </div>
+            <div className="grow bg-gray-200 dark:bg-gray-800">
+              <MainCanvasArea />
+            </div>
+            <div className="absolute top-0 right-0">
+              <LayersBar />
+            </div>
           </div>
-        </div>
-      )}
+        ))}
+
       {!store.imageMeta && (
         <div className="grow flex items-stretch bg-gray-200 dark:bg-gray-800">
           <Files />
