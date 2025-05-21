@@ -59,7 +59,7 @@ function useControl(
 ) {
   const { fingerOperations } = useGlobalSettings((state) => state);
 
-  const state = useRef<
+  const stateRef = useRef<
     | null
     | {
         type: "drawing";
@@ -87,7 +87,7 @@ function useControl(
       const store = useAppState.getState();
 
       if (
-        state.current?.type !== "drawing" &&
+        stateRef.current?.type !== "drawing" &&
         e.button === 0 &&
         !(fingerOperations && e.pointerType === "touch")
       ) {
@@ -96,7 +96,7 @@ function useControl(
         if (touchRef.current == null) return;
         touchRef.current.stroke(pos[0], pos[1], e.pressure);
 
-        state.current = {
+        stateRef.current = {
           type: "drawing",
           path,
           lastPos: pos,
@@ -105,17 +105,17 @@ function useControl(
         return;
       }
 
-      if (state.current == null) {
+      if (stateRef.current == null) {
         // Middle button to pan
         if (e.pointerType === "mouse" && e.button === 1) {
-          state.current = {
+          stateRef.current = {
             type: "translate",
             pointerId: e.pointerId,
           };
           return;
         }
 
-        state.current = {
+        stateRef.current = {
           type: "panning",
           pointers: [{ id: e.pointerId, pos: [e.clientX, e.clientY] }],
           angleUnnormalized: store.uiState.canvasView.angle,
@@ -123,9 +123,9 @@ function useControl(
         return;
       }
 
-      if (state.current.type === "panning") {
-        if (state.current.pointers.length < 2)
-          state.current.pointers.push({
+      if (stateRef.current.type === "panning") {
+        if (stateRef.current.pointers.length < 2)
+          stateRef.current.pointers.push({
             id: e.pointerId,
             pos: [e.clientX, e.clientY],
           });
@@ -134,29 +134,30 @@ function useControl(
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      if (!canvasRef.current || !containerRef.current || !state.current) return;
+      if (!canvasRef.current || !containerRef.current || !stateRef.current)
+        return;
 
-      if (state.current.type === "drawing") {
-        if (e.pointerId !== state.current.pointerId) return;
+      if (stateRef.current.type === "drawing") {
+        if (e.pointerId !== stateRef.current.pointerId) return;
         const pos = computePos(e, containerRef.current);
 
-        const { path, lastPos } = state.current;
+        const { path, lastPos } = stateRef.current;
         if (dist(lastPos, pos) > 3) {
           path.push({ pos, size: e.pressure });
           touchRef.current?.stroke(pos[0], pos[1], e.pressure);
-          state.current.lastPos = pos;
+          stateRef.current.lastPos = pos;
           redraw();
         }
         return;
       }
 
-      if (state.current.type === "panning") {
-        const pi = state.current.pointers.findIndex(
+      if (stateRef.current.type === "panning") {
+        const pi = stateRef.current.pointers.findIndex(
           (p) => p.id === e.pointerId
         );
         if (pi !== -1) {
-          if (state.current.pointers.length === 2) {
-            const ps = state.current.pointers;
+          if (stateRef.current.pointers.length === 2) {
+            const ps = stateRef.current.pointers;
             const prevPos = ps[pi].pos;
             const d1 = dist(ps[0].pos, ps[1].pos);
             const a1 = Math.atan2(
@@ -175,8 +176,8 @@ function useControl(
               bbox.top + bbox.height / 2,
             ];
             const angleUnnormalized =
-              (state.current.angleUnnormalized + (a2 - a1)) % (2 * Math.PI);
-            state.current.angleUnnormalized = angleUnnormalized;
+              (stateRef.current.angleUnnormalized + (a2 - a1)) % (2 * Math.PI);
+            stateRef.current.angleUnnormalized = angleUnnormalized;
             useAppState.setState((state) => {
               const prevPan_ = [
                 state.uiState.canvasView.pan[0] + panOffset[0],
@@ -206,14 +207,14 @@ function useControl(
               };
             });
           } else {
-            state.current.pointers[pi].pos = [e.clientX, e.clientY];
+            stateRef.current.pointers[pi].pos = [e.clientX, e.clientY];
           }
         }
         return;
       }
 
-      if (state.current.type === "translate") {
-        if (e.pointerId === state.current.pointerId) {
+      if (stateRef.current.type === "translate") {
+        if (e.pointerId === stateRef.current.pointerId) {
           useAppState.setState((state) => ({
             uiState: {
               ...state.uiState,
@@ -232,15 +233,19 @@ function useControl(
     };
 
     const onPointerUp = (e: PointerEvent) => {
-      if (!canvasRef.current || !containerRef.current || !state.current) return;
+      if (!canvasRef.current || !containerRef.current || !stateRef.current)
+        return;
 
       const store = useAppState.getState();
 
-      if (state.current.type === "drawing") {
-        if (e.pointerId !== state.current.pointerId || touchRef.current == null)
+      if (stateRef.current.type === "drawing") {
+        if (
+          e.pointerId !== stateRef.current.pointerId ||
+          touchRef.current == null
+        )
           return;
 
-        const { path, lastPos } = state.current;
+        const { path, lastPos } = stateRef.current;
         const pos = computePos(e, containerRef.current);
 
         // If the pointer is moved, we need to add the last position
@@ -289,20 +294,20 @@ function useControl(
           }
         }
         touchRef.current = null;
-        state.current = null;
+        stateRef.current = null;
         return;
       }
 
-      if (state.current.type === "panning") {
-        state.current.pointers = state.current.pointers.filter(
+      if (stateRef.current.type === "panning") {
+        stateRef.current.pointers = stateRef.current.pointers.filter(
           (p) => p.id !== e.pointerId
         );
         return;
       }
 
-      if (state.current.type === "translate") {
+      if (stateRef.current.type === "translate") {
         if (e.button === 1) {
-          state.current = null;
+          stateRef.current = null;
         }
         return;
       }
