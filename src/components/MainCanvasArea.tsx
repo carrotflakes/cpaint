@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useViewControl } from "../hooks/useViewControl";
+import {
+  calculateTransformedPoint,
+  dist,
+  normalizeAngle,
+  Pos,
+} from "../libs/geometry";
 import { Touch } from "../libs/touch";
 import { Op } from "../model/op";
 import { StateRender } from "../model/state";
@@ -178,10 +184,10 @@ function useControl(
             const angleUnnormalized =
               (stateRef.current.angleUnnormalized + (a2 - a1)) % (2 * Math.PI);
             stateRef.current.angleUnnormalized = angleUnnormalized;
-            useAppState.setState((state) => {
+            useAppState.getState().update((draft) => {
               const prevPan_ = [
-                state.uiState.canvasView.pan[0] + panOffset[0],
-                state.uiState.canvasView.pan[1] + panOffset[1],
+                draft.uiState.canvasView.pan[0] + panOffset[0],
+                draft.uiState.canvasView.pan[1] + panOffset[1],
               ] as Pos;
               const pan_ = calculateTransformedPoint(
                 ps[1 - pi].pos,
@@ -194,16 +200,10 @@ function useControl(
                 pan_[1] - panOffset[1],
               ] as Pos;
 
-              return {
-                uiState: {
-                  ...state.uiState,
-                  canvasView: {
-                    ...state.uiState.canvasView,
-                    angle: normalizeAngle(angleUnnormalized),
-                    scale: (state.uiState.canvasView.scale * d2) / d1,
-                    pan,
-                  },
-                },
+              draft.uiState.canvasView = {
+                pan,
+                angle: normalizeAngle(angleUnnormalized),
+                scale: (draft.uiState.canvasView.scale * d2) / d1,
               };
             });
           } else {
@@ -215,18 +215,12 @@ function useControl(
 
       if (stateRef.current.type === "translate") {
         if (e.pointerId === stateRef.current.pointerId) {
-          useAppState.setState((state) => ({
-            uiState: {
-              ...state.uiState,
-              canvasView: {
-                ...state.uiState.canvasView,
-                pan: [
-                  state.uiState.canvasView.pan[0] + e.movementX,
-                  state.uiState.canvasView.pan[1] + e.movementY,
-                ],
-              },
-            },
-          }));
+          useAppState.getState().update((draft) => {
+            draft.uiState.canvasView.pan = [
+              draft.uiState.canvasView.pan[0] + e.movementX,
+              draft.uiState.canvasView.pan[1] + e.movementY,
+            ];
+          });
         }
         return;
       }
@@ -306,7 +300,7 @@ function useControl(
       }
 
       if (stateRef.current.type === "translate") {
-        if (e.button === 1) {
+        if (e.pointerId === stateRef.current.pointerId) {
           stateRef.current = null;
         }
         return;
@@ -326,37 +320,4 @@ function useControl(
       window.removeEventListener("pointercancel", onPointerUp);
     };
   }, [canvasRef, containerRef, touchRef, redraw, fingerOperations]);
-}
-
-function dist(a: [number, number], b: [number, number]) {
-  return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2);
-}
-
-const angleGripGrace = 0.05;
-
-function normalizeAngle(angle: number) {
-  const a = (angle / (2 * Math.PI)) * 4;
-  const b = Math.round(a);
-  const d = Math.abs(a - b);
-  if (d < angleGripGrace) return (b * (2 * Math.PI)) / 4;
-  return angle;
-}
-
-type Pos = [number, number];
-
-function calculateTransformedPoint(o: Pos, a1: Pos, a2: Pos, p: Pos): Pos {
-  const a1x = a1[0] - o[0];
-  const a1y = a1[1] - o[1];
-  const a2x = a2[0] - o[0];
-  const a2y = a2[1] - o[1];
-  const px = p[0] - o[0];
-  const py = p[1] - o[1];
-
-  const d = a1x ** 2 + a1y ** 2;
-  const a = (a1x * a2x + a1y * a2y) / d;
-  const b = (a1x * a2y - a1y * a2x) / d;
-
-  const x = a * px - b * py + o[0];
-  const y = b * px + a * py + o[1];
-  return [x, y];
 }
