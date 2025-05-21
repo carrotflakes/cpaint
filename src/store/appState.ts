@@ -41,6 +41,8 @@ export type AppState = {
     rect: TransformRect
   } | {
     type: "canvasResize"
+    rendered: OffscreenCanvas
+    size: [number, number]
     rect: TransformRect
   }
   stateContainer: StateContainer

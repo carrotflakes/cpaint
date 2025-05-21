@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
 import { useViewControlByPointer } from "../hooks/useViewControlByPointer";
 import { useViewControlByWheel } from "../hooks/useViewControlByWheel";
-import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
 import { makeApply, TransformRectHandles } from "./TransformRectHandles";
+import { State } from "../model/state";
+import { Op } from "../model/op";
 
-export default function Transform() {
+export default function CanvasResize() {
   const store = useAppState();
-  const layerTransform =
-    store.mode.type === "layerTransform" ? store.mode : null;
+  const canvasResize = store.mode.type === "canvasResize" ? store.mode : null;
 
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
@@ -18,43 +18,40 @@ export default function Transform() {
   useViewControlByWheel(containerRef);
 
   useEffect(() => {
-    if (!layerTransform) return;
+    if (!canvasResize) return;
 
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    const layer =
-      store.stateContainer.state.layers[layerTransform.layerIndex ?? 0];
-    const touch = {
-      layerId: layer.id,
-      apply: makeApply(layer.canvas, layerTransform.rect),
-    };
-    StateRender(store.stateContainer.state, ctx, touch);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    makeApply(canvasResize.rendered, canvasResize.rect)(ctx);
   }, [store, canvasRef]);
 
-  if (!layerTransform) {
-    return "Oops, not in transform mode🤔";
+  if (!canvasResize) {
+    return "Oops, not in canvasResize mode";
   }
 
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize = {
+    width: canvasResize.size[0],
+    height: canvasResize.size[1],
+  };
   return (
     <div className="relative w-full h-full">
       <CanvasArea
-        canvasSize={firstCanvas}
+        canvasSize={canvasSize}
         canvasView={store.uiState.canvasView}
         containerRef={containerRef}
         canvasRef={canvasRef}
       >
-        {layerTransform && (
+        {canvasResize && (
           <TransformRectHandles
-            rect={layerTransform.rect}
+            rect={canvasResize.rect}
             onRectChange={(rect) => {
               store.update((draft) => {
-                if (draft.mode.type === "layerTransform")
-                  draft.mode.rect = rect;
+                if (draft.mode.type === "canvasResize") draft.mode.rect = rect;
               });
             }}
-            canvasSize={firstCanvas}
+            canvasSize={canvasSize}
           />
         )}
       </CanvasArea>
@@ -73,16 +70,30 @@ export default function Transform() {
         <div
           className="p-2 rounded bg-gray-200 cursor-pointer"
           onClick={() => {
-            if (!layerTransform) return;
-            const op = {
-              type: "layerTransform" as const,
-              layerIndex: layerTransform.layerIndex,
-              rect: layerTransform.rect,
+            if (!canvasResize) return;
+            const layers = store.stateContainer.state.layers.map((layer) => {
+              const canvas = new OffscreenCanvas(
+                canvasResize.size[0],
+                canvasResize.size[1]
+              );
+              const ctx = canvas.getContext("2d")!;
+              makeApply(layer.canvas, canvasResize.rect)(ctx);
+              return {
+                ...layer,
+                canvas,
+              };
+            });
+            const op: Op = {
+              type: "patch",
+              patches: [
+                {
+                  op: "replace",
+                  path: "/layers",
+                  value: layers satisfies State["layers"],
+                },
+              ],
             };
-
-            const layer =
-              store.stateContainer.state.layers[layerTransform.layerIndex ?? 0];
-            store.apply(op, makeApply(layer.canvas, layerTransform.rect));
+            store.apply(op, null);
             store.update((draft) => {
               draft.mode = { type: "draw" };
             });

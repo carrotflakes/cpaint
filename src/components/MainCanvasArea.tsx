@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useViewControl } from "../hooks/useViewControl";
+import { useViewControlByWheel } from "../hooks/useViewControlByWheel";
 import {
   calculateTransformedPoint,
   dist,
@@ -25,7 +25,7 @@ export default function MainCanvasArea() {
     setUpdatedAt(Date.now());
   }, []);
   useControl(canvasRef, containerRef, touchRef, redraw);
-  useViewControl(containerRef);
+  useViewControlByWheel(containerRef);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -49,7 +49,7 @@ export default function MainCanvasArea() {
   const firstCanvas = store.stateContainer.state.layers[0].canvas;
   return (
     <CanvasArea
-      canvas={firstCanvas}
+      canvasSize={firstCanvas}
       canvasView={store.uiState.canvasView}
       containerRef={containerRef}
       canvasRef={canvasRef}

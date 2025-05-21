@@ -3,13 +3,13 @@ import { CHECK_PATTERN } from "../libs/check";
 import { useAppState } from "../store/appState";
 
 export default function CanvasArea({
-  canvas,
+  canvasSize,
   canvasView,
   containerRef,
   canvasRef,
   children,
 }: {
-  canvas: { width: number; height: number };
+  canvasSize: { width: number; height: number };
   canvasView: {
     angle: number;
     scale: number;
@@ -50,8 +50,8 @@ export default function CanvasArea({
     >
       <canvas
         className="absolute shadow-[0_0_0_99999px_#f3f4f6] dark:shadow-gray-950"
-        width={canvas.width}
-        height={canvas.height}
+        width={canvasSize.width}
+        height={canvasSize.height}
         style={{
           transform: viewToTransform(canvasView),
           imageRendering: "pixelated",

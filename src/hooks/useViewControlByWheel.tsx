@@ -4,7 +4,7 @@ import { useGlobalSettings } from "../store/globalSetting";
 
 export type Pos = [number, number];
 
-export function useViewControl(containerRef: {
+export function useViewControlByWheel(containerRef: {
   current: HTMLDivElement | null;
 }) {
   const { wheelZoom } = useGlobalSettings();

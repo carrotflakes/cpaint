@@ -10,6 +10,7 @@ import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
 import Transform from "./Transform";
+import CanvasResize from "./CanvasResize";
 
 function App() {
   useDisableScroll();
@@ -51,6 +52,10 @@ function App() {
         (store.mode.type === "layerTransform" ? (
           <div className="grow bg-gray-200 dark:bg-gray-800">
             <Transform />
+          </div>
+        ) : store.mode.type === "canvasResize" ? (
+          <div className="grow bg-gray-200 dark:bg-gray-800">
+            <CanvasResize />
           </div>
         ) : (
           <div className="relative grow flex items-stretch min-h-0">
