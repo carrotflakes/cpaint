@@ -32,7 +32,16 @@ export type AppState = {
       scale: number
       pan: [number, number]
     }
-    layerTransform: { layerIndex: number, rect: TransformRect } | null
+  }
+  mode: {
+    type: "draw"
+  } | {
+    type: "layerTransform"
+    layerIndex: number
+    rect: TransformRect
+  } | {
+    type: "canvasResize"
+    rect: TransformRect
   }
   stateContainer: StateContainer
 
@@ -64,6 +73,9 @@ export const useAppState = create<AppState>()((set) => {
         pan: [0, 0],
       },
       layerTransform: null,
+    },
+    mode: {
+      type: "draw",
     },
     stateContainer: StateContainerNew(400, 400),
 

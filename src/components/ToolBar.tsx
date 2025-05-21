@@ -32,7 +32,10 @@ export function ToolBar() {
     setValue: (v) =>
       store.update((draft) => {
         draft.uiState.penSize = Math.max(
-          Math.min(Math.round(Math.max(0, v) ** penWidthExp * penWidthMax), penWidthMax),
+          Math.min(
+            Math.round(Math.max(0, v) ** penWidthExp * penWidthMax),
+            penWidthMax
+          ),
           1
         );
       }),
@@ -305,13 +308,14 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={!!uiState.layerTransform}
+        data-selected={false}
         onClick={() => {
           store.update((draft) => {
             const canvas =
               draft.stateContainer.state.layers[draft.uiState.layerIndex]
                 .canvas;
-            draft.uiState.layerTransform = {
+            draft.mode = {
+              type: "layerTransform",
               layerIndex: draft.uiState.layerIndex,
               rect: {
                 cx: canvas.width / 2,

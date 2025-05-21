@@ -7,7 +7,8 @@ import { Rect, TransformRectHandles } from "./TransformRectHandles";
 
 export default function Transform() {
   const store = useAppState();
-  const layerTransform = store.uiState.layerTransform;
+  const layerTransform =
+    store.mode.type === "layerTransform" ? store.mode : null;
 
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
@@ -30,6 +31,10 @@ export default function Transform() {
     StateRender(store.stateContainer.state, ctx, touch);
   }, [store, canvasRef]);
 
+  if (!layerTransform) {
+    return "Oops, not in transform mode🤔";
+  }
+
   const firstCanvas = store.stateContainer.state.layers[0].canvas;
   return (
     <div className="relative w-full h-full">
@@ -44,8 +49,8 @@ export default function Transform() {
             rect={layerTransform.rect}
             onRectChange={(rect) => {
               store.update((draft) => {
-                if (draft.uiState.layerTransform)
-                  draft.uiState.layerTransform.rect = rect;
+                if (draft.mode.type === "layerTransform")
+                  draft.mode.rect = rect;
               });
             }}
             canvasSize={firstCanvas}
@@ -58,7 +63,7 @@ export default function Transform() {
           className="p-2 rounded bg-gray-200 cursor-pointer"
           onClick={() => {
             store.update((draft) => {
-              draft.uiState.layerTransform = null;
+              draft.mode = { type: "draw" };
             });
           }}
         >
@@ -78,7 +83,7 @@ export default function Transform() {
               store.stateContainer.state.layers[layerTransform.layerIndex ?? 0];
             store.apply(op, makeApply(layer.canvas, layerTransform.rect));
             store.update((draft) => {
-              draft.uiState.layerTransform = null;
+              draft.mode = { type: "draw" };
             });
           }}
         >
@@ -102,6 +107,7 @@ function makeApply(canvas: OffscreenCanvas, rect: Rect) {
   };
 }
 
+// TODO: refactor me
 function useControl(
   canvasRef: { current: HTMLCanvasElement | null },
   containerRef: { current: HTMLDivElement | null }

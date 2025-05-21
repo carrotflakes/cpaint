@@ -48,7 +48,7 @@ function App() {
       </div>
 
       {store.imageMeta &&
-        (store.uiState.layerTransform ? (
+        (store.mode.type === "layerTransform" ? (
           <div className="grow bg-gray-200 dark:bg-gray-800">
             <Transform />
           </div>
