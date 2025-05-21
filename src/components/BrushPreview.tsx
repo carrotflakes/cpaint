@@ -27,6 +27,7 @@ export function BrushPreview({
       color: "black",
       opacity: 1,
       erace: false,
+      alphaLock: false,
       canvasSize: [canvas.width, canvas.height],
       ...overwriteProps,
     });

@@ -6,6 +6,7 @@ import { ColorPalette } from "./ColorPalette";
 import {
   IconArrowsOutCardinal,
   IconBucket,
+  IconCheckerBoard,
   IconEraser,
   IconFill,
   IconMagnifyingGlass,
@@ -251,6 +252,19 @@ export function ToolBar() {
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
+
+      <div
+        className="cursor-pointer data-[selected=false]:opacity-50"
+        data-selected={uiState.alphaLock}
+        onClick={() => {
+          store.update((draft) => {
+            draft.uiState.alphaLock = !draft.uiState.alphaLock;
+          });
+        }}
+        title="Alpha Lock"
+      >
+        <IconCheckerBoard />
+      </div>
 
       <hr className="opacity-20" />
 

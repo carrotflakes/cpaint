@@ -27,6 +27,7 @@ export type AppState = {
     brushType: string
     layerIndex: number
     bucketFillTolerance: number
+    alphaLock: boolean
     canvasView: {
       angle: number
       scale: number
@@ -69,6 +70,7 @@ export const useAppState = create<AppState>()((set) => {
       brushType: "particle1",
       layerIndex: 0,
       bucketFillTolerance: 0,
+      alphaLock: false,
       canvasView: {
         angle: 0,
         scale: 1,
@@ -163,6 +165,7 @@ export function createTouch(store: AppState) {
         color: store.uiState.color,
         opacity: store.uiState.opacity,
         erace: store.uiState.erase,
+        alphaLock: store.uiState.alphaLock,
         canvasSize,
       });
     case "bucketFill":

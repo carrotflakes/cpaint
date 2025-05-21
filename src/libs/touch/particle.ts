@@ -1,7 +1,7 @@
 import { Touch, CanvasContext } from ".";
 import { mulberry32 } from "../rand";
 
-export function startTouchParticle1({ width, color, opacity, erace, canvasSize }: { width: number; color: string; opacity: number; erace: boolean; canvasSize: [number, number]; }
+export function startTouchParticle1({ width, color, opacity, canvasSize }: { width: number; color: string; opacity: number; canvasSize: [number, number]; }
 ): Touch {
   const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
 
@@ -27,15 +27,13 @@ export function startTouchParticle1({ width, color, opacity, erace, canvasSize }
     transfer(ctx: CanvasContext) {
       ctx.save();
       ctx.globalAlpha = opacity;
-      if (erace)
-        ctx.globalCompositeOperation = "destination-out";
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },
   };
 }
 
-export function startTouchParticle2({ width, color, opacity, erace, canvasSize }: { width: number; color: string; opacity: number; erace: boolean; canvasSize: [number, number]; }
+export function startTouchParticle2({ width, color, opacity, canvasSize }: { width: number; color: string; opacity: number; canvasSize: [number, number]; }
 ): Touch {
   const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
 
@@ -64,15 +62,14 @@ export function startTouchParticle2({ width, color, opacity, erace, canvasSize }
     },
     transfer(ctx: CanvasContext) {
       ctx.save();
-      if (erace)
-        ctx.globalCompositeOperation = "destination-out";
+      ctx.globalAlpha = opacity;
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },
   };
 }
 
-export function startTouchParticle3({ width, color, opacity, erace, canvasSize }: { width: number; color: string; opacity: number; erace: boolean; canvasSize: [number, number]; }
+export function startTouchParticle3({ width, color, opacity, canvasSize }: { width: number; color: string; opacity: number; canvasSize: [number, number]; }
 ): Touch {
   const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
 
@@ -98,8 +95,6 @@ export function startTouchParticle3({ width, color, opacity, erace, canvasSize }
     },
     transfer(ctx: CanvasContext) {
       ctx.save();
-      if (erace)
-        ctx.globalCompositeOperation = "destination-out";
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },

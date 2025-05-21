@@ -10,6 +10,7 @@ import { Rect as TransformRect } from "../components/TransformRectHandles";
 export type Op = {
   type: "stroke";
   erase: boolean;
+  alphaLock: boolean;
   strokeStyle: {
     color: string
     brushType: string
@@ -58,6 +59,7 @@ export function applyOp(
         color: op.strokeStyle.color,
         opacity: op.opacity,
         erace: op.erase,
+        alphaLock: op.alphaLock,
         canvasSize: [layer.canvas.width, layer.canvas.height],
       }) :
       startTouchFill({

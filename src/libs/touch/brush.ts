@@ -1,26 +1,49 @@
 import { CanvasContext, Touch } from ".";
 import { startTouchParticle1, startTouchParticle2, startTouchParticle3 } from "./particle";
 
-export function startTouchBrush({ brushType, width, color, opacity, erace, canvasSize }:
-  { brushType: string, width: number, color: string, opacity: number, erace: boolean, canvasSize: [number, number] }
+export function startTouchBrush({ brushType, width, color, opacity, erace, alphaLock, canvasSize }:
+  { brushType: string, width: number, color: string, opacity: number, erace: boolean, alphaLock: boolean, canvasSize: [number, number] }
 ): Touch {
+  let touch: Touch;
   switch (brushType) {
     case "soft":
-      return startTouchSoft({ width, color, opacity, erace, canvasSize });
+      touch = startTouchSoft({ width, color, opacity, canvasSize });
+      break;
     case "particle1":
-      return startTouchParticle1({ width, color, opacity, erace, canvasSize });
+      touch = startTouchParticle1({ width, color, opacity, canvasSize });
+      break;
     case "particle2":
-      return startTouchParticle2({ width, color, opacity, erace, canvasSize });
+      touch = startTouchParticle2({ width, color, opacity, canvasSize });
+      break;
     case "particle3":
-      return startTouchParticle3({ width, color, opacity, erace, canvasSize });
+      touch = startTouchParticle3({ width, color, opacity, canvasSize });
+      break;
     case "hard":
     default:
-      return startTouchHard({ width, color, opacity, erace, canvasSize });
+      touch = startTouchHard({ width, color, opacity, canvasSize });
   }
+
+  const transfer = touch.transfer;
+  if (erace) {
+    touch.transfer = (ctx: CanvasContext) => {
+      ctx.save();
+      ctx.globalCompositeOperation = "destination-out";
+      transfer(ctx);
+      ctx.restore();
+    };
+  } else if (alphaLock) {
+    touch.transfer = (ctx: CanvasContext) => {
+      ctx.save();
+      ctx.globalCompositeOperation = "source-atop";
+      transfer(ctx);
+      ctx.restore();
+    };
+  }
+  return touch;
 }
 
-export function startTouchSoft({ width, color, opacity, erace, canvasSize }:
-  { width: number, color: string, opacity: number, erace: boolean, canvasSize: [number, number] }
+export function startTouchSoft({ width, color, opacity, canvasSize }:
+  { width: number, color: string, opacity: number, canvasSize: [number, number] }
 ): Touch {
   const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
   let imageData: ImageData;
@@ -66,8 +89,6 @@ export function startTouchSoft({ width, color, opacity, erace, canvasSize }:
       }
 
       ctx.save();
-      if (erace)
-        ctx.globalCompositeOperation = "destination-out";
       ctx.globalAlpha = opacity;
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
@@ -75,8 +96,8 @@ export function startTouchSoft({ width, color, opacity, erace, canvasSize }:
   }
 }
 
-export function startTouchHard({ width, color, opacity, erace, canvasSize }:
-  { width: number, color: string, opacity: number, erace: boolean, canvasSize: [number, number] }
+export function startTouchHard({ width, color, opacity, canvasSize }:
+  { width: number, color: string, opacity: number, canvasSize: [number, number] }
 ): Touch {
   const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
 
@@ -104,8 +125,6 @@ export function startTouchHard({ width, color, opacity, erace, canvasSize }:
       }
 
       ctx.save();
-      if (erace)
-        ctx.globalCompositeOperation = "destination-out";
       ctx.globalAlpha = opacity;
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();

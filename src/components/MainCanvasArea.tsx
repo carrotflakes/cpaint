@@ -264,6 +264,7 @@ function useControl(
             const op: Op = {
               type: "stroke",
               erase: store.uiState.erase,
+              alphaLock: store.uiState.alphaLock,
               strokeStyle: {
                 color: store.uiState.color,
                 brushType: store.uiState.brushType,
