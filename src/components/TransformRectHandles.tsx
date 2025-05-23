@@ -22,6 +22,7 @@ export function TransformRectHandles({
   const polygonRef = useRef<SVGPolygonElement | null>(null);
   const rotateHandleRef = useRef<SVGCircleElement | null>(null);
   const handlesRef = useRef<SVGGElement | null>(null);
+  const lockRef = useRef(false);
 
   function toScreen([x, y]: [number, number]): [number, number] {
     const cx = canvasSize.width / 2;
@@ -53,7 +54,7 @@ export function TransformRectHandles({
     const polygon = polygonRef.current;
     if (!polygon || !onRectChange) return;
 
-    return addPointerEventsHandler(polygon, (e) => {
+    return addPointerEventsHandler(polygon, lockRef, (e) => {
       const [startCanvasX, startCanvasY] = toCanvas([e.clientX, e.clientY]);
 
       return {
@@ -86,7 +87,7 @@ export function TransformRectHandles({
       return Math.atan2(svgY - centerY, svgX - centerX);
     }
 
-    return addPointerEventsHandler(handle, (e) => {
+    return addPointerEventsHandler(handle, lockRef, (e) => {
       const startAngle = rect.angle;
       const startPointerAngle = getAngleFromCenter(e);
       return {
@@ -118,7 +119,7 @@ export function TransformRectHandles({
       return [x, y, canvasPos[0], canvasPos[1]];
     }
 
-    return addPointerEventsHandler(handles, (e) => {
+    return addPointerEventsHandler(handles, lockRef, (e) => {
       if (
         !(e.target instanceof SVGCircleElement) ||
         e.target.dataset.handle == null
@@ -274,6 +275,7 @@ export function TransformRectHandles({
 
 function addPointerEventsHandler(
   element: SVGElement,
+  lockRef: React.MutableRefObject<boolean>,
   onDown: (e: PointerEvent) =>
     | {
         onMove: (e: PointerEvent) => void;
@@ -282,6 +284,7 @@ function addPointerEventsHandler(
     | undefined
 ) {
   function pointerDown(e: PointerEvent) {
+    if (lockRef.current) return;
     if (e.pointerType === "mouse" && e.button !== 0) return; // Only left button
 
     e.stopPropagation();
@@ -300,10 +303,14 @@ function addPointerEventsHandler(
       window.removeEventListener("pointermove", pointerMove);
       window.removeEventListener("pointerup", pointerUp);
       window.removeEventListener("pointercancel", pointerUp);
+
+      lockRef.current = false;
     }
     window.addEventListener("pointermove", pointerMove);
     window.addEventListener("pointerup", pointerUp);
     window.addEventListener("pointercancel", pointerUp);
+
+    lockRef.current = true;
   }
 
   element.addEventListener("pointerdown", pointerDown);
