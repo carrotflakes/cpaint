@@ -36,26 +36,29 @@ export function bucketFill(
   const queue: [number, number][] = [[sX, sY]];
 
   while (queue.length > 0) {
-    const [x, y] = queue.shift()!; // Safe due to queue.length > 0 check
+    const [x, y] = queue.pop()!;
 
-    if (x < 0 || x >= canvasWidth || y < 0 || y >= canvasHeight) {
-      continue; // Pixel is outside canvas bounds
-    }
-    if (imageDataDst.data[(y * canvasWidth + x) * 4 + 3] !== 0) {
-      continue; // Pixel is already filled
-    }
+    if (imageDataDst.data[(y * canvasWidth + x) * 4 + 3] !== 0)
+      continue;
 
-    const currentColor = getColorAtPixel(imageDataSrc, x, y);
+    let lx = x;
+    while (lx >= 0 && match(getColorAtPixel(imageDataSrc, lx, y)))
+      lx--;
 
-    if (match(currentColor)) {
-      setColorAtPixel(imageDataDst, x, y, fillColor);
+    let rx = x;
+    while (rx < canvasWidth && match(getColorAtPixel(imageDataSrc, rx, y)))
+      rx++;
 
-      // Add neighbors to the queue
-      queue.push([x + 1, y]); // Right
-      queue.push([x - 1, y]); // Left
-      queue.push([x, y + 1]); // Down
-      queue.push([x, y - 1]); // Up
-    }
+    for (let px = lx + 1; px < rx; px++)
+      setColorAtPixel(imageDataDst, px, y, fillColor);
+
+    if (y > 0)
+      for (let px = lx + 1; px < rx; px++)
+        queue.push([px, y - 1]);
+
+    if (y < canvasHeight - 1)
+      for (let px = lx + 1; px < rx; px++)
+        queue.push([px, y + 1]);
   }
 }
 
