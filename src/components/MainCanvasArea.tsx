@@ -15,7 +15,6 @@ import CanvasArea, { computePos } from "./CanvasArea";
 
 export default function MainCanvasArea() {
   const store = useAppState();
-  const touchRef = useRef<Touch | null>(null);
   const [updatedAt, setUpdatedAt] = useState(0);
 
   const containerRef = useRef<null | HTMLDivElement>(null);
@@ -24,7 +23,7 @@ export default function MainCanvasArea() {
   const redraw = useCallback(() => {
     setUpdatedAt(Date.now());
   }, []);
-  useControl(canvasRef, containerRef, touchRef, redraw);
+  const { touchRef } = useControl(containerRef, redraw);
   useViewControlByWheel(containerRef);
 
   useEffect(() => {
@@ -60,11 +59,10 @@ export default function MainCanvasArea() {
 }
 
 function useControl(
-  canvasRef: { current: HTMLCanvasElement | null },
   containerRef: { current: HTMLDivElement | null },
-  touchRef: { current: Touch | null },
   redraw: () => void
 ) {
+  const touchRef = useRef<Touch | null>(null);
   const { fingerOperations } = useGlobalSettings((state) => state);
 
   const stateRef = useRef<
@@ -89,7 +87,7 @@ function useControl(
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
       e.preventDefault();
-      if (!canvasRef.current || !containerRef.current) return;
+      if (!containerRef.current) return;
       const pos = computePos(e, containerRef.current);
 
       const store = useAppState.getState();
@@ -142,8 +140,7 @@ function useControl(
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      if (!canvasRef.current || !containerRef.current || !stateRef.current)
-        return;
+      if (!containerRef.current || !stateRef.current) return;
 
       if (stateRef.current.type === "drawing") {
         if (e.pointerId !== stateRef.current.pointerId) return;
@@ -229,8 +226,7 @@ function useControl(
     };
 
     const onPointerUp = (e: PointerEvent) => {
-      if (!canvasRef.current || !containerRef.current || !stateRef.current)
-        return;
+      if (!containerRef.current || !stateRef.current) return;
 
       const store = useAppState.getState();
 
@@ -250,7 +246,7 @@ function useControl(
           touchRef.current.stroke(pos[0], pos[1], 0);
         }
 
-        apply: {
+        {
           touchRef.current.end();
           if (store.uiState.tool === "fill") {
             const op: Op = {
@@ -322,7 +318,9 @@ function useControl(
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, [canvasRef, containerRef, touchRef, redraw, fingerOperations]);
+  }, [containerRef, touchRef, redraw, fingerOperations]);
+
+  return { touchRef };
 }
 
 function CursorIndicator({
