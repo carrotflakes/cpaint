@@ -149,6 +149,7 @@ export function LayersBar() {
                   className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
                   onClick={() => toggleVisibility(i)}
                   tabIndex={-1}
+                  title={layer.visible ? "Hide layer" : "Show layer"}
                 >
                   {layer.visible ? <IconEye /> : <IconEyeSlash />}
                 </button>
