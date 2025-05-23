@@ -357,7 +357,9 @@ function CursorIndicator({
     };
   }, [containerRef]);
 
-  return cursorPos ? (
+  if (store.uiState.tool !== "brush" || !cursorPos) return null;
+
+  return (
     <circle
       cx={cursorPos.x}
       cy={cursorPos.y}
@@ -367,5 +369,5 @@ function CursorIndicator({
       fill="none"
       pointerEvents="none"
     />
-  ) : null;
+  );
 }
