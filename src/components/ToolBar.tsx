@@ -3,22 +3,21 @@ import * as Popover from "@radix-ui/react-popover";
 import { usePointer } from "../hooks/usePointer";
 import { useAppState } from "../store/appState";
 import { ColorPalette } from "./ColorPalette";
-import {
-  IconArrowsOutCardinal,
-  IconBucket,
-  IconCheckerBoard,
-  IconDropper,
-  IconEraser,
-  IconFill,
-  IconMagnifyingGlass,
-  IconMinus,
-  IconPencil,
-  IconPlus,
-  IconRedo,
-  IconUndo,
-} from "./icons";
 import { StateContainerHasRedo, StateContainerHasUndo } from "../model/state";
 import { BrushPreview } from "./BrushPreview";
+import { ReactComponent as IconArrowsOutCardinal } from "../assets/icons/arrows-out-cardinal.svg";
+import { ReactComponent as IconBucket } from "../assets/icons/bucket.svg";
+import { ReactComponent as IconCheckerBoard } from "../assets/icons/checkerboard.svg";
+import { ReactComponent as IconDropper } from "../assets/icons/dropper.svg";
+import { ReactComponent as IconEraser } from "../assets/icons/eraser.svg";
+import { ReactComponent as IconFill } from "../assets/icons/fill.svg";
+import { ReactComponent as IconMagnifyingGlass } from "../assets/icons/magnifying-glass.svg";
+import { ReactComponent as IconMinus } from "../assets/icons/minus.svg";
+import { ReactComponent as IconPencil } from "../assets/icons/pencil.svg";
+import { ReactComponent as IconPlus } from "../assets/icons/plus.svg";
+import { ReactComponent as IconRedo } from "../assets/icons/redo.svg";
+import { ReactComponent as IconUndo } from "../assets/icons/undo.svg";
+import { ReactComponent as IconSparkle } from "../assets/icons/sparkle.svg";
 
 const penWidthExp = 2;
 const penWidthMax = 1000;
@@ -219,7 +218,7 @@ export function ToolBar() {
         }}
         title="Eraser"
       >
-        <IconEraser />
+        <IconEraser width={24} height={24} />
       </div>
 
       <Popover.Root
@@ -264,7 +263,7 @@ export function ToolBar() {
         }}
         title="Alpha Lock"
       >
-        <IconCheckerBoard />
+        <IconCheckerBoard width={24} height={24} />
       </div>
 
       <hr className="opacity-20" />
@@ -279,7 +278,7 @@ export function ToolBar() {
         }}
         title="Brush"
       >
-        <IconPencil />
+        <IconPencil width={24} height={24} />
       </div>
 
       <div
@@ -292,7 +291,7 @@ export function ToolBar() {
         }}
         title="Fill"
       >
-        <IconFill />
+        <IconFill width={24} height={24} />
       </div>
 
       <div
@@ -305,7 +304,7 @@ export function ToolBar() {
         }}
         title="Bucket Fill"
       >
-        <IconBucket />
+        <IconBucket width={24} height={24} />
       </div>
 
       <div
@@ -318,7 +317,7 @@ export function ToolBar() {
         }}
         title="Eye Dropper"
       >
-        <IconDropper />
+        <IconDropper width={24} height={24} />
       </div>
 
       <div
@@ -344,7 +343,15 @@ export function ToolBar() {
         }}
         title="Layer Transform"
       >
-        <IconArrowsOutCardinal />
+        <IconArrowsOutCardinal width={24} height={24} />
+      </div>
+
+      <div
+        className="cursor-pointer data-[selected=false]:opacity-50"
+        data-selected={false}
+        title="Effects"
+      >
+        <IconSparkle width={24} height={24} />
       </div>
 
       <hr className="opacity-20" />
@@ -357,7 +364,7 @@ export function ToolBar() {
         }}
         title="Undo"
       >
-        <IconUndo />
+        <IconUndo width={24} height={24} />
       </div>
 
       <div
@@ -368,7 +375,7 @@ export function ToolBar() {
         }}
         title="Redo"
       >
-        <IconRedo />
+        <IconRedo width={24} height={24} />
       </div>
 
       <hr className="opacity-20" />
@@ -385,7 +392,7 @@ export function ToolBar() {
         }
         title="Zoom"
       >
-        <IconPlus />
+        <IconPlus width={24} height={24} />
       </div>
 
       <div
@@ -400,7 +407,7 @@ export function ToolBar() {
         }
         title="Unzoom"
       >
-        <IconMinus />
+        <IconMinus width={24} height={24} />
       </div>
 
       <div
@@ -416,7 +423,7 @@ export function ToolBar() {
         }
         title="Reset view"
       >
-        <IconMagnifyingGlass />
+        <IconMagnifyingGlass width={24} height={24} />
       </div>
     </div>
   );

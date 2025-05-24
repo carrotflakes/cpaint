@@ -4,7 +4,10 @@ import logo from "../assets/cpaint.svg";
 import { storage } from "../libs/storage";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
-import { IconCaretLeft, IconFrameCorners, IconGear, IconSave } from "./icons";
+import { ReactComponent as IconCaretLeft } from "../assets/icons/caret-left.svg";
+import { ReactComponent as IconFrameCorners } from "../assets/icons/frame-corners.svg";
+import { ReactComponent as IconGear } from "../assets/icons/gear.svg";
+import { ReactComponent as IconSave } from "../assets/icons/save.svg";
 import { useSettingDialog } from "./SettingDialog";
 import { pushToast } from "./Toasts";
 import { ModalDialog } from "./ModalDialog";
@@ -26,7 +29,7 @@ export function Header() {
           }}
           title="Back to home"
         >
-          <IconCaretLeft />
+          <IconCaretLeft width={24} height={24} />
         </div>
       ) : (
         <div className="self-center">
@@ -77,7 +80,7 @@ export function Header() {
           }}
           title="Save"
         >
-          <IconSave />
+          <IconSave width={24} height={24} />
         </div>
       )}
 
@@ -88,7 +91,7 @@ export function Header() {
         }}
         title="Settings"
       >
-        <IconGear />
+        <IconGear width={24} height={24} />
       </div>
 
       {document.body.requestFullscreen && (
@@ -101,7 +104,7 @@ export function Header() {
           }}
           title="Fullscreen"
         >
-          <IconFrameCorners />
+          <IconFrameCorners width={24} height={24} />
         </div>
       )}
 

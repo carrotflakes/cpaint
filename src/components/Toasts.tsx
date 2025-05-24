@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { IconClose } from "./icons";
+import { ReactComponent as IconClose } from "../assets/icons/close.svg";
 
 export function Toasts() {
   const store = useStore();
@@ -15,7 +15,7 @@ export function Toasts() {
             className="shrink-0 w-5 text-black/50 hover:text-black/100 cursor-pointer"
             onClick={() => store.removeMessage(message.id)}
           >
-            <IconClose />
+            <IconClose width={24} height={24} />
           </div>
         </div>
       ))}

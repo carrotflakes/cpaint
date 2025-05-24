@@ -1,7 +1,9 @@
 import { State } from "../model/state";
 import { useAppState, AppState } from "../store/appState";
 import { useState } from "react";
-import { IconEye, IconEyeSlash, IconMenu } from "./icons";
+import { ReactComponent as IconEye } from "../assets/icons/eye.svg";
+import { ReactComponent as IconEyeSlash } from "../assets/icons/eye-slash.svg";
+import { ReactComponent as IconMenu } from "../assets/icons/menu.svg";
 import { BlendMode } from "../model/blendMode";
 import * as Popover from "@radix-ui/react-popover";
 
@@ -151,7 +153,7 @@ export function LayersBar() {
                   tabIndex={-1}
                   title={layer.visible ? "Hide layer" : "Show layer"}
                 >
-                  {layer.visible ? <IconEye /> : <IconEyeSlash />}
+                  {layer.visible ? <IconEye width={24} height={24} /> : <IconEyeSlash width={24} height={24} />}
                 </button>
                 <div
                   className="grow cursor-pointer"
@@ -178,7 +180,7 @@ export function LayersBar() {
                       }}
                       tabIndex={-1}
                     >
-                      <IconMenu />
+                      <IconMenu width={24} height={24} />
                     </button>
                   </Popover.Trigger>
                   <Popover.Portal>
