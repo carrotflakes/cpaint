@@ -46,6 +46,7 @@ export function Header() {
               className="cursor-pointer px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
               title="Click to edit name"
               onClick={() => setPopoverOpen(true)}
+              translate="no"
             >
               {imageMeta.name}
             </div>

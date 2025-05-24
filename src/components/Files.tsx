@@ -76,7 +76,7 @@ export function Files() {
             className="p-4 flex flex-col gap-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-900"
             onClick={() => storage && loadImage(storage, file.id)}
           >
-            {file.name}
+            <span translate="no">{file.name}</span>
             <Thumbnail id={file.id} />
             <button
               className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
