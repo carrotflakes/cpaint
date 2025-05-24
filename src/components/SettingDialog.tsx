@@ -74,11 +74,16 @@ export function SettingDialog() {
 
           <button
             onClick={() => {
-              pushToast("🌟（ゝω・）vｷｬﾋﾟ");
+              pushToast("\uD83C\uDF1F（ゝω・）vｷｬﾋﾟ");
             }}
           >
             Toast test
           </button>
+
+          {/* Build date display */}
+          <div className="mt-4 text-xs opacity-40 select-text">
+            build {__BUILD_DATE__}
+          </div>
         </div>
       </ModalDialog>
     )
