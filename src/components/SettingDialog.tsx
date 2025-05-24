@@ -25,7 +25,7 @@ export function SettingDialog() {
   return (
     settingDialog.show && (
       <ModalDialog onClickOutside={() => settingDialog.setShow(false)}>
-        <div className="flex flex-col gap-2">
+        <div className="min-w-64 flex flex-col gap-2">
           <div className="text-lg">Settings</div>
           <hr className="opacity-20" />
 
@@ -62,6 +62,7 @@ export function SettingDialog() {
           <hr className="opacity-20" />
 
           <button
+            className="px-4 py-2 rounded font-semibold bg-red-700 text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 transition-colors cursor-pointer"
             onClick={() => {
               if (confirm("Delete all data?")) {
                 storage.deleteDatabase();
@@ -73,6 +74,7 @@ export function SettingDialog() {
           </button>
 
           <button
+            className="px-4 py-2 rounded font-semibold bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
             onClick={() => {
               pushToast("\uD83C\uDF1F（ゝω・）vｷｬﾋﾟ");
             }}
