@@ -14,10 +14,7 @@ import { ReactComponent as IconRedo } from "../assets/icons/redo.svg";
 import { ReactComponent as IconSparkle } from "../assets/icons/sparkle.svg";
 import { ReactComponent as IconUndo } from "../assets/icons/undo.svg";
 import { usePointer } from "../hooks/usePointer";
-import {
-  StateContainerHasRedo,
-  StateContainerHasUndo
-} from "../model/state";
+import { StateContainerHasRedo, StateContainerHasUndo } from "../model/state";
 import { applyEffect, useAppState } from "../store/appState";
 import { BrushPreview } from "./BrushPreview";
 import { ColorPalette } from "./ColorPalette";
@@ -224,6 +221,19 @@ export function ToolBar() {
         <IconEraser width={24} height={24} />
       </div>
 
+      <div
+        className="cursor-pointer data-[selected=false]:opacity-50"
+        data-selected={uiState.alphaLock}
+        onClick={() => {
+          store.update((draft) => {
+            draft.uiState.alphaLock = !draft.uiState.alphaLock;
+          });
+        }}
+        title="Alpha Lock"
+      >
+        <IconCheckerBoard width={24} height={24} />
+      </div>
+
       <Popover.Root
         open={controlBFTolerance.show}
         onOpenChange={controlBFTolerance.setShow}
@@ -255,19 +265,6 @@ export function ToolBar() {
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
-
-      <div
-        className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={uiState.alphaLock}
-        onClick={() => {
-          store.update((draft) => {
-            draft.uiState.alphaLock = !draft.uiState.alphaLock;
-          });
-        }}
-        title="Alpha Lock"
-      >
-        <IconCheckerBoard width={24} height={24} />
-      </div>
 
       <hr className="opacity-20" />
 
