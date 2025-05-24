@@ -9,26 +9,26 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    svgr({icon: true}),
+    svgr({ icon: true }),
     VitePWA({
       manifest: {
-        "name": "cpaint",
-        "short_name": "cpaint",
-        "description": "A simple paint app",
-        "start_url": "/",
-        "display": "standalone",
-        "background_color": "#ffffff",
-        "theme_color": "#000000",
-        "icons": [
+        name: "cpaint",
+        short_name: "cpaint",
+        description: "A simple paint app",
+        start_url: "/",
+        display: "standalone",
+        background_color: "#ffffff",
+        theme_color: "#000000",
+        icons: [
           {
-            "src": "/icon_full_512.svg",
-            "sizes": "512x512",
-            "purpose": "any"
+            src: "/icon_full_512.svg",
+            sizes: "512x512",
+            purpose: "any"
           },
           {
-            "src": "/icon_mask_512.svg",
-            "sizes": "512x512",
-            "purpose": "maskable"
+            src: "/icon_mask_512.svg",
+            sizes: "512x512",
+            purpose: "maskable"
           }
         ]
       }
