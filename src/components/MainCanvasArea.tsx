@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useViewControlByWheel } from "../hooks/useViewControlByWheel";
-import {
-  calculateTransformedPoint,
-  dist,
-  normalizeAngle,
-  Pos,
-} from "../libs/geometry";
+import { useViewControl } from "../hooks/useViewControl";
+import { dist } from "../libs/geometry";
 import { Touch } from "../libs/touch";
 import { Op } from "../model/op";
 import { StateRender } from "../model/state";
@@ -24,7 +19,7 @@ export default function MainCanvasArea() {
     setUpdatedAt(Date.now());
   }, []);
   const { touchRef } = useControl(containerRef, redraw);
-  useViewControlByWheel(containerRef);
+  useViewControl(containerRef);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -65,24 +60,12 @@ function useControl(
   const touchRef = useRef<Touch | null>(null);
   const { fingerOperations } = useGlobalSettings((state) => state);
 
-  const stateRef = useRef<
-    | null
-    | {
-        type: "drawing";
-        path: any[];
-        lastPos: [number, number];
-        pointerId: number;
-      }
-    | {
-        type: "panning";
-        pointers: { id: number; pos: [number, number] }[];
-        angleUnnormalized: number;
-      }
-    | {
-        type: "translate";
-        pointerId: number;
-      }
-  >(null);
+  const stateRef = useRef<null | {
+    type: "drawing";
+    path: any[];
+    lastPos: [number, number];
+    pointerId: number;
+  }>(null);
 
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
@@ -110,33 +93,6 @@ function useControl(
         };
         return;
       }
-
-      if (stateRef.current == null) {
-        // Middle button to pan
-        if (e.pointerType === "mouse" && e.button === 1) {
-          stateRef.current = {
-            type: "translate",
-            pointerId: e.pointerId,
-          };
-          return;
-        }
-
-        stateRef.current = {
-          type: "panning",
-          pointers: [{ id: e.pointerId, pos: [e.clientX, e.clientY] }],
-          angleUnnormalized: store.uiState.canvasView.angle,
-        };
-        return;
-      }
-
-      if (stateRef.current.type === "panning") {
-        if (stateRef.current.pointers.length < 2)
-          stateRef.current.pointers.push({
-            id: e.pointerId,
-            pos: [e.clientX, e.clientY],
-          });
-        return;
-      }
     };
 
     const onPointerMove = (e: PointerEvent) => {
@@ -152,74 +108,6 @@ function useControl(
           touchRef.current?.stroke(pos[0], pos[1], e.pressure);
           stateRef.current.lastPos = pos;
           redraw();
-        }
-        return;
-      }
-
-      if (stateRef.current.type === "panning") {
-        const pi = stateRef.current.pointers.findIndex(
-          (p) => p.id === e.pointerId
-        );
-        if (pi !== -1) {
-          if (stateRef.current.pointers.length === 2) {
-            const ps = stateRef.current.pointers;
-            const prevPos = ps[pi].pos;
-            const d1 = dist(ps[0].pos, ps[1].pos);
-            const a1 = Math.atan2(
-              ps[0].pos[1] - ps[1].pos[1],
-              ps[0].pos[0] - ps[1].pos[0]
-            );
-            ps[pi].pos = [e.clientX, e.clientY];
-            const d2 = dist(ps[0].pos, ps[1].pos);
-            const a2 = Math.atan2(
-              ps[0].pos[1] - ps[1].pos[1],
-              ps[0].pos[0] - ps[1].pos[0]
-            );
-            const bbox = containerRef.current.getBoundingClientRect();
-            const panOffset = [
-              bbox.left + bbox.width / 2,
-              bbox.top + bbox.height / 2,
-            ];
-            const angleUnnormalized =
-              (stateRef.current.angleUnnormalized + (a2 - a1)) % (2 * Math.PI);
-            stateRef.current.angleUnnormalized = angleUnnormalized;
-            useAppState.getState().update((draft) => {
-              const prevPan_ = [
-                draft.uiState.canvasView.pan[0] + panOffset[0],
-                draft.uiState.canvasView.pan[1] + panOffset[1],
-              ] as Pos;
-              const pan_ = calculateTransformedPoint(
-                ps[1 - pi].pos,
-                prevPos,
-                ps[pi].pos,
-                prevPan_
-              );
-              const pan = [
-                pan_[0] - panOffset[0],
-                pan_[1] - panOffset[1],
-              ] as Pos;
-
-              draft.uiState.canvasView = {
-                pan,
-                angle: normalizeAngle(angleUnnormalized),
-                scale: (draft.uiState.canvasView.scale * d2) / d1,
-              };
-            });
-          } else {
-            stateRef.current.pointers[pi].pos = [e.clientX, e.clientY];
-          }
-        }
-        return;
-      }
-
-      if (stateRef.current.type === "translate") {
-        if (e.pointerId === stateRef.current.pointerId) {
-          useAppState.getState().update((draft) => {
-            draft.uiState.canvasView.pan = [
-              draft.uiState.canvasView.pan[0] + e.movementX,
-              draft.uiState.canvasView.pan[1] + e.movementY,
-            ];
-          });
         }
         return;
       }
@@ -290,27 +178,13 @@ function useControl(
         stateRef.current = null;
         return;
       }
-
-      if (stateRef.current.type === "panning") {
-        stateRef.current.pointers = stateRef.current.pointers.filter(
-          (p) => p.id !== e.pointerId
-        );
-        return;
-      }
-
-      if (stateRef.current.type === "translate") {
-        if (e.pointerId === stateRef.current.pointerId) {
-          stateRef.current = null;
-        }
-        return;
-      }
     };
 
     const el = containerRef.current;
     el?.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", onPointerUp); // FIXME
+    window.addEventListener("pointercancel", onPointerUp);
 
     return () => {
       el?.removeEventListener("pointerdown", onPointerDown);

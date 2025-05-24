@@ -1,11 +1,10 @@
 import { useEffect, useRef } from "react";
-import { useViewControlByPointer } from "../hooks/useViewControlByPointer";
-import { useViewControlByWheel } from "../hooks/useViewControlByWheel";
+import { useViewControl } from "../hooks/useViewControl";
+import { Op } from "../model/op";
+import { State } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
 import { makeApply, TransformRectHandles } from "./TransformRectHandles";
-import { State } from "../model/state";
-import { Op } from "../model/op";
 
 export default function CanvasResize() {
   const store = useAppState();
@@ -14,8 +13,7 @@ export default function CanvasResize() {
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
-  useViewControlByPointer(containerRef);
-  useViewControlByWheel(containerRef);
+  useViewControl(containerRef);
 
   useEffect(() => {
     if (!canvasResize) return;

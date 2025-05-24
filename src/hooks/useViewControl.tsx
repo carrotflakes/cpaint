@@ -6,10 +6,13 @@ import {
   normalizeAngle,
 } from "../libs/geometry";
 import { useAppState } from "../store/appState";
+import { useGlobalSettings } from "../store/globalSetting";
 
-export function useViewControlByPointer(containerRef: {
+export function useViewControl(containerRef: {
   current: HTMLDivElement | null;
 }) {
+  const { wheelZoom } = useGlobalSettings();
+
   useEffect(() => {
     let state:
       | null
@@ -35,19 +38,19 @@ export function useViewControlByPointer(containerRef: {
             type: "translate",
             pointerId: e.pointerId,
           };
-          return;
         }
-
-        state = {
-          type: "panning",
-          pointers: [{ id: e.pointerId, pos: [e.clientX, e.clientY] }],
-          angleUnnormalized: store.uiState.canvasView.angle,
-        };
+        if (e.pointerType === "touch") {
+          state = {
+            type: "panning",
+            pointers: [{ id: e.pointerId, pos: [e.clientX, e.clientY] }],
+            angleUnnormalized: store.uiState.canvasView.angle,
+          };
+        }
         return;
       }
 
       if (state.type === "panning") {
-        if (state.pointers.length < 2)
+        if (e.pointerType === "touch" && state.pointers.length < 2)
           state.pointers.push({
             id: e.pointerId,
             pos: [e.clientX, e.clientY],
@@ -146,7 +149,7 @@ export function useViewControlByPointer(containerRef: {
     el?.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", onPointerUp); // FIXME
+    window.addEventListener("pointercancel", onPointerUp);
 
     return () => {
       el?.removeEventListener("pointerdown", onPointerDown);
@@ -155,4 +158,44 @@ export function useViewControlByPointer(containerRef: {
       window.removeEventListener("pointercancel", onPointerUp);
     };
   }, [containerRef]);
+
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      if (!containerRef.current) return;
+      e.preventDefault();
+
+      if (wheelZoom || e.ctrlKey) {
+        if (e.deltaMode !== 0) return;
+        const base = 0.995;
+        const scaleFactor = base ** e.deltaY;
+
+        const bbox = containerRef.current.getBoundingClientRect();
+        const pos = [
+          e.clientX - bbox.left - bbox.width / 2,
+          e.clientY - bbox.top - bbox.height / 2,
+        ] as Pos;
+
+        useAppState.getState().update((draft) => {
+          draft.uiState.canvasView.scale *= scaleFactor;
+          draft.uiState.canvasView.pan[0] =
+            (draft.uiState.canvasView.pan[0] - pos[0]) * scaleFactor + pos[0];
+          draft.uiState.canvasView.pan[1] =
+            (draft.uiState.canvasView.pan[1] - pos[1]) * scaleFactor + pos[1];
+        });
+      } else {
+        if (e.deltaMode !== 0) return;
+
+        useAppState.getState().update((draft) => {
+          draft.uiState.canvasView.pan[0] -= e.deltaX;
+          draft.uiState.canvasView.pan[1] -= e.deltaY;
+        });
+      }
+    };
+
+    const el = containerRef.current;
+    el?.addEventListener("wheel", onWheel, {
+      passive: false,
+    });
+    return () => el?.removeEventListener("wheel", onWheel);
+  }, [wheelZoom]);
 }

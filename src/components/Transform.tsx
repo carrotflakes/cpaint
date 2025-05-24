@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useViewControlByPointer } from "../hooks/useViewControlByPointer";
-import { useViewControlByWheel } from "../hooks/useViewControlByWheel";
+import { useViewControl } from "../hooks/useViewControl";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
@@ -14,8 +13,7 @@ export default function Transform() {
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
-  useViewControlByPointer(containerRef);
-  useViewControlByWheel(containerRef);
+  useViewControl(containerRef);
 
   useEffect(() => {
     if (!layerTransform) return;
