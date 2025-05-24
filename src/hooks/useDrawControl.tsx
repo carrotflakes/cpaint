@@ -1,18 +1,25 @@
-import { useRef, useState, useEffect } from "react";
-import { dist } from "../libs/geometry";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { dist, Pos } from "../libs/geometry";
 import { Touch } from "../libs/touch";
 import { Op } from "../model/op";
 import { LayerMod } from "../model/state";
 import { useAppState, createTouch, createOp } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
 import { computePos } from "../components/CanvasArea";
+import * as color from "color-convert";
 
-export function useDrawControl(containerRef: {
-  current: HTMLDivElement | null;
-}) {
+export function useDrawControl(
+  containerRef: {
+    current: HTMLDivElement | null;
+  },
+  canvasRef: {
+    current: HTMLCanvasElement | null;
+  }
+) {
   const touchRef = useRef<Touch | null>(null);
   const { touchToDraw } = useGlobalSettings((state) => state);
   const [layerMod, setLayerMod] = useState<null | LayerMod>(null);
+  const { eyeDropper, updateEyeDropper } = useEyeDropper(canvasRef);
 
   const stateRef = useRef<
     | null
@@ -49,6 +56,7 @@ export function useDrawControl(containerRef: {
       const pos = computePos(e, containerRef.current);
 
       const store = useAppState.getState();
+      const tool = store.uiState.tool;
       const layerId =
         store.stateContainer.state.layers[store.uiState.layerIndex]?.id;
       if (!layerId) return;
@@ -58,22 +66,30 @@ export function useDrawControl(containerRef: {
         e.pointerType === "pen" ||
         (touchToDraw && e.pointerType === "touch")
       ) {
-        touchRef.current = createTouch(store);
-        if (touchRef.current == null) return;
-        touchRef.current.stroke(pos[0], pos[1], e.pressure);
+        if (tool === "eyeDropper") {
+          stateRef.current = {
+            type: "eyeDropper",
+            pointerId: e.pointerId,
+          };
+          updateEyeDropper(pos);
+        } else {
+          touchRef.current = createTouch(store);
+          if (touchRef.current == null) return;
+          touchRef.current.stroke(pos[0], pos[1], e.pressure);
 
-        let op = createOp(store);
-        if (op == null) return;
-        opPush(op, pos, e.pressure);
+          let op = createOp(store);
+          if (op == null) return;
+          opPush(op, pos, e.pressure);
 
-        stateRef.current = {
-          type: "drawing",
-          op,
-          lastPos: pos,
-          pointerId: e.pointerId,
-          layerId,
-        };
-        redraw();
+          stateRef.current = {
+            type: "drawing",
+            op,
+            lastPos: pos,
+            pointerId: e.pointerId,
+            layerId,
+          };
+          redraw();
+        }
         return;
       }
     };
@@ -94,6 +110,10 @@ export function useDrawControl(containerRef: {
           redraw();
         }
         return;
+      } else if (stateRef.current.type === "eyeDropper") {
+        if (e.pointerId !== stateRef.current.pointerId) return;
+        const pos = computePos(e, containerRef.current);
+        updateEyeDropper(pos);
       }
     };
 
@@ -125,7 +145,11 @@ export function useDrawControl(containerRef: {
         touchRef.current = null;
         stateRef.current = null;
         redraw();
-        return;
+      } else if (stateRef.current.type === "eyeDropper") {
+        if (e.pointerId !== stateRef.current.pointerId) return;
+        const pos = computePos(e, containerRef.current);
+        updateEyeDropper(pos, true);
+        stateRef.current = null;
       }
     };
 
@@ -143,7 +167,7 @@ export function useDrawControl(containerRef: {
     };
   }, [containerRef, touchRef, touchToDraw]);
 
-  return { layerMod };
+  return { layerMod, eyeDropper };
 }
 
 function opPush(op: Op, pos: [number, number], pressure: number) {
@@ -156,4 +180,39 @@ function opPush(op: Op, pos: [number, number], pressure: number) {
   } else {
     throw new Error(`Unsupported operation type: ${op.type}`);
   }
+}
+
+function useEyeDropper(canvasRef: { current: HTMLCanvasElement | null }) {
+  const [eyeDropper, setEyeDropper] = useState<null | {
+    pos: [number, number];
+    color: string;
+  }>(null);
+
+  const updateEyeDropper = useCallback(
+    (pos: Pos, final?: boolean) => {
+      const ctx = canvasRef.current?.getContext("2d", {
+        willReadFrequently: true,
+      })!;
+      const color = pixelColor(ctx, pos[0], pos[1]);
+      if (final) {
+        useAppState.getState().update((draft) => {
+          draft.uiState.color = color;
+        });
+        setEyeDropper(null);
+      } else {
+        setEyeDropper({ pos, color });
+      }
+    },
+    [canvasRef]
+  );
+
+  return { eyeDropper, updateEyeDropper };
+}
+
+function pixelColor(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  const imageData = ctx.getImageData(x, y, 1, 1);
+  return (
+    "#" +
+    color.rgb.hex([imageData.data[0], imageData.data[1], imageData.data[2]])
+  );
 }

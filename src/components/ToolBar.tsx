@@ -7,6 +7,7 @@ import {
   IconArrowsOutCardinal,
   IconBucket,
   IconCheckerBoard,
+  IconDropper,
   IconEraser,
   IconFill,
   IconMagnifyingGlass,
@@ -307,7 +308,7 @@ export function ToolBar() {
         <IconBucket />
       </div>
 
-      {/* <div
+      <div
         className="cursor-pointer data-[selected=false]:opacity-50"
         data-selected={uiState.tool === "eyeDropper"}
         onClick={() => {
@@ -315,10 +316,10 @@ export function ToolBar() {
             draft.uiState.tool = "eyeDropper";
           });
         }}
-        title="Eye dropper"
+        title="Eye Dropper"
       >
         <IconDropper />
-      </div> */}
+      </div>
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
