@@ -1,44 +1,28 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useViewControl } from "../hooks/useViewControl";
 import { dist } from "../libs/geometry";
 import { Touch } from "../libs/touch";
 import { Op } from "../model/op";
-import { StateRender } from "../model/state";
-import { createTouch, useAppState } from "../store/appState";
+import { LayerMod, StateRender } from "../model/state";
+import { createOp, createTouch, useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
 import CanvasArea, { computePos } from "./CanvasArea";
 
 export default function MainCanvasArea() {
   const store = useAppState();
-  const [updatedAt, setUpdatedAt] = useState(0);
 
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
-  const redraw = useCallback(() => {
-    setUpdatedAt(Date.now());
-  }, []);
-  const { touchRef } = useControl(containerRef, redraw);
+  const { layerMod } = useControl(containerRef);
   useViewControl(containerRef);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    const touch_ = touchRef.current;
-    const touch =
-      touch_ &&
-      store.uiState.layerIndex < store.stateContainer.state.layers.length
-        ? {
-            layerId:
-              store.stateContainer.state.layers[store.uiState.layerIndex].id,
-            apply: (ctx: OffscreenCanvasRenderingContext2D) => {
-              touch_.transfer(ctx);
-            },
-          }
-        : null;
-    StateRender(store.stateContainer.state, ctx, touch);
-  }, [store, canvasRef, touchRef, updatedAt]);
+    StateRender(store.stateContainer.state, ctx, layerMod);
+  }, [store.stateContainer.state, canvasRef, layerMod]);
 
   const firstCanvas = store.stateContainer.state.layers[0].canvas;
   return (
@@ -53,19 +37,29 @@ export default function MainCanvasArea() {
   );
 }
 
-function useControl(
-  containerRef: { current: HTMLDivElement | null },
-  redraw: () => void
-) {
+function useControl(containerRef: { current: HTMLDivElement | null }) {
   const touchRef = useRef<Touch | null>(null);
   const { fingerOperations } = useGlobalSettings((state) => state);
+  const [layerMod, setLayerMod] = useState<null | LayerMod>(null);
 
   const stateRef = useRef<null | {
     type: "drawing";
-    path: any[];
+    op: Op;
     lastPos: [number, number];
     pointerId: number;
+    layerId: string;
   }>(null);
+
+  function redraw() {
+    setLayerMod(
+      stateRef.current?.op && touchRef.current && stateRef.current
+        ? {
+            layerId: stateRef.current.layerId,
+            apply: touchRef.current?.transfer,
+          }
+        : null
+    );
+  }
 
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
@@ -74,23 +68,31 @@ function useControl(
       const pos = computePos(e, containerRef.current);
 
       const store = useAppState.getState();
+      const layerId =
+        store.stateContainer.state.layers[store.uiState.layerIndex]?.id;
 
       if (
-        stateRef.current?.type !== "drawing" &&
+        stateRef.current == null &&
+        layerId != null &&
         e.button === 0 &&
         !(fingerOperations && e.pointerType === "touch")
       ) {
-        const path = [{ pos, size: e.pressure }];
         touchRef.current = createTouch(store);
         if (touchRef.current == null) return;
         touchRef.current.stroke(pos[0], pos[1], e.pressure);
 
+        let op = createOp(store);
+        if (op == null) return;
+        opPush(op, pos, e.pressure);
+
         stateRef.current = {
           type: "drawing",
-          path,
+          op,
           lastPos: pos,
           pointerId: e.pointerId,
+          layerId,
         };
+        redraw();
         return;
       }
     };
@@ -102,9 +104,10 @@ function useControl(
         if (e.pointerId !== stateRef.current.pointerId) return;
         const pos = computePos(e, containerRef.current);
 
-        const { path, lastPos } = stateRef.current;
+        const { op, lastPos } = stateRef.current;
         if (dist(lastPos, pos) > 3) {
-          path.push({ pos, size: e.pressure });
+          opPush(op, pos, e.pressure);
+
           touchRef.current?.stroke(pos[0], pos[1], e.pressure);
           stateRef.current.lastPos = pos;
           redraw();
@@ -125,57 +128,22 @@ function useControl(
         )
           return;
 
-        const { path, lastPos } = stateRef.current;
+        const { op, lastPos } = stateRef.current;
         const pos = computePos(e, containerRef.current);
 
         // If the pointer is moved, we need to add the last position
         if (dist(lastPos, pos) > 0) {
-          path.push({ pos, size: e.pressure });
+          opPush(op, pos, e.pressure);
+
           touchRef.current.stroke(pos[0], pos[1], 0);
         }
 
-        {
-          touchRef.current.end();
-          if (store.uiState.tool === "fill") {
-            const op: Op = {
-              type: "fill",
-              fillColor: store.uiState.color,
-              opacity: store.uiState.opacity,
-              erace: store.uiState.erase,
-              path,
-              layerIndex: store.uiState.layerIndex,
-            };
-            store.apply(op, touchRef.current.transfer);
-          } else if (store.uiState.tool === "brush") {
-            const op: Op = {
-              type: "stroke",
-              erase: store.uiState.erase,
-              alphaLock: store.uiState.alphaLock,
-              strokeStyle: {
-                color: store.uiState.color,
-                brushType: store.uiState.brushType,
-                width: store.uiState.penSize,
-              },
-              opacity: store.uiState.opacity,
-              path,
-              layerIndex: store.uiState.layerIndex,
-            };
-            store.apply(op, touchRef.current.transfer);
-          } else if (store.uiState.tool === "bucketFill") {
-            const op: Op = {
-              type: "bucketFill",
-              fillColor: store.uiState.color,
-              opacity: store.uiState.opacity,
-              erace: store.uiState.erase,
-              tolerance: store.uiState.bucketFillTolerance,
-              pos: [pos[0], pos[1]],
-              layerIndex: store.uiState.layerIndex,
-            };
-            store.apply(op, touchRef.current.transfer);
-          }
-        }
+        touchRef.current.end();
+        store.apply(op, touchRef.current.transfer);
+
         touchRef.current = null;
         stateRef.current = null;
+        redraw();
         return;
       }
     };
@@ -192,9 +160,21 @@ function useControl(
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, [containerRef, touchRef, redraw, fingerOperations]);
+  }, [containerRef, touchRef, fingerOperations]);
 
-  return { touchRef };
+  return { layerMod };
+}
+
+function opPush(op: Op, pos: [number, number], pressure: number) {
+  if (op.type === "fill") {
+    op.path.push({ pos });
+  } else if (op.type === "bucketFill") {
+    op.pos = pos;
+  } else if (op.type === "stroke") {
+    op.path.push({ pos, pressure });
+  } else {
+    throw new Error(`Unsupported operation type: ${op.type}`);
+  }
 }
 
 function CursorIndicator({

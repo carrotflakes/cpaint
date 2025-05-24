@@ -23,14 +23,14 @@ export type Op = {
   type: "fill";
   fillColor: string;
   opacity: number;
-  erace: boolean;
+  erase: boolean;
   path: { pos: [number, number] }[];
   layerIndex: number;
 } | {
   type: "bucketFill";
   fillColor: string;
   opacity: number;
-  erace: boolean;
+  erase: boolean;
   tolerance: number;
   pos: [number, number];
   layerIndex: number;
@@ -58,14 +58,14 @@ export function applyOp(
         width: op.strokeStyle.width,
         color: op.strokeStyle.color,
         opacity: op.opacity,
-        erace: op.erase,
+        erase: op.erase,
         alphaLock: op.alphaLock,
         canvasSize: [layer.canvas.width, layer.canvas.height],
       }) :
       startTouchFill({
         color: op.fillColor,
         opacity: op.opacity,
-        erace: op.erace,
+        erase: op.erase,
       });
     const newCanvas = new OffscreenCanvas(
       layer.canvas.width,

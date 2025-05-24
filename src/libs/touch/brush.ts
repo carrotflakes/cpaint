@@ -1,8 +1,8 @@
 import { CanvasContext, Touch } from ".";
 import { startTouchParticle1, startTouchParticle2, startTouchParticle3 } from "./particle";
 
-export function startTouchBrush({ brushType, width, color, opacity, erace, alphaLock, canvasSize }:
-  { brushType: string, width: number, color: string, opacity: number, erace: boolean, alphaLock: boolean, canvasSize: [number, number] }
+export function startTouchBrush({ brushType, width, color, opacity, erase, alphaLock, canvasSize }:
+  { brushType: string, width: number, color: string, opacity: number, erase: boolean, alphaLock: boolean, canvasSize: [number, number] }
 ): Touch {
   let touch: Touch;
   switch (brushType) {
@@ -24,7 +24,7 @@ export function startTouchBrush({ brushType, width, color, opacity, erace, alpha
   }
 
   const transfer = touch.transfer;
-  if (erace) {
+  if (erase) {
     touch.transfer = (ctx: CanvasContext) => {
       ctx.save();
       ctx.globalCompositeOperation = "destination-out";

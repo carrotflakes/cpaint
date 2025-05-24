@@ -67,13 +67,13 @@ export function StateContainerFromState(
 export function StateContainerDo(
   sc: StateContainer,
   op: Op,
-  touch: Touch | null,
+  layerMod: LayerMod | null,
 ): StateContainer {
   const opts = OpTsNew(op);
-  if ((op.type === "stroke" || op.type === "fill" || op.type === "bucketFill" || op.type === "layerTransform") && touch) {
-    const layer = sc.state.layers.find(l => l.id === touch.layerId);
+  if ((op.type === "stroke" || op.type === "fill" || op.type === "bucketFill" || op.type === "layerTransform") && layerMod) {
+    const layer = sc.state.layers.find(l => l.id === layerMod.layerId);
     if (!layer) {
-      throw new Error(`Layer ${touch.layerId} not found`);
+      throw new Error(`Layer ${layerMod.layerId} not found`);
     }
     const canvas = new OffscreenCanvas(
       layer.canvas.width,
@@ -85,7 +85,7 @@ export function StateContainerDo(
     }
     ctx.drawImage(layer.canvas, 0, 0);
     ctx.save();
-    touch.apply(ctx);
+    layerMod.apply(ctx);
     ctx.restore();
     const diff = canvasToImageDiff(canvas, layer.canvas);
     if (!diff) {
@@ -235,7 +235,7 @@ function applyStateDiff(
 export function StateRender(
   state: State,
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-  touch: Touch | null,
+  layerMod: LayerMod | null,
 ) {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
@@ -243,7 +243,7 @@ export function StateRender(
     const layer = state.layers[i];
     if (!layer.visible) continue; // Skip rendering invisible layers
 
-    if (layer.id === touch?.layerId) {
+    if (layer.id === layerMod?.layerId) {
       const canvas = getTmpCanvas(layer.canvas.width, layer.canvas.height);
       const layerCtx = canvas.getContext("2d");
       if (!layerCtx) {
@@ -252,7 +252,7 @@ export function StateRender(
       layerCtx.clearRect(0, 0, canvas.width, canvas.height);
       layerCtx.drawImage(layer.canvas, 0, 0);
       layerCtx.save();
-      touch.apply(layerCtx);
+      layerMod.apply(layerCtx);
       layerCtx.restore();
 
       ctx.globalAlpha = layer.opacity;
@@ -275,7 +275,7 @@ function getTmpCanvas(width: number, height: number) {
   return tmpCanvas;
 }
 
-export type Touch = {
+export type LayerMod = {
   layerId: string;
   apply: (ctx: OffscreenCanvasRenderingContext2D) => void;
 }

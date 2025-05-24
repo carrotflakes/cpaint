@@ -26,7 +26,7 @@ export function BrushPreview({
       width: 20,
       color: "black",
       opacity: 1,
-      erace: false,
+      erase: false,
       alphaLock: false,
       canvasSize: [canvas.width, canvas.height],
       ...overwriteProps,

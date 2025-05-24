@@ -147,6 +147,46 @@ export const useAppState = create<AppState>()((set) => {
   })
 });
 
+export function createOp(store: AppState): Op | null {
+  switch (store.uiState.tool) {
+    case "fill":
+      return {
+        type: "fill",
+        fillColor: store.uiState.color,
+        opacity: store.uiState.opacity,
+        erase: store.uiState.erase,
+        path: [],
+        layerIndex: store.uiState.layerIndex,
+      };
+    case "brush":
+      return {
+        type: "stroke",
+        layerIndex: store.uiState.layerIndex,
+        strokeStyle: {
+          color: store.uiState.color,
+          width: store.uiState.penSize,
+          brushType: store.uiState.brushType,
+        },
+        opacity: store.uiState.opacity,
+        erase: store.uiState.erase,
+        path: [],
+        alphaLock: store.uiState.alphaLock,
+      };
+    case "bucketFill":
+      return {
+        type: "bucketFill",
+        fillColor: store.uiState.color,
+        opacity: store.uiState.opacity,
+        erase: store.uiState.erase,
+        tolerance: store.uiState.bucketFillTolerance,
+        pos: [0, 0], // Placeholder, will be set later
+        layerIndex: store.uiState.layerIndex,
+      };
+    default:
+      return null;
+  }
+}
+
 export function createTouch(store: AppState) {
   const canvas = store.stateContainer.state.layers[store.uiState.layerIndex].canvas;
   const canvasSize: [number, number] = [canvas.width, canvas.height];
@@ -156,7 +196,7 @@ export function createTouch(store: AppState) {
       return startTouchFill({
         color: store.uiState.color,
         opacity: store.uiState.opacity,
-        erace: store.uiState.erase,
+        erase: store.uiState.erase,
       });
     case "brush":
       return startTouchBrush({
@@ -164,7 +204,7 @@ export function createTouch(store: AppState) {
         width: store.uiState.penSize,
         color: store.uiState.color,
         opacity: store.uiState.opacity,
-        erace: store.uiState.erase,
+        erase: store.uiState.erase,
         alphaLock: store.uiState.alphaLock,
         canvasSize,
       });
@@ -172,7 +212,7 @@ export function createTouch(store: AppState) {
       return startTouchBucketFill({
         color: store.uiState.color,
         opacity: store.uiState.opacity,
-        erace: store.uiState.erase,
+        erase: store.uiState.erase,
         tolerance: store.uiState.bucketFillTolerance,
         imageData: canvas.getContext("2d", { willReadFrequently: true })!.getImageData(0, 0, canvas.width, canvas.height),
       });

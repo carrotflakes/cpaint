@@ -1,7 +1,7 @@
 import { CanvasContext, Touch } from ".";
 
-export function startTouchFill({ color, opacity, erace }:
-  { color: string, opacity: number, erace: boolean }
+export function startTouchFill({ color, opacity, erase }:
+  { color: string, opacity: number, erase: boolean }
 ): Touch {
   const path: { x: number, y: number }[] = [];
   let finished = false;
@@ -19,7 +19,7 @@ export function startTouchFill({ color, opacity, erace }:
       if (finished) {
         ctx.fillStyle = color;
         ctx.globalAlpha = opacity;
-        if (erace)
+        if (erase)
           ctx.globalCompositeOperation = "destination-out";
         ctx.beginPath();
         for (let i = 0; i < path.length; i++) {
