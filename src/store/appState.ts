@@ -4,11 +4,12 @@ import {
   startTouchBrush,
 } from "../libs/touch/brush";
 import { Op } from '../model/op';
-import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo, StateContainerUndo, StateContainerFromState } from '../model/state';
+import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo, StateContainerUndo, StateContainerFromState, State } from '../model/state';
 import { startTouchFill } from '../libs/touch/fill';
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
 import { BlendMode } from "../model/blendMode";
 import { Rect as TransformRect } from '../components/TransformRectHandles';
+import { blur } from '../libs/imageFx';
 
 type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper";
 
@@ -219,4 +220,30 @@ export function createTouch(store: AppState) {
     default:
       return null;
   }
+}
+
+export function applyEffect() {
+  const store = useAppState.getState();
+  const layerOrg =
+    store.stateContainer.state.layers[store.uiState.layerIndex];
+  const canvas = new OffscreenCanvas(
+    layerOrg.canvas.width,
+    layerOrg.canvas.height
+  );
+  blur(layerOrg.canvas, canvas, 5);
+  const layer = {
+    ...layerOrg,
+    canvas,
+  };
+  const op: Op = {
+    type: "patch",
+    patches: [
+      {
+        op: "replace",
+        path: `/layers/${store.uiState.layerIndex}`,
+        value: layer satisfies State["layers"][number],
+      },
+    ],
+  };
+  store.apply(op, null);
 }

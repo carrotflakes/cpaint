@@ -1,10 +1,5 @@
-import { useRef, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
-import { usePointer } from "../hooks/usePointer";
-import { useAppState } from "../store/appState";
-import { ColorPalette } from "./ColorPalette";
-import { StateContainerHasRedo, StateContainerHasUndo } from "../model/state";
-import { BrushPreview } from "./BrushPreview";
+import { useRef, useState } from "react";
 import { ReactComponent as IconArrowsOutCardinal } from "../assets/icons/arrows-out-cardinal.svg";
 import { ReactComponent as IconBucket } from "../assets/icons/bucket.svg";
 import { ReactComponent as IconCheckerBoard } from "../assets/icons/checkerboard.svg";
@@ -16,8 +11,16 @@ import { ReactComponent as IconMinus } from "../assets/icons/minus.svg";
 import { ReactComponent as IconPencil } from "../assets/icons/pencil.svg";
 import { ReactComponent as IconPlus } from "../assets/icons/plus.svg";
 import { ReactComponent as IconRedo } from "../assets/icons/redo.svg";
-import { ReactComponent as IconUndo } from "../assets/icons/undo.svg";
 import { ReactComponent as IconSparkle } from "../assets/icons/sparkle.svg";
+import { ReactComponent as IconUndo } from "../assets/icons/undo.svg";
+import { usePointer } from "../hooks/usePointer";
+import {
+  StateContainerHasRedo,
+  StateContainerHasUndo
+} from "../model/state";
+import { applyEffect, useAppState } from "../store/appState";
+import { BrushPreview } from "./BrushPreview";
+import { ColorPalette } from "./ColorPalette";
 
 const penWidthExp = 2;
 const penWidthMax = 1000;
@@ -350,6 +353,9 @@ export function ToolBar() {
         className="cursor-pointer data-[selected=false]:opacity-50"
         data-selected={false}
         title="Effects"
+        onClick={() => {
+          applyEffect();
+        }}
       >
         <IconSparkle width={24} height={24} />
       </div>
