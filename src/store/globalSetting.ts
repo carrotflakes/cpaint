@@ -2,13 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type GlobalSettings = {
-  fingerOperations: boolean
+  touchToDraw: boolean
   wheelZoom: boolean
 }
 
 export const useGlobalSettings = create<GlobalSettings>()(
   persist((_set) => ({
-    fingerOperations: false,
+    touchToDraw: false,
     wheelZoom: false,
   }), {
     name: 'cpaint',

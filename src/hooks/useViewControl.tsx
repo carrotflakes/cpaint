@@ -8,10 +8,14 @@ import {
 import { useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
 
-export function useViewControl(containerRef: {
-  current: HTMLDivElement | null;
-}) {
-  const { wheelZoom } = useGlobalSettings();
+export function useViewControl(
+  containerRef: {
+    current: HTMLDivElement | null;
+  },
+  noDraw?: boolean
+) {
+  const { wheelZoom, touchToDraw } = useGlobalSettings();
+  const allowTouch = noDraw || !touchToDraw;
 
   useEffect(() => {
     let state:
@@ -39,7 +43,7 @@ export function useViewControl(containerRef: {
             pointerId: e.pointerId,
           };
         }
-        if (e.pointerType === "touch") {
+        if (allowTouch && e.pointerType === "touch") {
           state = {
             type: "panning",
             pointers: [{ id: e.pointerId, pos: [e.clientX, e.clientY] }],
@@ -157,7 +161,7 @@ export function useViewControl(containerRef: {
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, [containerRef]);
+  }, [containerRef, touchToDraw]);
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {

@@ -32,16 +32,16 @@ export function SettingDialog() {
           <div className="flex gap-2">
             <input
               type="checkbox"
-              name="fingerOperations"
-              checked={globalSettings.fingerOperations}
+              name="touchToDraw"
+              checked={globalSettings.touchToDraw}
               onChange={(e) =>
                 useGlobalSettings.setState({
-                  fingerOperations: e.target.checked,
+                  touchToDraw: e.target.checked,
                 })
               }
               className="w-6 h-6"
             />
-            <label htmlFor="fingerOperations">Finger operations</label>
+            <label htmlFor="touchToDraw">Touch to draw</label>
           </div>
 
           <div className="flex gap-2">

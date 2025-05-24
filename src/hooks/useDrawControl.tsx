@@ -11,20 +11,29 @@ export function useDrawControl(containerRef: {
   current: HTMLDivElement | null;
 }) {
   const touchRef = useRef<Touch | null>(null);
-  const { fingerOperations } = useGlobalSettings((state) => state);
+  const { touchToDraw } = useGlobalSettings((state) => state);
   const [layerMod, setLayerMod] = useState<null | LayerMod>(null);
 
-  const stateRef = useRef<null | {
-    type: "drawing";
-    op: Op;
-    lastPos: [number, number];
-    pointerId: number;
-    layerId: string;
-  }>(null);
+  const stateRef = useRef<
+    | null
+    | {
+        type: "drawing";
+        op: Op;
+        lastPos: [number, number];
+        pointerId: number;
+        layerId: string;
+      }
+    | {
+        type: "eyeDropper";
+        pointerId: number;
+      }
+  >(null);
 
   function redraw() {
     setLayerMod(
-      stateRef.current?.op && touchRef.current && stateRef.current
+      stateRef.current?.type === "drawing" &&
+        touchRef.current &&
+        stateRef.current
         ? {
             layerId: stateRef.current.layerId,
             apply: touchRef.current?.transfer,
@@ -36,18 +45,18 @@ export function useDrawControl(containerRef: {
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
       e.preventDefault();
-      if (!containerRef.current) return;
+      if (!containerRef.current || stateRef.current) return;
       const pos = computePos(e, containerRef.current);
 
       const store = useAppState.getState();
       const layerId =
         store.stateContainer.state.layers[store.uiState.layerIndex]?.id;
+      if (!layerId) return;
 
       if (
-        stateRef.current == null &&
-        layerId != null &&
-        e.button === 0 &&
-        !(fingerOperations && e.pointerType === "touch")
+        (e.pointerType === "mouse" && e.button === 0) ||
+        e.pointerType === "pen" ||
+        (touchToDraw && e.pointerType === "touch")
       ) {
         touchRef.current = createTouch(store);
         if (touchRef.current == null) return;
@@ -132,7 +141,7 @@ export function useDrawControl(containerRef: {
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, [containerRef, touchRef, fingerOperations]);
+  }, [containerRef, touchRef, touchToDraw]);
 
   return { layerMod };
 }

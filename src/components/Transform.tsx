@@ -13,7 +13,7 @@ export default function Transform() {
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
-  useViewControl(containerRef);
+  useViewControl(containerRef, true);
 
   useEffect(() => {
     if (!layerTransform) return;
