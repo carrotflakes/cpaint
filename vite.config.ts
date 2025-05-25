@@ -43,12 +43,12 @@ function formatBuildDate() {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
 
-  const year = now.getFullYear() % 100;
-  const month = pad(now.getMonth() + 1);
-  const day = pad(now.getDate());
-  const hour = pad(now.getHours());
-  const minute = pad(now.getMinutes());
-  const second = pad(now.getSeconds());
+  const year = now.getUTCFullYear() % 100;
+  const month = pad(now.getUTCMonth() + 1);
+  const day = pad(now.getUTCDate());
+  const hour = pad(now.getUTCHours());
+  const minute = pad(now.getUTCMinutes());
+  const second = pad(now.getUTCSeconds());
 
   return `${year}${month}${day}-${hour}${minute}${second}`;
 }
