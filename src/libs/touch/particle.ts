@@ -101,7 +101,7 @@ export function startTouchParticle3({ width, color, opacity, canvasSize }: { wid
   };
 }
 
-function pathToDots() {
+export function pathToDots() {
   return {
     path: [] as { x: number, y: number, pressure: number }[],
     i: 0,
@@ -125,6 +125,8 @@ function pathToDots() {
       return {
         x: prev.x + (next.x - prev.x) * t,
         y: prev.y + (next.y - prev.y) * t,
+        dx: next.x - prev.x,
+        dy: next.y - prev.y,
         pressure: prev.pressure + (next.pressure - prev.pressure) * t,
       }
     },

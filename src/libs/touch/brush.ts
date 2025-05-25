@@ -1,5 +1,6 @@
 import { CanvasContext, Touch } from ".";
 import { startTouchParticle1, startTouchParticle2, startTouchParticle3 } from "./particle";
+import { startTouchCat } from "./cat";
 
 export function startTouchBrush({ brushType, width, color, opacity, erase, alphaLock, canvasSize }:
   { brushType: string, width: number, color: string, opacity: number, erase: boolean, alphaLock: boolean, canvasSize: [number, number] }
@@ -17,6 +18,9 @@ export function startTouchBrush({ brushType, width, color, opacity, erase, alpha
       break;
     case "particle3":
       touch = startTouchParticle3({ width, color, opacity, canvasSize });
+      break;
+    case "cat":
+      touch = startTouchCat({ width, color, opacity, canvasSize });
       break;
     case "hard":
     default:
