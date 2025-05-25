@@ -4,7 +4,7 @@ import { Op } from "../model/op";
 import { State } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
-import { makeApply, TransformRectHandles } from "./TransformRectHandles";
+import { makeApply, Rect, TransformRectHandles } from "./TransformRectHandles";
 
 export default function CanvasResize() {
   const store = useAppState();
@@ -23,7 +23,7 @@ export default function CanvasResize() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     makeApply(canvasResize.rendered, canvasResize.rect)(ctx);
-  }, [store, canvasRef]);
+  }, [canvasResize?.rect, canvasRef]);
 
   if (!canvasResize) {
     return "Oops, not in canvasResize mode";
@@ -69,32 +69,7 @@ export default function CanvasResize() {
           className="p-2 rounded bg-gray-200 cursor-pointer"
           onClick={() => {
             if (!canvasResize) return;
-            const layers = store.stateContainer.state.layers.map((layer) => {
-              const canvas = new OffscreenCanvas(
-                canvasResize.size[0],
-                canvasResize.size[1]
-              );
-              const ctx = canvas.getContext("2d")!;
-              makeApply(layer.canvas, canvasResize.rect)(ctx);
-              return {
-                ...layer,
-                canvas,
-              };
-            });
-            const op: Op = {
-              type: "patch",
-              patches: [
-                {
-                  op: "replace",
-                  path: "/layers",
-                  value: layers satisfies State["layers"],
-                },
-              ],
-            };
-            store.apply(op, null);
-            store.update((draft) => {
-              draft.mode = { type: "draw" };
-            });
+            applyCanvasResize(canvasResize);
           }}
         >
           Apply
@@ -102,4 +77,39 @@ export default function CanvasResize() {
       </div>
     </div>
   );
+}
+
+function applyCanvasResize(canvasResize: {
+  size: [number, number];
+  rect: Rect;
+}) {
+  const store = useAppState.getState();
+
+  const layers = store.stateContainer.state.layers.map((layer) => {
+    const canvas = new OffscreenCanvas(
+      canvasResize.size[0],
+      canvasResize.size[1]
+    );
+    const ctx = canvas.getContext("2d")!;
+    makeApply(layer.canvas, canvasResize.rect)(ctx);
+    return {
+      ...layer,
+      canvas,
+    };
+  });
+
+  const op: Op = {
+    type: "patch",
+    patches: [
+      {
+        op: "replace",
+        path: "/layers",
+        value: layers satisfies State["layers"],
+      },
+    ],
+  };
+  store.apply(op, null);
+  store.update((draft) => {
+    draft.mode = { type: "draw" };
+  });
 }
