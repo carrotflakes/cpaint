@@ -15,7 +15,7 @@ import { ReactComponent as IconSparkle } from "../assets/icons/sparkle.svg";
 import { ReactComponent as IconUndo } from "../assets/icons/undo.svg";
 import { usePointer } from "../hooks/usePointer";
 import { StateContainerHasRedo, StateContainerHasUndo } from "../model/state";
-import { applyEffect, useAppState } from "../store/appState";
+import { applyEffect, AppState, useAppState } from "../store/appState";
 import { BrushPreview } from "./BrushPreview";
 import { ColorPalette } from "./ColorPalette";
 
@@ -27,6 +27,7 @@ export function ToolBar() {
   const store = useAppState();
   const { uiState } = store;
   const [showBrushPreview, setShowBrushPreview] = useState(false);
+  const [showBucketFill, setShowBucketFill] = useState(false);
 
   const controlPenWidth = useControl({
     getValue: () => (uiState.penSize / penWidthMax) ** (1 / penWidthExp),
@@ -47,14 +48,6 @@ export function ToolBar() {
     setValue: (v) =>
       store.update((draft) => {
         draft.uiState.opacity = Math.max(Math.min(v, 1), 0);
-      }),
-    sensitivity: 0.01,
-  });
-  const controlBFTolerance = useControl({
-    getValue: () => uiState.bucketFillTolerance,
-    setValue: (v) =>
-      store.update((draft) => {
-        draft.uiState.bucketFillTolerance = Math.max(Math.min(v, 1), 0);
       }),
     sensitivity: 0.01,
   });
@@ -209,7 +202,7 @@ export function ToolBar() {
       </Popover.Root>
 
       <div
-        className="cursor-pointer data-[selected=false]:opacity-50"
+        className="cursor-pointer data-[selected=true]:text-blue-400"
         data-selected={uiState.erase}
         onClick={() => {
           store.update((draft) => {
@@ -222,7 +215,7 @@ export function ToolBar() {
       </div>
 
       <div
-        className="cursor-pointer data-[selected=false]:opacity-50"
+        className="cursor-pointer data-[selected=true]:text-blue-400"
         data-selected={uiState.alphaLock}
         onClick={() => {
           store.update((draft) => {
@@ -234,42 +227,10 @@ export function ToolBar() {
         <IconCheckerBoard width={24} height={24} />
       </div>
 
-      <Popover.Root
-        open={controlBFTolerance.show}
-        onOpenChange={controlBFTolerance.setShow}
-      >
-        <Popover.Trigger asChild>
-          <div
-            className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
-            title="Tolerance"
-            {...controlBFTolerance.props}
-          >
-            {Math.round(uiState.bucketFillTolerance * 255)}
-          </div>
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content
-            className="p-2 flex bg-white dark:bg-black shadow z-10"
-            sideOffset={5}
-            collisionPadding={8}
-            onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
-          >
-            <SliderV
-              value={uiState.bucketFillTolerance}
-              onChange={(value) => {
-                store.update((draft) => {
-                  draft.uiState.bucketFillTolerance = value;
-                });
-              }}
-            />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-
       <hr className="opacity-20" />
 
       <div
-        className="cursor-pointer data-[selected=false]:opacity-50"
+        className="cursor-pointer data-[selected=true]:text-blue-400"
         data-selected={uiState.tool === "brush"}
         onClick={() => {
           store.update((draft) => {
@@ -282,7 +243,7 @@ export function ToolBar() {
       </div>
 
       <div
-        className="cursor-pointer data-[selected=false]:opacity-50"
+        className="cursor-pointer data-[selected=true]:text-blue-400"
         data-selected={uiState.tool === "fill"}
         onClick={() => {
           store.update((draft) => {
@@ -294,21 +255,37 @@ export function ToolBar() {
         <IconFill width={24} height={24} />
       </div>
 
-      <div
-        className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={uiState.tool === "bucketFill"}
-        onClick={() => {
-          store.update((draft) => {
-            draft.uiState.tool = "bucketFill";
-          });
-        }}
-        title="Bucket Fill"
-      >
-        <IconBucket width={24} height={24} />
-      </div>
+      <Popover.Root open={uiState.tool === "bucketFill" && showBucketFill}>
+        <Popover.Trigger asChild>
+          <div
+            className="cursor-pointer data-[selected=true]:text-blue-400"
+            data-selected={uiState.tool === "bucketFill"}
+            onClick={() => {
+              if (uiState.tool === "bucketFill") setShowBucketFill((x) => !x);
+              else setShowBucketFill(true);
+              store.update((draft) => {
+                draft.uiState.tool = "bucketFill";
+              });
+            }}
+            title="Bucket Fill"
+          >
+            <IconBucket width={24} height={24} />
+          </div>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="p-2 flex bg-white dark:bg-black shadow z-10"
+            side="right"
+            sideOffset={5}
+            collisionPadding={8}
+          >
+            <BucketFillTool />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
       <div
-        className="cursor-pointer data-[selected=false]:opacity-50"
+        className="cursor-pointer data-[selected=true]:text-blue-400"
         data-selected={uiState.tool === "eyeDropper"}
         onClick={() => {
           store.update((draft) => {
@@ -320,26 +297,13 @@ export function ToolBar() {
         <IconDropper width={24} height={24} />
       </div>
 
+      <hr className="opacity-20" />
+
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={false}
+        data-selected={true}
         onClick={() => {
-          store.update((draft) => {
-            const canvas =
-              draft.stateContainer.state.layers[draft.uiState.layerIndex]
-                .canvas;
-            draft.mode = {
-              type: "layerTransform",
-              layerIndex: draft.uiState.layerIndex,
-              rect: {
-                cx: canvas.width / 2,
-                cy: canvas.height / 2,
-                hw: canvas.width / 2,
-                hh: canvas.height / 2,
-                angle: 0,
-              },
-            };
-          });
+          intoLayerTransformMode(store);
         }}
         title="Layer Transform"
       >
@@ -348,7 +312,7 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={false}
+        data-selected={true}
         title="Effects"
         onClick={() => {
           applyEffect();
@@ -429,6 +393,71 @@ export function ToolBar() {
         <IconMagnifyingGlass width={24} height={24} />
       </div>
     </div>
+  );
+}
+
+function intoLayerTransformMode(store: AppState) {
+  store.update((draft) => {
+    const canvas =
+      draft.stateContainer.state.layers[draft.uiState.layerIndex].canvas;
+    draft.mode = {
+      type: "layerTransform",
+      layerIndex: draft.uiState.layerIndex,
+      rect: {
+        cx: canvas.width / 2,
+        cy: canvas.height / 2,
+        hw: canvas.width / 2,
+        hh: canvas.height / 2,
+        angle: 0,
+      },
+    };
+  });
+}
+
+function BucketFillTool() {
+  const store = useAppState();
+  const { uiState } = store;
+
+  const controlBFTolerance = useControl({
+    getValue: () => uiState.bucketFillTolerance,
+    setValue: (v) =>
+      store.update((draft) => {
+        draft.uiState.bucketFillTolerance = Math.max(Math.min(v, 1), 0);
+      }),
+    sensitivity: 0.01,
+  });
+  return (
+    <Popover.Root
+      open={controlBFTolerance.show}
+      onOpenChange={controlBFTolerance.setShow}
+    >
+      <Popover.Trigger asChild>
+        <div
+          className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
+          title="Tolerance"
+          {...controlBFTolerance.props}
+        >
+          {Math.round(uiState.bucketFillTolerance * 255)}
+        </div>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          className="p-2 flex bg-white dark:bg-black shadow z-10"
+          sideOffset={5}
+          collisionPadding={8}
+          onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
+        >
+          <SliderV
+            value={uiState.bucketFillTolerance}
+            onChange={(value) => {
+              store.update((draft) => {
+                draft.uiState.bucketFillTolerance = value;
+              });
+            }}
+          />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }
 
