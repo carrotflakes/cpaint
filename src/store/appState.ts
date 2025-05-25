@@ -46,6 +46,10 @@ export type AppState = {
     rendered: OffscreenCanvas
     size: [number, number]
     rect: TransformRect
+  } | {
+    type: "addImageAsLayer"
+    image: OffscreenCanvas
+    rect: TransformRect
   }
   stateContainer: StateContainer
 
@@ -126,8 +130,24 @@ export const useAppState = create<AppState>()((set) => {
         }),
       }));
     },
-    importAsLayer(_image: HTMLImageElement) {
-      // TODO
+    importAsLayer(image: HTMLImageElement) {
+      const { width, height } = image;
+      const canvas = new OffscreenCanvas(width, height);
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(image, 0, 0);
+      const firstCanvas = useAppState.getState().stateContainer.state.layers[0].canvas;
+      set(() => ({
+        mode: {
+          type: "addImageAsLayer", image: canvas,
+          rect: {
+            cx: firstCanvas.width / 2,
+            cy: firstCanvas.height / 2,
+            hw: width / 2,
+            hh: height / 2,
+            angle: 0,
+          },
+        },
+      }));
     },
     undo() {
       set((state) => ({

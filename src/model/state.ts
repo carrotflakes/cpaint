@@ -239,6 +239,7 @@ export function StateRender(
 ) {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
+  ctx.save();
   for (let i = 0; i < state.layers.length; i++) {
     const layer = state.layers[i];
     if (!layer.visible) continue; // Skip rendering invisible layers
@@ -264,6 +265,7 @@ export function StateRender(
       ctx.drawImage(layer.canvas, 0, 0);
     }
   }
+  ctx.restore();
 }
 
 let tmpCanvas = new OffscreenCanvas(1, 1);

@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useDisableScroll } from "../hooks/useDisableScroll";
 import { useAppState } from "../store/appState";
+import AddImageAsLayer from "./AddImageAsLayer";
+import CanvasResize from "./CanvasResize";
 import { Files } from "./Files";
 import { Header } from "./Header";
 import { ImageDropTarget } from "./ImageDropTarget";
@@ -10,7 +12,6 @@ import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
 import Transform from "./Transform";
-import CanvasResize from "./CanvasResize";
 
 function App() {
   useDisableScroll();
@@ -56,6 +57,10 @@ function App() {
         ) : store.mode.type === "canvasResize" ? (
           <div className="grow bg-gray-200 dark:bg-gray-800">
             <CanvasResize />
+          </div>
+        ) : store.mode.type === "addImageAsLayer" ? (
+          <div className="grow bg-gray-200 dark:bg-gray-800">
+            <AddImageAsLayer />
           </div>
         ) : (
           <div className="relative grow flex items-stretch min-h-0">
