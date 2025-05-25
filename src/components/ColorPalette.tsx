@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as color from "color-convert";
 import { usePointer } from "../hooks/usePointer";
+import { useAppState } from "../store/appState";
 
 type Color = string;
 
@@ -23,6 +24,7 @@ export function ColorPalette({
   initialColor?: Color;
   onChanged?: (color: Color) => void;
 }) {
+  const colorHistory = useAppState((s) => s.uiState.colorHistory);
   return (
     <div className="flex flex-col gap-2">
       <ColorPicker initialColor={initialColor} onChanged={onChanged} />
@@ -31,7 +33,18 @@ export function ColorPalette({
           {colors.map((color) => (
             <div
               key={color}
-              className="w-6 h-6 rounded-sm shadow cursor-pointer"
+              className="w-6 h-6 rounded-sm shadow border border-gray-400 cursor-pointer"
+              style={{ background: color }}
+              onClick={() => onChanged?.(color)}
+            />
+          ))}
+        </div>
+        <div>History</div>
+        <div className="flex flex-wrap gap-1 mb-1">
+          {colorHistory.map((color) => (
+            <div
+              key={color}
+              className="w-6 h-6 rounded-sm shadow border border-gray-400 cursor-pointer"
               style={{ background: color }}
               onClick={() => onChanged?.(color)}
             />

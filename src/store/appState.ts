@@ -34,6 +34,7 @@ export type AppState = {
       scale: number
       pan: [number, number]
     }
+    colorHistory: string[]
   }
   mode: {
     type: "draw"
@@ -60,6 +61,7 @@ export type AppState = {
   update: (update: (draft: WritableDraft<AppState>) => void) => void
   openAsNewFile: (image: HTMLImageElement) => void
   importAsLayer: (image: HTMLImageElement) => void
+  addColorToHistory: (color: string) => void
 };
 
 export const useAppState = create<AppState>()((set) => {
@@ -81,7 +83,7 @@ export const useAppState = create<AppState>()((set) => {
         scale: 1,
         pan: [0, 0],
       },
-      layerTransform: null,
+      colorHistory: [],
     },
     mode: {
       type: "draw",
@@ -148,6 +150,18 @@ export const useAppState = create<AppState>()((set) => {
           },
         },
       }));
+    },
+    addColorToHistory(color: string) {
+      set((state) =>
+        produce(state, (draft) => {
+          const history = draft.uiState.colorHistory.filter(c => c !== color);
+          if (history.length >= 20) {
+            history.pop();
+          }
+          history.unshift(color);
+          draft.uiState.colorHistory = history;
+        })
+      );
     },
     undo() {
       set((state) => ({

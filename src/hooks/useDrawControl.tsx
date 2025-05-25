@@ -81,6 +81,9 @@ export function useDrawControl(
           if (op == null) return;
           opPush(op, pos, e.pressure);
 
+          if (!store.uiState.erase)
+            store.addColorToHistory(store.uiState.color);
+
           stateRef.current = {
             type: "drawing",
             op,
