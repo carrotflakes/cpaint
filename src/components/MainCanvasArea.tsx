@@ -31,11 +31,7 @@ export default function MainCanvasArea() {
     >
       <CursorIndicator containerRef={containerRef} />
       {eyeDropper && (
-        <EyeDropper
-          containerRef={containerRef}
-          color={eyeDropper.color}
-          pos={eyeDropper.pos}
-        />
+        <EyeDropper color={eyeDropper.color} pos={eyeDropper.pos} />
       )}
     </CanvasArea>
   );
@@ -88,15 +84,7 @@ function CursorIndicator({
   );
 }
 
-function EyeDropper({
-  containerRef,
-  color,
-  pos,
-}: {
-  containerRef: { current: HTMLDivElement | null };
-  color: string;
-  pos: [number, number];
-}) {
+function EyeDropper({ color, pos }: { color: string; pos: [number, number] }) {
   const view = useAppState((state) => state.uiState.canvasView);
   const canvasSize = useAppState(
     (state) => state.stateContainer.state.layers[0].canvas
@@ -114,7 +102,7 @@ function EyeDropper({
     const sx = rx * view.scale;
     const sy = ry * view.scale;
     return [sx + view.pan[0], sy + view.pan[1]];
-  }, [containerRef, view, pos]);
+  }, [view, pos]);
 
   return (
     <circle
