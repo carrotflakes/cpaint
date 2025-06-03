@@ -4,6 +4,7 @@ import { useViewControl } from "../hooks/useViewControl";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
+import { SelectionOverlay } from "./SelectionOverlay";
 
 export default function MainCanvasArea() {
   const store = useAppState();
@@ -33,6 +34,7 @@ export default function MainCanvasArea() {
       {eyeDropper && (
         <EyeDropper color={eyeDropper.color} pos={eyeDropper.pos} />
       )}
+      <SelectionOverlay />
     </CanvasArea>
   );
 }

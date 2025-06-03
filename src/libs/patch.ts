@@ -1,4 +1,6 @@
-export type Obj = string | number | boolean | null | readonly Obj[] | { readonly [key: string]: Obj } | OffscreenCanvas;
+import { Selection } from "./selection";
+
+export type Obj = string | number | boolean | null | readonly Obj[] | { readonly [key: string]: Obj } | OffscreenCanvas | Selection;
 
 export type Patch = {
   op: "add",

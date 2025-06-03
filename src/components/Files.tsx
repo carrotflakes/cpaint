@@ -145,6 +145,7 @@ async function loadImage(storage: Storage, id: number) {
 
   const state = {
     layers,
+    selection: null,
   };
   useAppState.setState(() => {
     return {

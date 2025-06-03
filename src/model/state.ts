@@ -1,6 +1,7 @@
 import { applyPatches } from "../libs/applyPatches";
 import { applyImageDiff, canvasToImageDiff, ImageDiff } from "../libs/canvasUtil";
 import { Patch } from "../libs/patch";
+import { Selection } from "../libs/selection";
 import { BlendMode } from "./blendMode";
 import { applyOp, mergeOp, shrinkPatches, type Op } from "./op";
 import { OpTs, OpTsNew } from "./opts";
@@ -13,6 +14,7 @@ export type State = Readonly<{
     opacity: number;
     blendMode: BlendMode;
   }[];
+  selection: Selection | null;
 }>
 
 export type StateContainer = Readonly<{
@@ -48,6 +50,7 @@ export function StateContainerNew(
           blendMode: "source-over" as BlendMode,
         },
       ],
+      selection: null,
     },
     backward: [],
     forward: [],
@@ -94,6 +97,7 @@ export function StateContainerDo(
     }
     const state = {
       layers: [...sc.state.layers],
+      selection: sc.state.selection,
     }
     state.layers[op.layerIndex] = {
       ...state.layers[op.layerIndex],

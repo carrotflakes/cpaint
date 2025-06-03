@@ -1,17 +1,20 @@
 import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
+import { Rect as TransformRect } from '../components/TransformRectHandles';
+import { blur } from '../libs/imageFx';
 import {
   startTouchBrush,
 } from "../libs/touch/brush";
-import { Op } from '../model/op';
-import { StateContainer, StateContainerDo, StateContainerNew, StateContainerRedo, StateContainerUndo, StateContainerFromState, State } from '../model/state';
-import { startTouchFill } from '../libs/touch/fill';
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
+import { startTouchFill } from '../libs/touch/fill';
 import { BlendMode } from "../model/blendMode";
-import { Rect as TransformRect } from '../components/TransformRectHandles';
-import { blur } from '../libs/imageFx';
+import { Op } from '../model/op';
+import { State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
 
-type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper";
+type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
+
+export type SelectionOperation = 'new' | 'add' | 'subtract' | 'intersect';
+export type SelectionTool = 'rectangle' | 'ellipse' | 'lasso' | 'magicWand';
 
 export type AppState = {
   imageMeta: null | {
@@ -29,6 +32,9 @@ export type AppState = {
     layerIndex: number
     bucketFillTolerance: number
     alphaLock: boolean
+    selectionTool: SelectionTool
+    selectionOperation: SelectionOperation
+    selectionTolerance: number
     canvasView: {
       angle: number
       scale: number
@@ -78,6 +84,9 @@ export const useAppState = create<AppState>()((set) => {
       layerIndex: 0,
       bucketFillTolerance: 0,
       alphaLock: false,
+      selectionTool: "rectangle" as SelectionTool,
+      selectionOperation: "new" as SelectionOperation,
+      selectionTolerance: 0,
       canvasView: {
         angle: 0,
         scale: 1,
@@ -129,6 +138,7 @@ export const useAppState = create<AppState>()((set) => {
               blendMode: "source-over" as BlendMode,
             },
           ],
+          selection: null,
         }),
       }));
     },

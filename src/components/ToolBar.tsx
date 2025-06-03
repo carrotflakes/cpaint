@@ -11,6 +11,7 @@ import { ReactComponent as IconMinus } from "../assets/icons/minus.svg";
 import { ReactComponent as IconPencil } from "../assets/icons/pencil.svg";
 import { ReactComponent as IconPlus } from "../assets/icons/plus.svg";
 import { ReactComponent as IconRedo } from "../assets/icons/redo.svg";
+import { ReactComponent as IconSelection } from "../assets/icons/selection.svg";
 import { ReactComponent as IconSparkle } from "../assets/icons/sparkle.svg";
 import { ReactComponent as IconUndo } from "../assets/icons/undo.svg";
 import { usePointer } from "../hooks/usePointer";
@@ -18,6 +19,7 @@ import { StateContainerHasRedo, StateContainerHasUndo } from "../model/state";
 import { applyEffect, AppState, useAppState } from "../store/appState";
 import { BrushPreview } from "./BrushPreview";
 import { ColorPalette } from "./ColorPalette";
+import { SelectionControls } from "./SelectionControls";
 
 const penWidthExp = 2;
 const penWidthMax = 1000;
@@ -28,6 +30,7 @@ export function ToolBar() {
   const { uiState } = store;
   const [showBrushPreview, setShowBrushPreview] = useState(false);
   const [showBucketFill, setShowBucketFill] = useState(false);
+  const [showSelectionControls, setShowSelectionControls] = useState(false);
 
   const controlPenWidth = useControl({
     getValue: () => (uiState.penSize / penWidthMax) ** (1 / penWidthExp),
@@ -296,6 +299,41 @@ export function ToolBar() {
       >
         <IconDropper width={24} height={24} />
       </div>
+
+      <Popover.Root 
+        open={uiState.tool === "selection" && showSelectionControls}
+        onOpenChange={setShowSelectionControls}
+      >
+        <Popover.Trigger asChild>
+          <div
+            className="cursor-pointer data-[selected=true]:text-blue-400"
+            data-selected={uiState.tool === "selection"}
+            onClick={() => {
+              if (uiState.tool === "selection") setShowSelectionControls((x) => !x);
+              else setShowSelectionControls(true);
+              store.update((draft) => {
+                draft.uiState.tool = "selection";
+              });
+            }}
+            title="Selection"
+          >
+            <IconSelection width={24} height={24} />
+          </div>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="max-h-[calc(100dvh-16px)] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto"
+            data-scroll={true}
+            side="right"
+            align="start"
+            sideOffset={5}
+            collisionPadding={8}
+            forceMount
+          >
+            <SelectionControls />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
       <hr className="opacity-20" />
 

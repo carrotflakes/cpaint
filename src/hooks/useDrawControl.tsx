@@ -2,11 +2,12 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { dist, Pos } from "../libs/geometry";
 import { Touch } from "../libs/touch";
 import { Op } from "../model/op";
-import { LayerMod } from "../model/state";
+import { LayerMod, State } from "../model/state";
 import { useAppState, createTouch, createOp } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
 import { computePos } from "../components/CanvasArea";
 import * as color from "color-convert";
+import { Selection } from "../libs/selection";
 
 export function useDrawControl(
   containerRef: {
@@ -32,6 +33,11 @@ export function useDrawControl(
       }
     | {
         type: "eyeDropper";
+        pointerId: number;
+      }
+    | {
+        type: "selection";
+        startPos: [number, number];
         pointerId: number;
       }
   >(null);
@@ -72,6 +78,12 @@ export function useDrawControl(
             pointerId: e.pointerId,
           };
           updateEyeDropper(pos);
+        } else if (tool === "selection") {
+          stateRef.current = {
+            type: "selection",
+            startPos: pos,
+            pointerId: e.pointerId,
+          };
         } else {
           touchRef.current = createTouch(store);
           if (touchRef.current == null) return;
@@ -153,6 +165,14 @@ export function useDrawControl(
         const pos = computePos(e, containerRef.current);
         updateEyeDropper(pos, true);
         stateRef.current = null;
+      } else if (stateRef.current.type === "selection") {
+        if (e.pointerId !== stateRef.current.pointerId) return;
+        const pos = computePos(e, containerRef.current);
+
+        // WIP select rect
+        select(stateRef.current.startPos, pos);
+
+        stateRef.current = null;
       }
     };
 
@@ -217,5 +237,32 @@ function pixelColor(ctx: CanvasRenderingContext2D, x: number, y: number) {
   return (
     "#" +
     color.rgb.hex([imageData.data[0], imageData.data[1], imageData.data[2]])
+  );
+}
+
+function select(startPos: [number, number], endPos: [number, number]) {
+  const store = useAppState.getState();
+  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const selection =
+    store.stateContainer.state.selection?.clone() ??
+    new Selection(firstCanvas.width, firstCanvas.height, false);
+  selection.addRect(
+    Math.round(Math.min(startPos[0], endPos[0])),
+    Math.round(Math.min(startPos[1], endPos[1])),
+    Math.round(Math.abs(endPos[0] - startPos[0])),
+    Math.round(Math.abs(endPos[1] - startPos[1]))
+  );
+  store.apply(
+    {
+      type: "patch",
+      patches: [
+        {
+          op: "replace",
+          path: "/selection",
+          value: selection satisfies State["selection"],
+        },
+      ],
+    },
+    null
   );
 }
