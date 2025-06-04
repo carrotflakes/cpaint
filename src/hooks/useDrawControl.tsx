@@ -8,6 +8,8 @@ import { useGlobalSettings } from "../store/globalSetting";
 import { computePos } from "../components/CanvasArea";
 import * as color from "color-convert";
 import { Selection } from "../libs/selection";
+import { CursorIndicator } from "../components/overlays/CursorIndicator";
+import { EyeDropper } from "../components/overlays/EyeDropper";
 
 export function useDrawControl(
   containerRef: {
@@ -17,7 +19,6 @@ export function useDrawControl(
     current: HTMLCanvasElement | null;
   }
 ) {
-  const touchRef = useRef<Touch | null>(null);
   const { touchToDraw } = useGlobalSettings((state) => state);
   const [layerMod, setLayerMod] = useState<null | LayerMod>(null);
   const { eyeDropper, updateEyeDropper } = useEyeDropper(canvasRef);
@@ -30,6 +31,7 @@ export function useDrawControl(
         lastPos: [number, number];
         pointerId: number;
         layerId: string;
+        touch: Touch;
       }
     | {
         type: "eyeDropper";
@@ -41,19 +43,6 @@ export function useDrawControl(
         pointerId: number;
       }
   >(null);
-
-  function redraw() {
-    setLayerMod(
-      stateRef.current?.type === "drawing" &&
-        touchRef.current &&
-        stateRef.current
-        ? {
-            layerId: stateRef.current.layerId,
-            apply: touchRef.current?.transfer,
-          }
-        : null
-    );
-  }
 
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
@@ -85,9 +74,9 @@ export function useDrawControl(
             pointerId: e.pointerId,
           };
         } else {
-          touchRef.current = createTouch(store);
-          if (touchRef.current == null) return;
-          touchRef.current.stroke(pos[0], pos[1], e.pressure);
+          const touch = createTouch(store);
+          if (touch == null) return;
+          touch.stroke(pos[0], pos[1], e.pressure);
 
           let op = createOp(store);
           if (op == null) return;
@@ -102,8 +91,12 @@ export function useDrawControl(
             lastPos: pos,
             pointerId: e.pointerId,
             layerId,
+            touch,
           };
-          redraw();
+          setLayerMod({
+            layerId,
+            apply: touch.transfer,
+          });
         }
         return;
       }
@@ -120,9 +113,12 @@ export function useDrawControl(
         if (dist(lastPos, pos) > 3) {
           opPush(op, pos, e.pressure);
 
-          touchRef.current?.stroke(pos[0], pos[1], e.pressure);
+          stateRef.current.touch.stroke(pos[0], pos[1], e.pressure);
           stateRef.current.lastPos = pos;
-          redraw();
+          setLayerMod({
+            layerId: stateRef.current.layerId,
+            apply: stateRef.current.touch.transfer,
+          });
         }
         return;
       } else if (stateRef.current.type === "eyeDropper") {
@@ -138,11 +134,7 @@ export function useDrawControl(
       const store = useAppState.getState();
 
       if (stateRef.current.type === "drawing") {
-        if (
-          e.pointerId !== stateRef.current.pointerId ||
-          touchRef.current == null
-        )
-          return;
+        if (e.pointerId !== stateRef.current.pointerId) return;
 
         const { op, lastPos } = stateRef.current;
         const pos = computePos(e, containerRef.current);
@@ -151,15 +143,14 @@ export function useDrawControl(
         if (dist(lastPos, pos) > 0) {
           opPush(op, pos, e.pressure);
 
-          touchRef.current.stroke(pos[0], pos[1], 0);
+          stateRef.current.touch.stroke(pos[0], pos[1], 0);
         }
 
-        touchRef.current.end();
-        store.apply(op, touchRef.current.transfer);
+        stateRef.current.touch.end();
+        store.apply(op, stateRef.current.touch.transfer);
 
-        touchRef.current = null;
         stateRef.current = null;
-        redraw();
+        setLayerMod(null);
       } else if (stateRef.current.type === "eyeDropper") {
         if (e.pointerId !== stateRef.current.pointerId) return;
         const pos = computePos(e, containerRef.current);
@@ -188,9 +179,18 @@ export function useDrawControl(
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, [containerRef, touchRef, touchToDraw]);
+  }, [containerRef, touchToDraw]);
 
-  return { layerMod, eyeDropper };
+  const overlay = (
+    <>
+      <CursorIndicator containerRef={containerRef} />
+      {eyeDropper && (
+        <EyeDropper color={eyeDropper.color} pos={eyeDropper.pos} />
+      )}
+    </>
+  );
+
+  return { layerMod, overlay };
 }
 
 function opPush(op: Op, pos: [number, number], pressure: number) {
