@@ -1,15 +1,14 @@
-import { useRef, useState, useEffect, useCallback } from "react";
-import { dist, Pos } from "../libs/geometry";
-import { Touch } from "../libs/touch";
-import { Op } from "../model/op";
-import { LayerMod, State } from "../model/state";
-import { useAppState, createTouch, createOp } from "../store/appState";
-import { useGlobalSettings } from "../store/globalSetting";
-import { computePos } from "../components/CanvasArea";
 import * as color from "color-convert";
-import { Selection } from "../libs/selection";
+import { useCallback, useEffect, useState } from "react";
+import { computePos } from "../components/CanvasArea";
 import { CursorIndicator } from "../components/overlays/CursorIndicator";
 import { EyeDropper } from "../components/overlays/EyeDropper";
+import { dist, Pos } from "../libs/geometry";
+import { Selection } from "../libs/selection";
+import { Op } from "../model/op";
+import { LayerMod, State } from "../model/state";
+import { createOp, createTouch, useAppState } from "../store/appState";
+import { useGlobalSettings } from "../store/globalSetting";
 
 export function useDrawControl(
   containerRef: {
@@ -20,164 +19,44 @@ export function useDrawControl(
   }
 ) {
   const { touchToDraw } = useGlobalSettings((state) => state);
+  const [lock, setLock] = useState(false);
   const [layerMod, setLayerMod] = useState<null | LayerMod>(null);
   const { eyeDropper, updateEyeDropper } = useEyeDropper(canvasRef);
 
-  const stateRef = useRef<
-    | null
-    | {
-        type: "drawing";
-        op: Op;
-        lastPos: [number, number];
-        pointerId: number;
-        layerId: string;
-        touch: Touch;
-      }
-    | {
-        type: "eyeDropper";
-        pointerId: number;
-      }
-    | {
-        type: "selection";
-        startPos: [number, number];
-        pointerId: number;
-      }
-  >(null);
-
   useEffect(() => {
+    if (lock) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
     const onPointerDown = (e: PointerEvent) => {
       e.preventDefault();
-      if (!containerRef.current || stateRef.current) return;
-      const pos = computePos(e, containerRef.current);
-
-      const store = useAppState.getState();
-      const tool = store.uiState.tool;
-      const layerId =
-        store.stateContainer.state.layers[store.uiState.layerIndex]?.id;
-      if (!layerId) return;
 
       if (
         (e.pointerType === "mouse" && e.button === 0) ||
         e.pointerType === "pen" ||
         (touchToDraw && e.pointerType === "touch")
       ) {
-        if (tool === "eyeDropper") {
-          stateRef.current = {
-            type: "eyeDropper",
-            pointerId: e.pointerId,
-          };
-          updateEyeDropper(pos);
-        } else if (tool === "selection") {
-          stateRef.current = {
-            type: "selection",
-            startPos: pos,
-            pointerId: e.pointerId,
-          };
-        } else {
-          const touch = createTouch(store);
-          if (touch == null) return;
-          touch.stroke(pos[0], pos[1], e.pressure);
-
-          let op = createOp(store);
-          if (op == null) return;
-          opPush(op, pos, e.pressure);
-
-          if (!store.uiState.erase)
-            store.addColorToHistory(store.uiState.color);
-
-          stateRef.current = {
-            type: "drawing",
-            op,
-            lastPos: pos,
-            pointerId: e.pointerId,
-            layerId,
-            touch,
-          };
-          setLayerMod({
-            layerId,
-            apply: touch.transfer,
-          });
+        const store = useAppState.getState();
+        switch (store.uiState.tool) {
+          case "brush":
+          case "bucketFill":
+          case "fill":
+            startDrawing(container, e, setLock, setLayerMod);
+            break;
+          case "eyeDropper":
+            startEyeDropper(container, e, setLock, updateEyeDropper);
+            break;
+          case "selection":
+            startSelection(container, e, setLock);
+            break;
         }
-        return;
       }
     };
 
-    const onPointerMove = (e: PointerEvent) => {
-      if (!containerRef.current || !stateRef.current) return;
-
-      if (stateRef.current.type === "drawing") {
-        if (e.pointerId !== stateRef.current.pointerId) return;
-        const pos = computePos(e, containerRef.current);
-
-        const { op, lastPos } = stateRef.current;
-        if (dist(lastPos, pos) > 3) {
-          opPush(op, pos, e.pressure);
-
-          stateRef.current.touch.stroke(pos[0], pos[1], e.pressure);
-          stateRef.current.lastPos = pos;
-          setLayerMod({
-            layerId: stateRef.current.layerId,
-            apply: stateRef.current.touch.transfer,
-          });
-        }
-        return;
-      } else if (stateRef.current.type === "eyeDropper") {
-        if (e.pointerId !== stateRef.current.pointerId) return;
-        const pos = computePos(e, containerRef.current);
-        updateEyeDropper(pos);
-      }
-    };
-
-    const onPointerUp = (e: PointerEvent) => {
-      if (!containerRef.current || !stateRef.current) return;
-
-      const store = useAppState.getState();
-
-      if (stateRef.current.type === "drawing") {
-        if (e.pointerId !== stateRef.current.pointerId) return;
-
-        const { op, lastPos } = stateRef.current;
-        const pos = computePos(e, containerRef.current);
-
-        // If the pointer is moved, we need to add the last position
-        if (dist(lastPos, pos) > 0) {
-          opPush(op, pos, e.pressure);
-
-          stateRef.current.touch.stroke(pos[0], pos[1], 0);
-        }
-
-        stateRef.current.touch.end();
-        store.apply(op, stateRef.current.touch.transfer);
-
-        stateRef.current = null;
-        setLayerMod(null);
-      } else if (stateRef.current.type === "eyeDropper") {
-        if (e.pointerId !== stateRef.current.pointerId) return;
-        const pos = computePos(e, containerRef.current);
-        updateEyeDropper(pos, true);
-        stateRef.current = null;
-      } else if (stateRef.current.type === "selection") {
-        if (e.pointerId !== stateRef.current.pointerId) return;
-        const pos = computePos(e, containerRef.current);
-
-        // WIP select rect
-        select(stateRef.current.startPos, pos);
-
-        stateRef.current = null;
-      }
-    };
-
-    const el = containerRef.current;
-    el?.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", onPointerUp);
-
+    container.addEventListener("pointerdown", onPointerDown);
     return () => {
-      el?.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("pointercancel", onPointerUp);
+      container.removeEventListener("pointerdown", onPointerDown);
     };
   }, [containerRef, touchToDraw]);
 
@@ -191,6 +70,137 @@ export function useDrawControl(
   );
 
   return { layerMod, overlay };
+}
+
+function startDrawing(
+  container: HTMLDivElement,
+  e: PointerEvent,
+  setLock: (lock: boolean) => void,
+  setLayerMod: (mod: LayerMod | null) => void
+) {
+  const pos = computePos(e, container);
+  const store = useAppState.getState();
+
+  const layerId =
+    store.stateContainer.state.layers[store.uiState.layerIndex]?.id;
+  if (!layerId) return;
+
+  const bucketFill = store.uiState.tool === "bucketFill";
+
+  const touch = createTouch(store);
+  if (touch == null) return;
+  touch.stroke(pos[0], pos[1], e.pressure);
+
+  let op = createOp(store);
+  if (op == null) return;
+  opPush(op, pos, e.pressure);
+
+  if (!store.uiState.erase) store.addColorToHistory(store.uiState.color);
+
+  const state = {
+    lastPos: pos,
+    pointerId: e.pointerId,
+  };
+  setLayerMod({
+    layerId,
+    apply: touch.transfer,
+  });
+  setLock(true);
+
+  const onPointerMove = (e: PointerEvent) => {
+    if (e.pointerId !== state.pointerId) return;
+    const pos = computePos(e, container);
+
+    const { lastPos } = state;
+    if (dist(lastPos, pos) > (bucketFill ? 1 : 3)) {
+      opPush(op, pos, e.pressure);
+
+      touch.stroke(pos[0], pos[1], e.pressure);
+      state.lastPos = pos;
+      setLayerMod({
+        layerId,
+        apply: touch.transfer,
+      });
+    }
+  };
+
+  const onPointerUp = (e: PointerEvent) => {
+    if (e.pointerId !== state.pointerId) return;
+
+    const pos = computePos(e, container);
+
+    // If the pointer is moved, we need to add the last position
+    if (dist(state.lastPos, pos) > 0) {
+      opPush(op, pos, e.pressure);
+
+      touch.stroke(pos[0], pos[1], 0);
+    }
+
+    touch.end();
+    store.apply(op, touch.transfer);
+
+    setLayerMod(null);
+    setLock(false);
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
+  };
+
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("pointercancel", onPointerUp);
+}
+
+function startEyeDropper(
+  container: HTMLDivElement,
+  e: PointerEvent,
+  setLock: (lock: boolean) => void,
+  updateEyeDropper: (pos: Pos, final?: boolean) => void
+) {
+  const pos = computePos(e, container);
+  const pointerId = e.pointerId;
+  updateEyeDropper(pos);
+  setLock(true);
+  const onPointerMove = (e: PointerEvent) => {
+    if (e.pointerId !== pointerId) return;
+    const pos = computePos(e, container);
+    updateEyeDropper(pos);
+  };
+  const onPointerUp = (e: PointerEvent) => {
+    if (e.pointerId !== pointerId) return;
+    const pos = computePos(e, container);
+    updateEyeDropper(pos, true);
+    setLock(false);
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
+  };
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("pointercancel", onPointerUp);
+}
+
+function startSelection(
+  container: HTMLDivElement,
+  e: PointerEvent,
+  setLock: (lock: boolean) => void
+) {
+  const startPos = computePos(e, container);
+  const pointerId = e.pointerId;
+  setLock(true);
+  const onPointerUp = (e: PointerEvent) => {
+    if (e.pointerId !== pointerId) return;
+    const pos = computePos(e, container);
+
+    // WIP select rect
+    select(startPos, pos);
+
+    setLock(false);
+    window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
+  };
+  window.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("pointercancel", onPointerUp);
 }
 
 function opPush(op: Op, pos: [number, number], pressure: number) {
