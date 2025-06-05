@@ -26,6 +26,7 @@ export function usePointer<T extends HTMLElement>({
 
   const handlers = useRef(
     null as null | {
+      pointerId: number;
       onMove?: (pos: [number, number], event: MyPointerEvent) => void;
       onUp?: (event: MyPointerEvent) => void;
     }
@@ -49,7 +50,7 @@ export function usePointer<T extends HTMLElement>({
       };
       const r = onPointerDown(pos, ev, ref.current);
       if (!r) return;
-      handlers.current = r;
+      handlers.current = { pointerId: e.pointerId, ...r };
       e.preventDefault();
     };
 
@@ -62,7 +63,7 @@ export function usePointer<T extends HTMLElement>({
 
   useEffect(() => {
     const onPointerMove = (e: PointerEvent) => {
-      if (!ref.current) return;
+      if (!ref.current || handlers.current?.pointerId !== e.pointerId) return;
       const bbox = ref.current.getBoundingClientRect();
       const pos = [e.clientX - bbox.left, e.clientY - bbox.top] as [
         number,
@@ -76,6 +77,7 @@ export function usePointer<T extends HTMLElement>({
       handlers.current?.onMove?.(pos, ev);
     };
     const onPointerUp = (e: PointerEvent) => {
+      if (handlers.current?.pointerId !== e.pointerId) return;
       const ev = {
         preventDefault: () => e.preventDefault(),
         target: e.target,
