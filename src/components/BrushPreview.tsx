@@ -20,7 +20,7 @@ export function BrushPreview({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { desynchronized: true });
     if (!ctx) return;
     const cw = canvas.width;
     const ch = canvas.height;
