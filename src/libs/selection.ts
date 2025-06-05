@@ -300,7 +300,7 @@ export class Selection {
     if (radius <= 0) return;
 
     const originalData = new Uint8Array(this.data);
-    const kernel = this.createGaussianKernel(radius);
+    const kernel = createGaussianKernel(radius);
     const kernelSize = kernel.length;
     const halfKernel = Math.floor(kernelSize / 2);
 
@@ -342,32 +342,6 @@ export class Selection {
         this.data[y * this.width + x] = weightSum > 0 ? Math.round(sum / weightSum) : 0;
       }
     }
-  }
-
-  /**
-   * Create Gaussian kernel for feathering
-   */
-  private createGaussianKernel(radius: number): number[] {
-    const size = Math.ceil(radius * 2) * 2 + 1;
-    const kernel = new Array(size);
-    const sigma = radius / 3;
-    const sigmaSq = sigma * sigma;
-    const center = Math.floor(size / 2);
-
-    let sum = 0;
-    for (let i = 0; i < size; i++) {
-      const x = i - center;
-      const value = Math.exp(-(x * x) / (2 * sigmaSq));
-      kernel[i] = value;
-      sum += value;
-    }
-
-    // Normalize
-    for (let i = 0; i < size; i++) {
-      kernel[i] /= sum;
-    }
-
-    return kernel;
   }
 
   toPath(): string {
@@ -447,4 +421,84 @@ export class Selection {
 
     return loops.map(loop => loop.map((p, i) => (i === 0 ? 'M' : 'L') + p).join(' ') + ' Z').join(' ');
   }
+
+  /**
+   * Add lasso selection for area enclosed by path
+   */
+  addLasso(path: Array<{ x: number, y: number }>): void {
+    if (path.length < 3) {
+      return; // Need at least 3 points to form a polygon
+    }
+
+    // Get bounding box of the path to optimize iteration
+    let minX = Math.floor(Math.min(...path.map(p => p.x)));
+    let maxX = Math.ceil(Math.max(...path.map(p => p.x)));
+    let minY = Math.floor(Math.min(...path.map(p => p.y)));
+    let maxY = Math.ceil(Math.max(...path.map(p => p.y)));
+
+    // Clamp to canvas bounds
+    minX = Math.max(0, minX);
+    maxX = Math.min(this.width - 1, maxX);
+    minY = Math.max(0, minY);
+    maxY = Math.min(this.height - 1, maxY);
+
+    // Check each pixel in the bounding box
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        if (isPointInPolygon(x, y, path)) {
+          this.setPixel(x, y, true);
+        }
+      }
+    }
+  }
+
+}
+
+/**
+ * Create Gaussian kernel for feathering
+ */
+function createGaussianKernel(radius: number): number[] {
+  const size = Math.ceil(radius * 2) * 2 + 1;
+  const kernel = new Array(size);
+  const sigma = radius / 3;
+  const sigmaSq = sigma * sigma;
+  const center = Math.floor(size / 2);
+
+  let sum = 0;
+  for (let i = 0; i < size; i++) {
+    const x = i - center;
+    const value = Math.exp(-(x * x) / (2 * sigmaSq));
+    kernel[i] = value;
+    sum += value;
+  }
+
+  // Normalize
+  for (let i = 0; i < size; i++) {
+    kernel[i] /= sum;
+  }
+
+  return kernel;
+}
+
+/**
+ * Check if point is inside polygon using ray casting algorithm
+ */
+function isPointInPolygon(x: number, y: number, polygon: Array<{ x: number, y: number }>): boolean {
+  let inside = false;
+  const n = polygon.length;
+
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = polygon[i].x;
+    const yi = polygon[i].y;
+    const xj = polygon[j].x;
+    const yj = polygon[j].y;
+
+    // Check if ray crosses edge
+    if (((yi > y) !== (yj > y)) &&
+      (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+
+  return inside;
 }
