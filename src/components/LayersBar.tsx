@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ReactComponent as IconEye } from "../assets/icons/eye.svg";
 import { ReactComponent as IconEyeSlash } from "../assets/icons/eye-slash.svg";
 import { ReactComponent as IconMenu } from "../assets/icons/menu.svg";
+import { ReactComponent as IconLayers } from "../assets/icons/layers.svg";
 import { BlendMode } from "../model/blendMode";
 import * as Popover from "@radix-ui/react-popover";
 
@@ -86,10 +87,11 @@ export function LayersBar() {
     <div className="bg-gray-50 dark:bg-gray-800 border-l border-b border-gray-300">
       <div className="flex flex-col items-stretch">
         <div
-          className="p-2 cursor-pointer"
+          className="p-2 flex gap-2 cursor-pointer"
           onClick={() => setLayersVisible((v) => !v)}
         >
-          Layers
+          <IconLayers width={24} height={24} />
+          <span>Layers</span>
         </div>
         {layersVisible && (
           <div className="grow border-t border-gray-300 overflow-y-auto">
@@ -148,12 +150,16 @@ export function LayersBar() {
                 }}
               >
                 <button
-                  className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
+                  className="w-8 h-8 cursor-pointer"
                   onClick={() => toggleVisibility(i)}
                   tabIndex={-1}
                   title={layer.visible ? "Hide layer" : "Show layer"}
                 >
-                  {layer.visible ? <IconEye width={24} height={24} /> : <IconEyeSlash width={24} height={24} />}
+                  {layer.visible ? (
+                    <IconEye width={24} height={24} />
+                  ) : (
+                    <IconEyeSlash width={24} height={24} />
+                  )}
                 </button>
                 <div
                   className="grow cursor-pointer"
@@ -173,7 +179,7 @@ export function LayersBar() {
                 >
                   <Popover.Trigger asChild>
                     <button
-                      className="mt-1 w-8 h-8 p-1 rounded cursor-pointer"
+                      className="w-8 h-8 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         setPopoverOpen({ open: true, layerIndex: i });
@@ -204,9 +210,9 @@ export function LayersBar() {
                 </Popover.Root>
               </div>
             ))}
-            <div className="p-2 cursor-pointer" onClick={addLayer}>
+            <button className="w-full p-2 cursor-pointer" onClick={addLayer}>
               New Layer
-            </div>
+            </button>
           </div>
         )}
       </div>
