@@ -11,7 +11,7 @@ export function startTouchParticle1({ width, color, opacity, canvasSize }: { wid
     stroke(x: number, y: number, pressure: number) {
       path.path.push({ x, y, pressure });
 
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
       ctx.fillStyle = color;
       ctx.beginPath();
       while (true) {
@@ -44,7 +44,7 @@ export function startTouchParticle2({ width, color, opacity, canvasSize }: { wid
     stroke(x: number, y: number, pressure: number) {
       path.path.push({ x, y, pressure });
 
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
       ctx.fillStyle = color;
       ctx.globalAlpha = opacity;
       while (true) {
@@ -79,7 +79,7 @@ export function startTouchParticle3({ width, color, opacity, canvasSize }: { wid
     stroke(x: number, y: number, pressure: number) {
       path.path.push({ x, y, pressure });
 
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
       ctx.fillStyle = color;
       while (true) {
         const d = path.current();

@@ -250,7 +250,7 @@ export function StateRender(
 
     if (layer.id === layerMod?.layerId) {
       const canvas = getTmpCanvas(layer.canvas.width, layer.canvas.height);
-      const layerCtx = canvas.getContext("2d");
+      const layerCtx = canvas.getContext("2d", { willReadFrequently: true });
       if (!layerCtx) {
         throw new Error("Failed to get context");
       }

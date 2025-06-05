@@ -13,7 +13,7 @@ export function applyImageDiff(
   canvas: OffscreenCanvas,
   diff: ImageDiff,
 ): ImageDiff {
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) {
     throw new Error("Failed to get context");
   }

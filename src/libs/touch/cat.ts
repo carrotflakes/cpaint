@@ -12,7 +12,7 @@ export function startTouchCat({ width, color, opacity, canvasSize }: { width: nu
     stroke(x: number, y: number, pressure: number) {
       path.path.push({ x, y, pressure });
 
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
       ctx.fillStyle = color;
       ctx.globalAlpha = opacity;
       while (true) {

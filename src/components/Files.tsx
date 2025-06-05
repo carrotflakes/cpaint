@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { Storage } from "../libs/storage";
+import { BlendMode } from "../model/blendMode";
 import { StateContainerFromState } from "../model/state";
 import { useAppState } from "../store/appState";
-import { BlendMode } from "../model/blendMode";
 
 export function Files() {
   const [files, setFiles] = useState(
@@ -131,7 +131,9 @@ async function loadImage(storage: Storage, id: number) {
     const image = await blobToImage(layerData.canvas);
     const canvas = new OffscreenCanvas(image.width, image.height);
     {
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d", {
+        willReadFrequently: true,
+      })!;
       ctx.drawImage(image, 0, 0);
     }
     layers.push({

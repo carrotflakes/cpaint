@@ -90,7 +90,9 @@ function applyCanvasResize(canvasResize: {
       canvasResize.size[0],
       canvasResize.size[1]
     );
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d", {
+      willReadFrequently: true,
+    })!;
     makeApply(layer.canvas, canvasResize.rect)(ctx);
     return {
       ...layer,

@@ -1,11 +1,11 @@
 import { produce } from "immer";
+import { Rect as TransformRect } from "../components/TransformRectHandles";
 import { applyPatches } from "../libs/applyPatches";
-import { startTouchBrush } from "../libs/touch/brush";
 import { canvasToImageDiff } from "../libs/canvasUtil";
 import { Patch } from "../libs/patch";
-import type { State, StateDiff } from "./state";
+import { startTouchBrush } from "../libs/touch/brush";
 import { startTouchFill } from "../libs/touch/fill";
-import { Rect as TransformRect } from "../components/TransformRectHandles";
+import type { State, StateDiff } from "./state";
 
 export type Op = {
   type: "stroke";

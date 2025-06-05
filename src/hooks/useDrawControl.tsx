@@ -223,9 +223,7 @@ function useEyeDropper(canvasRef: { current: HTMLCanvasElement | null }) {
 
   const updateEyeDropper = useCallback(
     (pos: Pos, final?: boolean) => {
-      const ctx = canvasRef.current?.getContext("2d", {
-        willReadFrequently: true,
-      })!;
+      const ctx = canvasRef.current?.getContext("2d")!;
       const color = pixelColor(ctx, pos[0], pos[1]);
       if (final) {
         useAppState.getState().update((draft) => {

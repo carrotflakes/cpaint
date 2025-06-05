@@ -1,4 +1,4 @@
-export function createCheckCanvas() {
+function createCheckCanvas() {
   const size = 20;
   const canvas = document.createElement("canvas");
   canvas.width = size;

@@ -88,7 +88,9 @@ function applyAddImageAsLayer(addImageAsLayer: {
   const { width, height } = store.stateContainer.state.layers[0].canvas;
 
   const canvas = new OffscreenCanvas(width, height);
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d", {
+    willReadFrequently: true,
+  })!;
 
   const { image, rect } = addImageAsLayer;
   renderImage(ctx, image, rect);

@@ -120,7 +120,7 @@ export const useAppState = create<AppState>()((set) => {
     openAsNewFile(image: HTMLImageElement) {
       const { width, height } = image;
       const canvas = new OffscreenCanvas(width, height);
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
       ctx.drawImage(image, 0, 0);
       set(() => ({
         imageMeta: {
@@ -145,7 +145,7 @@ export const useAppState = create<AppState>()((set) => {
     importAsLayer(image: HTMLImageElement) {
       const { width, height } = image;
       const canvas = new OffscreenCanvas(width, height);
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
       ctx.drawImage(image, 0, 0);
       const firstCanvas = useAppState.getState().stateContainer.state.layers[0].canvas;
       set(() => ({

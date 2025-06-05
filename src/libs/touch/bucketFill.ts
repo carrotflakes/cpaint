@@ -39,7 +39,9 @@ export function startTouchBucketFill({ color, opacity, erase, tolerance, imageDa
       }
 
       {
-        const ctx2 = canvas.getContext("2d")!;
+        const ctx2 = canvas.getContext("2d", {
+          willReadFrequently: true,
+        })!;
         ctx2.putImageData(imageDataDst, 0, 0);
       }
 

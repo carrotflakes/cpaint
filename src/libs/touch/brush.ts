@@ -1,6 +1,6 @@
 import { CanvasContext, Touch } from ".";
-import { startTouchParticle1, startTouchParticle2, startTouchParticle3 } from "./particle";
 import { startTouchCat } from "./cat";
+import { startTouchParticle1, startTouchParticle2, startTouchParticle3 } from "./particle";
 
 export function startTouchBrush({ brushType, width, color, opacity, erase, alphaLock, canvasSize }:
   { brushType: string, width: number, color: string, opacity: number, erase: boolean, alphaLock: boolean, canvasSize: [number, number] }
@@ -53,7 +53,7 @@ export function startTouchSoft({ width, color, opacity, canvasSize }:
   let imageData: ImageData;
 
   {
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, canvasSize[0], canvasSize[1]);
     imageData = ctx.getImageData(0, 0, canvasSize[0], canvasSize[1]);
@@ -88,7 +88,7 @@ export function startTouchSoft({ width, color, opacity, canvasSize }:
     },
     transfer(ctx: CanvasContext) {
       {
-        const ctx2 = canvas.getContext("2d")!;
+        const ctx2 = canvas.getContext("2d", { willReadFrequently: true })!;
         ctx2.putImageData(imageData, 0, 0);
       }
 
@@ -115,7 +115,7 @@ export function startTouchHard({ width, color, opacity, canvasSize }:
     },
     transfer(ctx: CanvasContext) {
       {
-        const ctx2 = canvas.getContext("2d")!;
+        const ctx2 = canvas.getContext("2d", { willReadFrequently: true })!;
         ctx2.clearRect(0, 0, canvasSize[0], canvasSize[1]);
         ctx2.strokeStyle = color;
         ctx2.lineWidth = width;
