@@ -277,7 +277,7 @@ export function ToolBar() {
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content
-            className="p-2 flex bg-white dark:bg-black shadow z-10"
+            className="p-2 flex bg-gray-50 dark:bg-black shadow z-10"
             side="right"
             sideOffset={5}
             collisionPadding={8}
@@ -300,7 +300,7 @@ export function ToolBar() {
         <IconDropper width={24} height={24} />
       </div>
 
-      <Popover.Root 
+      <Popover.Root
         open={uiState.tool === "selection" && showSelectionControls}
         onOpenChange={setShowSelectionControls}
       >
@@ -309,7 +309,8 @@ export function ToolBar() {
             className="cursor-pointer data-[selected=true]:text-blue-400"
             data-selected={uiState.tool === "selection"}
             onClick={() => {
-              if (uiState.tool === "selection") setShowSelectionControls((x) => !x);
+              if (uiState.tool === "selection")
+                setShowSelectionControls((x) => !x);
               else setShowSelectionControls(true);
               store.update((draft) => {
                 draft.uiState.tool = "selection";
@@ -322,7 +323,7 @@ export function ToolBar() {
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content
-            className="max-h-[calc(100dvh-16px)] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto"
+            className="max-h-[calc(100dvh-16px)] p-2 bg-gray-50 dark:bg-black shadow z-10 overflow-y-auto"
             data-scroll={true}
             side="right"
             align="start"

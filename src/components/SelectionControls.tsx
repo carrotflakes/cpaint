@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { Selection } from "../libs/selection";
 import { State } from "../model/state";
 import {
@@ -5,16 +6,18 @@ import {
   SelectionTool,
   useAppState,
 } from "../store/appState";
+import { ReactComponent as IconLasso } from "../assets/icons/lasso.svg";
+import { ReactComponent as IconMagicWand } from "../assets/icons/magic-wand.svg";
 
 const SELECTION_TOOLS: {
   id: SelectionTool;
-  label: string;
+  label: ReactNode;
   title: string;
 }[] = [
   { id: "rectangle", label: "□", title: "Rectangle Selection" },
   { id: "ellipse", label: "○", title: "Ellipse Selection" },
-  { id: "lasso", label: "◊", title: "Lasso Selection" },
-  { id: "magicWand", label: "✦", title: "Magic Wand" },
+  { id: "lasso", label: <IconLasso />, title: "Lasso Selection" },
+  { id: "magicWand", label: <IconMagicWand />, title: "Magic Wand" },
 ];
 
 const SELECTION_OPERATIONS: {
