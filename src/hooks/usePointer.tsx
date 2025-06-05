@@ -32,6 +32,9 @@ export function usePointer<T extends HTMLElement>({
   );
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     const onPointerDown_ = (e: PointerEvent) => {
       if (!ref.current) return;
       const bbox = ref.current.getBoundingClientRect();
@@ -50,10 +53,10 @@ export function usePointer<T extends HTMLElement>({
       e.preventDefault();
     };
 
-    containerRef.current?.addEventListener("pointerdown", onPointerDown_);
+    container.addEventListener("pointerdown", onPointerDown_);
 
     return () => {
-      containerRef.current?.removeEventListener("pointerdown", onPointerDown_);
+      container.removeEventListener("pointerdown", onPointerDown_);
     };
   }, [onPointerDown]);
 
