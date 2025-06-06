@@ -108,7 +108,8 @@ function startDrawing(
   const onPointerMove = (e: PointerEvent) => {
     const pos = computePos(e, container);
 
-    if (dist(lastPos, pos) > (bucketFill ? 1 : 3)) {
+    const viewScale = store.uiState.canvasView.scale;
+    if (dist(lastPos, pos) * viewScale > (bucketFill ? 1 : 3)) {
       opPush(op, pos, e.pressure);
 
       touch.stroke(pos[0], pos[1], e.pressure);
