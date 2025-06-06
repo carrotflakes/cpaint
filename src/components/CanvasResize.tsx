@@ -4,7 +4,11 @@ import { Op } from "../model/op";
 import { State } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
-import { makeApply, Rect, TransformRectHandles } from "./overlays/TransformRectHandles";
+import {
+  makeApply,
+  Rect,
+  TransformRectHandles,
+} from "./overlays/TransformRectHandles";
 
 export default function CanvasResize() {
   const store = useAppState();
@@ -22,7 +26,7 @@ export default function CanvasResize() {
     const ctx = canvas.getContext("2d")!;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    makeApply(canvasResize.rendered, canvasResize.rect)(ctx);
+    makeApply(null, canvasResize.rendered, canvasResize.rect)(ctx);
   }, [canvasResize?.rect, canvasRef]);
 
   if (!canvasResize) {
@@ -93,7 +97,7 @@ function applyCanvasResize(canvasResize: {
     const ctx = canvas.getContext("2d", {
       willReadFrequently: true,
     })!;
-    makeApply(layer.canvas, canvasResize.rect)(ctx);
+    makeApply(null, layer.canvas, canvasResize.rect)(ctx);
     return {
       ...layer,
       canvas,

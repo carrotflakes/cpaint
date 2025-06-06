@@ -1,9 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useViewControl } from "../hooks/useViewControl";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
-import { makeApply, TransformRectHandles } from "./overlays/TransformRectHandles";
+import {
+  makeApply,
+  TransformRectHandles,
+} from "./overlays/TransformRectHandles";
+import { Selection } from "../libs/selection";
 
 export default function Transform() {
   const store = useAppState();
@@ -13,10 +17,29 @@ export default function Transform() {
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
+  const canvases = useMemo(() => {
+    if (!layerTransform) return null;
+
+    const selection = store.stateContainer.state.selection;
+    const canvas =
+      store.stateContainer.state.layers[layerTransform.layerIndex ?? 0].canvas;
+    if (!selection)
+      return {
+        base: null,
+        target: canvas,
+      };
+
+    return splitCanvasBySelection(canvas, selection);
+  }, [
+    store.stateContainer.state.layers,
+    store.stateContainer.state.selection,
+    layerTransform?.layerIndex,
+  ]);
+
   useViewControl(containerRef, true);
 
   useEffect(() => {
-    if (!layerTransform) return;
+    if (!layerTransform || !canvases) return;
 
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
@@ -25,10 +48,10 @@ export default function Transform() {
       store.stateContainer.state.layers[layerTransform.layerIndex ?? 0];
     const touch = {
       layerId: layer.id,
-      apply: makeApply(layer.canvas, layerTransform.rect),
+      apply: makeApply(canvases.base, canvases.target, layerTransform.rect),
     };
-    StateRender(store.stateContainer.state, ctx, touch);
-  }, [store, canvasRef]);
+    StateRender(store.stateContainer.state.layers, ctx, touch);
+  }, [store.stateContainer.state.layers, canvases, canvasRef, layerTransform]);
 
   if (!layerTransform) {
     return "Oops, not in transform mode🤔";
@@ -71,16 +94,18 @@ export default function Transform() {
         <div
           className="p-2 rounded bg-gray-200 cursor-pointer"
           onClick={() => {
-            if (!layerTransform) return;
+            if (!layerTransform || !canvases) return;
+
             const op = {
               type: "layerTransform" as const,
               layerIndex: layerTransform.layerIndex,
               rect: layerTransform.rect,
             };
 
-            const layer =
-              store.stateContainer.state.layers[layerTransform.layerIndex ?? 0];
-            store.apply(op, makeApply(layer.canvas, layerTransform.rect));
+            store.apply(
+              op,
+              makeApply(canvases.base, canvases.target, layerTransform.rect)
+            );
             store.update((draft) => {
               draft.mode = { type: "draw" };
             });
@@ -91,4 +116,26 @@ export default function Transform() {
       </div>
     </div>
   );
+}
+
+function splitCanvasBySelection(canvas: OffscreenCanvas, selection: Selection) {
+  const ctx = canvas.getContext("2d", { willFrequentyRead: true })!;
+  const targetID = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const baseID = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  selection.clipImageData(targetID);
+  const target = new OffscreenCanvas(canvas.width, canvas.height);
+  target
+    .getContext("2d", { willFrequentyRead: true })!
+    .putImageData(targetID, 0, 0);
+
+  const selectionInverted = selection.clone();
+  selectionInverted.invert();
+  selectionInverted.clipImageData(baseID);
+  const base = new OffscreenCanvas(canvas.width, canvas.height);
+  base
+    .getContext("2d", { willFrequentyRead: true })!
+    .putImageData(baseID, 0, 0);
+
+  return { base, target };
 }

@@ -359,12 +359,18 @@ function computeHandlePositions(
   } satisfies Record<string, [number, number]>;
 }
 
-export function makeApply(canvas: OffscreenCanvas, rect: Rect) {
+export function makeApply(
+  baseCanvas: OffscreenCanvas | null,
+  canvas: OffscreenCanvas,
+  rect: Rect
+) {
   return (
     ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D
   ) => {
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (baseCanvas)
+      ctx.drawImage(baseCanvas, 0, 0, canvas.width, canvas.height);
     ctx.translate(rect.cx, rect.cy);
     ctx.rotate(rect.angle);
     ctx.scale((rect.hw * 2) / canvas.width, (rect.hh * 2) / canvas.height);

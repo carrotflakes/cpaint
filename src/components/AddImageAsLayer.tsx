@@ -22,7 +22,7 @@ export default function AddImageAsLayer() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    StateRender(store.stateContainer.state, ctx, null);
+    StateRender(store.stateContainer.state.layers, ctx, null);
 
     const { image, rect } = addImageAsLayer;
     renderImage(ctx, image, rect);

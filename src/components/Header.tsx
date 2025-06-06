@@ -251,7 +251,7 @@ function createThumbnail() {
   const c = state.stateContainer.state.layers[0].canvas;
   const canvas = new OffscreenCanvas(c.width, c.height);
   const ctx = canvas.getContext("2d")!;
-  StateRender(state.stateContainer.state, ctx, null);
+  StateRender(state.stateContainer.state.layers, ctx, null);
   return canvas.convertToBlob();
 }
 
@@ -260,7 +260,7 @@ function intoResizeCanvasMode(width: number, height: number) {
   const firstCanvas = state.stateContainer.state.layers[0].canvas;
   const canvas = new OffscreenCanvas(firstCanvas.width, firstCanvas.height);
   const ctx = canvas.getContext("2d")!;
-  StateRender(state.stateContainer.state, ctx, null);
+  StateRender(state.stateContainer.state.layers, ctx, null);
 
   useAppState.getState().update((state) => {
     state.mode = {

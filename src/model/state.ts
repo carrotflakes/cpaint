@@ -237,15 +237,15 @@ function applyStateDiff(
 
 // Render the state to the canvas
 export function StateRender(
-  state: State,
+  layers: State["layers"],
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   layerMod: LayerMod | null,
 ) {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
   ctx.save();
-  for (let i = 0; i < state.layers.length; i++) {
-    const layer = state.layers[i];
+  for (let i = 0; i < layers.length; i++) {
+    const layer = layers[i];
     if (!layer.visible) continue; // Skip rendering invisible layers
 
     if (layer.id === layerMod?.layerId) {

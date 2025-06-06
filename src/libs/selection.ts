@@ -503,6 +503,27 @@ export class Selection {
     }
   }
 
+  /**
+   * Clip ImageData to selection area
+   * Returns new ImageData with pixels outside selection made transparent
+   */
+  clipImageData(imageData: ImageData) {
+    if (imageData.width !== this.width || imageData.height !== this.height) {
+      throw new Error("ImageData dimensions must match selection dimensions");
+    }
+
+    for (let i = 0; i < this.data.length; i++) {
+      const isSelected = this.data[i] > 0;
+      const pixelIndex = i * 4;
+
+      if (!isSelected) {
+        imageData.data[pixelIndex] = 0;     // R
+        imageData.data[pixelIndex + 1] = 0; // G
+        imageData.data[pixelIndex + 2] = 0; // B
+        imageData.data[pixelIndex + 3] = 0; // A (transparent)
+      }
+    }
+  }
 }
 
 /**
