@@ -152,6 +152,15 @@ function FileInfo({
       >
         Resize Canvas
       </button>
+      <button
+        className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"
+        onClick={() => {
+          exportToPNG();
+          setPopoverOpen(false);
+        }}
+      >
+        Export PNG
+      </button>
     </div>
   );
 }
@@ -276,4 +285,28 @@ function intoResizeCanvasMode(width: number, height: number) {
       },
     };
   });
+}
+
+async function exportToPNG() {
+  const state = useAppState.getState();
+  const meta = state.imageMeta;
+
+  if (!meta) return;
+
+  const firstCanvas = state.stateContainer.state.layers[0].canvas;
+  const canvas = new OffscreenCanvas(firstCanvas.width, firstCanvas.height);
+  const ctx = canvas.getContext("2d")!;
+  StateRender(state.stateContainer.state.layers, ctx, null);
+
+  const blob = await canvas.convertToBlob({ type: "image/png" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${meta.name}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
 }
