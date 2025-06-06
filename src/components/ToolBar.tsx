@@ -590,7 +590,7 @@ function BrushSelector({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      {["soft", "hard", "particle1", "particle2", "particle3", "cat"].map(
+      {["soft", "hard", "particle1", "particle2", "particle3", "pixel", "cat"].map(
         (type) => (
           <button
             key={type}
