@@ -1,5 +1,5 @@
 import * as color from "color-convert";
-import { useCallback, useEffect, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import { computePos } from "../components/CanvasArea";
 import { CursorIndicator } from "../components/overlays/CursorIndicator";
 import { EyeDropper } from "../components/overlays/EyeDropper";
@@ -9,6 +9,7 @@ import { Op } from "../model/op";
 import { LayerMod, State } from "../model/state";
 import { createOp, createTouch, useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
+import { SelectionRect } from "../components/overlays/SelectionRect";
 
 export function useDrawControl(
   containerRef: {
@@ -21,7 +22,7 @@ export function useDrawControl(
   const { touchToDraw } = useGlobalSettings((state) => state);
   const [lock, setLock] = useState(false);
   const [layerMod, setLayerMod] = useState<null | LayerMod>(null);
-  const { eyeDropper, updateEyeDropper } = useEyeDropper(canvasRef);
+  const [overlay, setOverlay] = useState<JSX.Element | null>(null);
 
   useEffect(() => {
     if (lock) return;
@@ -45,10 +46,17 @@ export function useDrawControl(
             startDrawing(container, e, setLock, setLayerMod);
             break;
           case "eyeDropper":
-            startEyeDropper(container, e, setLock, updateEyeDropper);
+            canvasRef.current &&
+              startEyeDropper(
+                container,
+                e,
+                setLock,
+                canvasRef.current,
+                setOverlay
+              );
             break;
           case "selection":
-            startSelection(container, e, setLock);
+            startSelection(container, e, setLock, setOverlay);
             break;
         }
       }
@@ -60,16 +68,10 @@ export function useDrawControl(
     };
   }, [containerRef, touchToDraw]);
 
-  const overlay = (
-    <>
-      <CursorIndicator containerRef={containerRef} />
-      {eyeDropper && (
-        <EyeDropper color={eyeDropper.color} pos={eyeDropper.pos} />
-      )}
-    </>
-  );
-
-  return { layerMod, overlay };
+  return {
+    layerMod,
+    overlay: overlay ?? <CursorIndicator containerRef={containerRef} />,
+  };
 }
 
 function startDrawing(
@@ -97,26 +99,20 @@ function startDrawing(
 
   if (!store.uiState.erase) store.addColorToHistory(store.uiState.color);
 
-  const state = {
-    lastPos: pos,
-    pointerId: e.pointerId,
-  };
+  let lastPos = pos;
   setLayerMod({
     layerId,
     apply: touch.transfer,
   });
-  setLock(true);
 
   const onPointerMove = (e: PointerEvent) => {
-    if (e.pointerId !== state.pointerId) return;
     const pos = computePos(e, container);
 
-    const { lastPos } = state;
     if (dist(lastPos, pos) > (bucketFill ? 1 : 3)) {
       opPush(op, pos, e.pressure);
 
       touch.stroke(pos[0], pos[1], e.pressure);
-      state.lastPos = pos;
+      lastPos = pos;
       setLayerMod({
         layerId,
         apply: touch.transfer,
@@ -125,12 +121,10 @@ function startDrawing(
   };
 
   const onPointerUp = (e: PointerEvent) => {
-    if (e.pointerId !== state.pointerId) return;
-
     const pos = computePos(e, container);
 
     // If the pointer is moved, we need to add the last position
-    if (dist(state.lastPos, pos) > 0) {
+    if (dist(lastPos, pos) > 0) {
       opPush(op, pos, e.pressure);
 
       touch.stroke(pos[0], pos[1], 0);
@@ -140,67 +134,103 @@ function startDrawing(
     store.apply(op, touch.transfer);
 
     setLayerMod(null);
-    setLock(false);
-    window.removeEventListener("pointermove", onPointerMove);
-    window.removeEventListener("pointerup", onPointerUp);
-    window.removeEventListener("pointercancel", onPointerUp);
   };
 
-  window.addEventListener("pointermove", onPointerMove);
-  window.addEventListener("pointerup", onPointerUp);
-  window.addEventListener("pointercancel", onPointerUp);
+  listenPointer(e.pointerId, setLock, onPointerMove, onPointerUp);
 }
 
 function startEyeDropper(
   container: HTMLDivElement,
   e: PointerEvent,
   setLock: (lock: boolean) => void,
-  updateEyeDropper: (pos: Pos, final?: boolean) => void
+  canvas: HTMLCanvasElement,
+  setOverlay: (overlay: JSX.Element | null) => void
 ) {
   const pos = computePos(e, container);
-  const pointerId = e.pointerId;
+
+  const updateEyeDropper = (pos: Pos, final?: boolean) => {
+    const ctx = canvas.getContext("2d")!;
+    const color = pixelColor(ctx, pos[0], pos[1]);
+    if (final) {
+      useAppState.getState().update((draft) => {
+        draft.uiState.color = color;
+      });
+      setOverlay(null);
+    } else {
+      setOverlay(<EyeDropper color={color} pos={pos} />);
+    }
+  };
+
   updateEyeDropper(pos);
-  setLock(true);
+
   const onPointerMove = (e: PointerEvent) => {
-    if (e.pointerId !== pointerId) return;
     const pos = computePos(e, container);
     updateEyeDropper(pos);
   };
   const onPointerUp = (e: PointerEvent) => {
-    if (e.pointerId !== pointerId) return;
     const pos = computePos(e, container);
     updateEyeDropper(pos, true);
-    setLock(false);
-    window.removeEventListener("pointermove", onPointerMove);
-    window.removeEventListener("pointerup", onPointerUp);
-    window.removeEventListener("pointercancel", onPointerUp);
   };
-  window.addEventListener("pointermove", onPointerMove);
-  window.addEventListener("pointerup", onPointerUp);
-  window.addEventListener("pointercancel", onPointerUp);
+
+  listenPointer(e.pointerId, setLock, onPointerMove, onPointerUp);
 }
 
 function startSelection(
   container: HTMLDivElement,
   e: PointerEvent,
-  setLock: (lock: boolean) => void
+  setLock: (lock: boolean) => void,
+  setOverlay: (overlay: JSX.Element | null) => void
 ) {
   const startPos = computePos(e, container);
-  const pointerId = e.pointerId;
-  setLock(true);
+  const store = useAppState.getState();
+
+  const onPointerMove = (e: PointerEvent) => {
+    const pos = computePos(e, container);
+    setOverlay(
+      <SelectionRect
+        rect={{
+          x: Math.min(startPos[0], pos[0]),
+          y: Math.min(startPos[1], pos[1]),
+          width: Math.abs(pos[0] - startPos[0]),
+          height: Math.abs(pos[1] - startPos[1]),
+        }}
+        ellipse={store.uiState.selectionTool === "ellipse"}
+      />
+    );
+  };
   const onPointerUp = (e: PointerEvent) => {
-    if (e.pointerId !== pointerId) return;
     const pos = computePos(e, container);
 
     // WIP select rect
     select(startPos, pos);
-
-    setLock(false);
-    window.removeEventListener("pointerup", onPointerUp);
-    window.removeEventListener("pointercancel", onPointerUp);
+    setOverlay(null);
   };
-  window.addEventListener("pointerup", onPointerUp);
-  window.addEventListener("pointercancel", onPointerUp);
+
+  listenPointer(e.pointerId, setLock, onPointerMove, onPointerUp);
+}
+
+function listenPointer(
+  pointerId: number,
+  setLock: (lock: boolean) => void,
+  onPointerMove: (e: PointerEvent) => void,
+  onPointerUp: (e: PointerEvent) => void
+) {
+  setLock(true);
+  const onMove = (e: PointerEvent) => {
+    if (e.pointerId !== pointerId) return;
+    onPointerMove(e);
+  };
+  const onUp = (e: PointerEvent) => {
+    if (e.pointerId !== pointerId) return;
+    onPointerUp(e);
+    setLock(false);
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    window.removeEventListener("pointercancel", onUp);
+  };
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
+  window.addEventListener("pointercancel", onUp);
 }
 
 function opPush(op: Op, pos: [number, number], pressure: number) {
@@ -213,31 +243,6 @@ function opPush(op: Op, pos: [number, number], pressure: number) {
   } else {
     throw new Error(`Unsupported operation type: ${op.type}`);
   }
-}
-
-function useEyeDropper(canvasRef: { current: HTMLCanvasElement | null }) {
-  const [eyeDropper, setEyeDropper] = useState<null | {
-    pos: [number, number];
-    color: string;
-  }>(null);
-
-  const updateEyeDropper = useCallback(
-    (pos: Pos, final?: boolean) => {
-      const ctx = canvasRef.current?.getContext("2d")!;
-      const color = pixelColor(ctx, pos[0], pos[1]);
-      if (final) {
-        useAppState.getState().update((draft) => {
-          draft.uiState.color = color;
-        });
-        setEyeDropper(null);
-      } else {
-        setEyeDropper({ pos, color });
-      }
-    },
-    [canvasRef]
-  );
-
-  return { eyeDropper, updateEyeDropper };
 }
 
 function pixelColor(ctx: CanvasRenderingContext2D, x: number, y: number) {
@@ -254,12 +259,23 @@ function select(startPos: [number, number], endPos: [number, number]) {
   const selection =
     store.stateContainer.state.selection?.clone() ??
     new Selection(firstCanvas.width, firstCanvas.height, false);
-  selection.addRect(
-    Math.round(Math.min(startPos[0], endPos[0])),
-    Math.round(Math.min(startPos[1], endPos[1])),
-    Math.round(Math.abs(endPos[0] - startPos[0])),
-    Math.round(Math.abs(endPos[1] - startPos[1]))
-  );
+  if (store.uiState.selectionTool === "ellipse") {
+    selection.addEllipse(
+      (startPos[0] + endPos[0]) / 2,
+      (startPos[1] + endPos[1]) / 2,
+      Math.abs(endPos[0] - startPos[0]) / 2,
+      Math.abs(endPos[1] - startPos[1]) / 2,
+      store.uiState.selectionOperation
+    );
+  } else {
+    selection.addRect(
+      Math.round(Math.min(startPos[0], endPos[0])),
+      Math.round(Math.min(startPos[1], endPos[1])),
+      Math.round(Math.abs(endPos[0] - startPos[0])),
+      Math.round(Math.abs(endPos[1] - startPos[1])),
+      store.uiState.selectionOperation
+    );
+  }
   store.apply(
     {
       type: "patch",

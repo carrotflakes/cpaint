@@ -1,3 +1,5 @@
+export type Operation = "new" | 'add' | 'subtract' | 'intersect' | 'xor';
+
 /**
  * Canvas selection model for pixel-level binary selection data
  * Supports efficient selection operations and memory-optimized storage
@@ -98,52 +100,101 @@ export class Selection {
   /**
    * Add rectangular selection
    */
-  addRect(x: number, y: number, width: number, height: number): void {
+  addRect(x: number, y: number, width: number, height: number, operation: Operation): void {
     const endX = Math.min(x + width, this.width);
     const endY = Math.min(y + height, this.height);
     const startX = Math.max(0, x);
     const startY = Math.max(0, y);
 
-    for (let py = startY; py < endY; py++) {
-      for (let px = startX; px < endX; px++) {
-        this.setPixel(px, py, true);
-      }
-    }
-  }
-
-  /**
-   * Remove rectangular selection
-   */
-  removeRect(x: number, y: number, width: number, height: number): void {
-    const endX = Math.min(x + width, this.width);
-    const endY = Math.min(y + height, this.height);
-    const startX = Math.max(0, x);
-    const startY = Math.max(0, y);
-
-    for (let py = startY; py < endY; py++) {
-      for (let px = startX; px < endX; px++) {
-        this.setPixel(px, py, false);
-      }
+    switch (operation) {
+      case 'new':
+        this.clear(); // Clear existing selection
+        for (let py = startY; py < endY; py++)
+          for (let px = startX; px < endX; px++)
+            this.setPixel(px, py, true);
+        break;
+      case 'add':
+        for (let py = startY; py < endY; py++)
+          for (let px = startX; px < endX; px++)
+            this.setPixel(px, py, true);
+        break;
+      case 'subtract':
+        for (let py = startY; py < endY; py++)
+          for (let px = startX; px < endX; px++)
+            this.setPixel(px, py, false);
+        break;
+      case 'xor':
+        for (let py = startY; py < endY; py++)
+          for (let px = startX; px < endX; px++)
+            this.setPixel(px, py, !this.getPixel(px, py));
+        break;
+      case 'intersect':
+        for (let py = 0; py < this.height; py++)
+          for (let px = 0; px < this.width; px++)
+            if (!(px >= startX && px < endX && py >= startY && py < endY))
+              this.setPixel(px, py, false);
+        break;
+      default:
+        throw new Error(`Unsupported operation: ${operation}`);
     }
   }
 
   /**
    * Add elliptical selection
    */
-  addEllipse(centerX: number, centerY: number, radiusX: number, radiusY: number): void {
+  addEllipse(centerX: number, centerY: number, radiusX: number, radiusY: number, operation: Operation): void {
     const minX = Math.max(0, Math.floor(centerX - radiusX));
     const maxX = Math.min(this.width - 1, Math.ceil(centerX + radiusX));
     const minY = Math.max(0, Math.floor(centerY - radiusY));
     const maxY = Math.min(this.height - 1, Math.ceil(centerY + radiusY));
 
-    for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) {
-        const dx = (x - centerX) / radiusX;
-        const dy = (y - centerY) / radiusY;
-        if (dx * dx + dy * dy <= 1) {
-          this.setPixel(x, y, true);
+    const fill = (value: boolean) => {
+      for (let y = minY; y <= maxY; y++) {
+        for (let x = minX; x <= maxX; x++) {
+          const dx = (x - centerX) / radiusX;
+          const dy = (y - centerY) / radiusY;
+          if (dx * dx + dy * dy <= 1) {
+            this.setPixel(x, y, value);
+          }
         }
       }
+    }
+
+    switch (operation) {
+      case 'new':
+        this.clear(); // Clear existing selection
+        fill(true);
+        break;
+      case 'add':
+        fill(true);
+        break;
+      case 'subtract':
+        fill(false);
+        break;
+      case 'xor':
+        for (let y = minY; y <= maxY; y++) {
+          for (let x = minX; x <= maxX; x++) {
+            const dx = (x - centerX) / radiusX;
+            const dy = (y - centerY) / radiusY;
+            if (dx * dx + dy * dy <= 1) {
+              this.setPixel(x, y, !this.getPixel(x, y));
+            }
+          }
+        }
+        break;
+      case 'intersect':
+        for (let y = 0; y < this.height; y++) {
+          for (let x = 0; x < this.width; x++) {
+            const dx = (x - centerX) / radiusX;
+            const dy = (y - centerY) / radiusY;
+            if (!(dx * dx + dy * dy <= 1)) {
+              this.setPixel(x, y, false);
+            }
+          }
+        }
+        break;
+      default:
+        throw new Error(`Unsupported operation: ${operation}`);
     }
   }
 
