@@ -83,6 +83,21 @@ export function viewToTransform(canvasView: {
   return `translate(${canvasView.pan[0]}px, ${canvasView.pan[1]}px) rotate(${canvasView.angle}rad) scale(${canvasView.scale})`;
 }
 
+export function viewToSVGTransform(
+  canvasView: {
+    angle: number;
+    scale: number;
+    pan: [number, number];
+  },
+  canvasSize: { width: number; height: number }
+): string {
+  return `translate(${canvasView.pan[0]} ${canvasView.pan[1]}) rotate(${
+    (canvasView.angle / (2 * Math.PI)) * 360
+  }) scale(${canvasView.scale}) translate(${-canvasSize.width / 2} ${
+    -canvasSize.height / 2
+  })`;
+}
+
 export function computePos(
   e: { clientX: number; clientY: number },
   containerEl: HTMLDivElement

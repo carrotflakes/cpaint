@@ -3,7 +3,7 @@ import { useViewControl } from "../hooks/useViewControl";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
-import { makeApply, TransformRectHandles } from "./TransformRectHandles";
+import { makeApply, TransformRectHandles } from "./overlays/TransformRectHandles";
 
 export default function Transform() {
   const store = useAppState();

@@ -1,6 +1,6 @@
 import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
-import { Rect as TransformRect } from '../components/TransformRectHandles';
+import { Rect as TransformRect } from '../components/overlays/TransformRectHandles';
 import { blur } from '../libs/imageFx';
 import {
   startTouchBrush,

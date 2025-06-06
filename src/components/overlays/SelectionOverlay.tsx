@@ -1,5 +1,6 @@
-import { useMemo, useState, useEffect } from "react";
-import { useAppState } from "../store/appState";
+import { useEffect, useMemo, useState } from "react";
+import { useAppState } from "../../store/appState";
+import { viewToSVGTransform } from "../CanvasArea";
 
 export function SelectionOverlay() {
   const store = useAppState();
@@ -62,19 +63,4 @@ export function SelectionOverlay() {
       />
     </g>
   );
-}
-
-export function viewToSVGTransform(
-  canvasView: {
-    angle: number;
-    scale: number;
-    pan: [number, number];
-  },
-  canvasSize: { width: number; height: number }
-): string {
-  return `translate(${canvasView.pan[0]} ${canvasView.pan[1]}) rotate(${
-    (canvasView.angle / (2 * Math.PI)) * 360
-  }) scale(${canvasView.scale}) translate(${-canvasSize.width / 2} ${
-    -canvasSize.height / 2
-  })`;
 }

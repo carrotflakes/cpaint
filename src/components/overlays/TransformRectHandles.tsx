@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { useAppState } from "../store/appState";
+import { useAppState } from "../../store/appState";
 
 export type Rect = {
   cx: number; // Center X coordinate
@@ -275,7 +275,7 @@ export function TransformRectHandles({
 
 function addPointerEventsHandler(
   element: SVGElement,
-  lockRef: React.MutableRefObject<boolean>,
+  lockRef: React.RefObject<boolean>,
   onDown: (e: PointerEvent) =>
     | {
         onMove: (e: PointerEvent) => void;

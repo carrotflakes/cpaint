@@ -4,7 +4,7 @@ import { Op } from "../model/op";
 import { State, StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
-import { Rect, TransformRectHandles } from "./TransformRectHandles";
+import { Rect, TransformRectHandles } from "./overlays/TransformRectHandles";
 
 export default function AddImageAsLayer() {
   const store = useAppState();

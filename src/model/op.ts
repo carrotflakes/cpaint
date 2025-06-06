@@ -1,5 +1,5 @@
 import { produce } from "immer";
-import { Rect as TransformRect } from "../components/TransformRectHandles";
+import { Rect as TransformRect } from "../components/overlays/TransformRectHandles";
 import { applyPatches } from "../libs/applyPatches";
 import { canvasToImageDiff } from "../libs/canvasUtil";
 import { Patch } from "../libs/patch";

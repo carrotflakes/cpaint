@@ -4,7 +4,7 @@ import { useViewControl } from "../hooks/useViewControl";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
-import { SelectionOverlay } from "./SelectionOverlay";
+import { SelectionOverlay } from "./overlays/SelectionOverlay";
 
 export default function MainCanvasArea() {
   const store = useAppState();

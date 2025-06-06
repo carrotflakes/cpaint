@@ -4,7 +4,7 @@ import { Op } from "../model/op";
 import { State } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
-import { makeApply, Rect, TransformRectHandles } from "./TransformRectHandles";
+import { makeApply, Rect, TransformRectHandles } from "./overlays/TransformRectHandles";
 
 export default function CanvasResize() {
   const store = useAppState();
