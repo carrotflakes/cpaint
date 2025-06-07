@@ -6,8 +6,13 @@ import { EyeDropper } from "../components/overlays/EyeDropper";
 import { dist, Pos } from "../libs/geometry";
 import { Selection } from "../libs/selection";
 import { Op } from "../model/op";
-import { LayerMod, State } from "../model/state";
-import { createOp, createTouch, useAppState } from "../store/appState";
+import { LayerMod } from "../model/state";
+import {
+  createOp,
+  createTouch,
+  patchSelection,
+  useAppState,
+} from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
 import { SelectionRect } from "../components/overlays/SelectionRect";
 import { applyPressureCurve } from "../libs/pressureCurve";
@@ -283,17 +288,5 @@ function select(startPos: [number, number], endPos: [number, number]) {
       store.uiState.selectionOperation
     );
   }
-  store.apply(
-    {
-      type: "patch",
-      patches: [
-        {
-          op: "replace",
-          path: "/selection",
-          value: selection satisfies State["selection"],
-        },
-      ],
-    },
-    null
-  );
+  patchSelection(selection);
 }

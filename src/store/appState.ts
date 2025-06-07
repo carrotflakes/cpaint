@@ -2,6 +2,8 @@ import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
 import { Rect as TransformRect } from '../components/overlays/TransformRectHandles';
 import { blur } from '../libs/imageFx';
+import { MCanvas } from '../libs/mCanvas';
+import { Selection } from '../libs/selection';
 import {
   startTouchBrush,
 } from "../libs/touch/brush";
@@ -10,7 +12,6 @@ import { startTouchFill } from '../libs/touch/fill';
 import { BlendMode } from "../model/blendMode";
 import { Op } from '../model/op';
 import { newLayerId, State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
-import { MCanvas } from '../libs/mCanvas';
 
 type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
 
@@ -311,4 +312,24 @@ export function applyEffect() {
     ],
   };
   store.apply(op, null);
+}
+
+export function patchSelection(selection: Selection | null) {
+  // If the selection is empty, set it to null
+  if (selection?.getBounds() === null) selection = null;
+
+  const store = useAppState.getState();
+  store.apply(
+    {
+      type: "patch",
+      patches: [
+        {
+          op: "replace",
+          path: "/selection",
+          value: selection satisfies State["selection"],
+        },
+      ],
+    },
+    null
+  );
 }

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Selection } from "../libs/selection";
-import { State } from "../model/state";
 import {
+  patchSelection,
   SelectionOperation,
   SelectionTool,
   useAppState,
@@ -169,36 +169,11 @@ function selectAll() {
   const store = useAppState.getState();
   const firstCanvas = store.stateContainer.state.layers[0].canvas;
   const selection = new Selection(firstCanvas.width, firstCanvas.height, true);
-  store.apply(
-    {
-      type: "patch",
-      patches: [
-        {
-          op: "replace",
-          path: "/selection",
-          value: selection satisfies State["selection"],
-        },
-      ],
-    },
-    null
-  );
+  patchSelection(selection);
 }
 
 function selectClear() {
-  const store = useAppState.getState();
-  store.apply(
-    {
-      type: "patch",
-      patches: [
-        {
-          op: "replace",
-          path: "/selection",
-          value: null satisfies State["selection"],
-        },
-      ],
-    },
-    null
-  );
+  patchSelection(null);
 }
 
 function selectInvert() {
@@ -208,19 +183,7 @@ function selectInvert() {
     store.stateContainer.state.selection?.clone() ??
     new Selection(firstCanvas.width, firstCanvas.height, false);
   selection.invert();
-  store.apply(
-    {
-      type: "patch",
-      patches: [
-        {
-          op: "replace",
-          path: "/selection",
-          value: selection satisfies State["selection"],
-        },
-      ],
-    },
-    null
-  );
+  patchSelection(selection);
 }
 
 function selectTest() {
@@ -255,17 +218,5 @@ function selectTest() {
   selection.setPixel(3, 9, true);
   selection.setPixel(6, 6, true);
   selection.setPixel(5, 7, true);
-  store.apply(
-    {
-      type: "patch",
-      patches: [
-        {
-          op: "replace",
-          path: "/selection",
-          value: selection satisfies State["selection"],
-        },
-      ],
-    },
-    null
-  );
+  patchSelection(selection);
 }
