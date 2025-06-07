@@ -125,7 +125,7 @@ export function startTouchHard({ width, color, opacity, canvasSize }:
         const ctx2 = canvas.getContext("2d", { willReadFrequently: true })!;
         ctx2.clearRect(0, 0, canvasSize[0], canvasSize[1]);
         ctx2.strokeStyle = color;
-        ctx2.lineWidth = width;
+        ctx2.lineWidth = width * 2;
         ctx2.lineCap = "round";
         ctx2.lineJoin = "round";
         ctx2.beginPath();
