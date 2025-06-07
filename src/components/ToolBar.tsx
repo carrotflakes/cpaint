@@ -55,6 +55,7 @@ export function ToolBar() {
     sensitivity: 0.01,
   });
 
+  const currentLayer = store.stateContainer.state.layers[uiState.layerIndex];
   return (
     <div className="h-full p-2 flex flex-col gap-2 overflow-y-auto">
       <Popover.Root>
@@ -340,8 +341,9 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={true}
+        data-selected={currentLayer?.canvas.getBbox() != null}
         onClick={() => {
+          if (currentLayer?.canvas.getBbox() == null) return;
           intoLayerTransformMode(store);
         }}
         title="Layer Transform"
@@ -590,18 +592,24 @@ function BrushSelector({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      {["soft", "hard", "particle1", "particle2", "particle3", "pixel", "cat"].map(
-        (type) => (
-          <button
-            key={type}
-            className="p-1 data-[selected=true]:bg-blue-400 cursor-pointer"
-            onClick={() => onChange(type)}
-            data-selected={brushType === type}
-          >
-            <BrushPreview brushType={type} />
-          </button>
-        )
-      )}
+      {[
+        "soft",
+        "hard",
+        "particle1",
+        "particle2",
+        "particle3",
+        "pixel",
+        "cat",
+      ].map((type) => (
+        <button
+          key={type}
+          className="p-1 data-[selected=true]:bg-blue-400 cursor-pointer"
+          onClick={() => onChange(type)}
+          data-selected={brushType === type}
+        >
+          <BrushPreview brushType={type} />
+        </button>
+      ))}
     </div>
   );
 }
