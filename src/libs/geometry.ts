@@ -6,11 +6,11 @@ export function dist(a: [number, number], b: [number, number]) {
 
 const angleGripGrace = 0.05;
 
-export function normalizeAngle(angle: number) {
-  const a = (angle / (2 * Math.PI)) * 4;
+export function normalizeAngle(angle: number, div: number = 4) {
+  const a = (angle / (2 * Math.PI)) * div;
   const b = Math.round(a);
   const d = Math.abs(a - b);
-  if (d < angleGripGrace) return (b * (2 * Math.PI)) / 4;
+  if (d < angleGripGrace) return (b * (2 * Math.PI)) / div;
   return angle;
 }
 

@@ -14,7 +14,7 @@ export function useViewControl(
   },
   noDraw?: boolean
 ) {
-  const { wheelZoom, touchToDraw } = useGlobalSettings();
+  const { wheelZoom, touchToDraw, angleSnapDivisor } = useGlobalSettings();
   const allowTouch = noDraw || !touchToDraw;
 
   useEffect(() => {
@@ -109,7 +109,10 @@ export function useViewControl(
 
               draft.uiState.canvasView = {
                 pan,
-                angle: normalizeAngle(angleUnnormalized),
+                angle:
+                  angleSnapDivisor > 0
+                    ? normalizeAngle(angleUnnormalized, angleSnapDivisor)
+                    : angleUnnormalized,
                 scale: (draft.uiState.canvasView.scale * d2) / d1,
               };
             });
@@ -161,7 +164,7 @@ export function useViewControl(
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, [containerRef, touchToDraw]);
+  }, [containerRef, angleSnapDivisor, allowTouch]);
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {

@@ -60,6 +60,24 @@ export function SettingDialog() {
             <label htmlFor="wheelZoom">Wheel zoom</label>
           </div>
 
+          <div className="flex items-center gap-2">
+            <div>View angle snapping:</div>
+            {[0, 4, 8].map((divisor) => (
+              <button
+                key={divisor}
+                className="px-2 rounded border border-gray-300 data-[selected=true]:bg-blue-500 data-[selected=true]:text-white cursor-pointer transition-colors"
+                data-selected={globalSettings.angleSnapDivisor === divisor}
+                onClick={() =>
+                  useGlobalSettings.setState({
+                    angleSnapDivisor: divisor,
+                  })
+                }
+              >
+                {divisor === 0 ? "Off" : `${360 / divisor}°`}
+              </button>
+            ))}
+          </div>
+
           <hr className="opacity-20" />
 
           <div>

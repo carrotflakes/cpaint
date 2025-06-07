@@ -7,6 +7,7 @@ export type GlobalSettings = {
   touchToDraw: boolean
   wheelZoom: boolean
   pressureCurve: PressureCurve
+  angleSnapDivisor: number
 }
 
 export const useGlobalSettings = create<GlobalSettings>()(
@@ -14,6 +15,7 @@ export const useGlobalSettings = create<GlobalSettings>()(
     touchToDraw: false,
     wheelZoom: false,
     pressureCurve: DEFAULT_PRESSURE_CURVE,
+    angleSnapDivisor: 4,
   }), {
     name: 'cpaint',
   }));
