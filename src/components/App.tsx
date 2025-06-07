@@ -70,7 +70,7 @@ function App() {
             <div className="grow bg-gray-200 dark:bg-gray-800">
               <MainCanvasArea />
             </div>
-            <div className="absolute top-0 right-0">
+            <div className="absolute top-0 right-0 bottom-0">
               <LayersBar />
             </div>
           </div>
