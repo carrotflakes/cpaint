@@ -25,6 +25,8 @@ export function TransformRectHandles({
   const handlesRef = useRef<SVGGElement | null>(null);
   const lockRef = useRef(false);
 
+  const keepAspectRatio = true; // TODO
+
   function toScreen([x, y]: [number, number]): [number, number] {
     const cx = canvasSize.width / 2;
     const cy = canvasSize.height / 2;
@@ -135,72 +137,118 @@ export function TransformRectHandles({
           const dy = relPos[1] - startRelPos[1];
           const sin = Math.sin(-rect.angle);
           const cos = Math.cos(-rect.angle);
+          const scale =
+            ((relPos[0] / startRelPos[0] + relPos[1] / startRelPos[1]) / 2 +
+              1) /
+            2;
+          const sx = rect.hw * (scale - 1);
+          const sy = rect.hh * (scale - 1);
           switch (handleIndex) {
             case 0: // lt
-              onRectChange({
-                ...rect,
-                cx: rect.cx + (relPos[2] - startRelPos[2]) / 2,
-                cy: rect.cy + (relPos[3] - startRelPos[3]) / 2,
-                hw: rect.hw - dx / 2,
-                hh: rect.hh - dy / 2,
-              });
+              if (keepAspectRatio) {
+                onRectChange({
+                  ...rect,
+                  cx: rect.cx + (-sx * cos - sy * sin),
+                  cy: rect.cy + (sx * sin - sy * cos),
+                  hw: rect.hw * scale,
+                  hh: rect.hh * scale,
+                });
+              } else {
+                onRectChange({
+                  ...rect,
+                  cx: rect.cx + (relPos[2] - startRelPos[2]) / 2,
+                  cy: rect.cy + (relPos[3] - startRelPos[3]) / 2,
+                  hw: rect.hw - dx / 2,
+                  hh: rect.hh - dy / 2,
+                });
+              }
               break;
             case 1: // rt
-              onRectChange({
-                ...rect,
-                cx: rect.cx + (relPos[2] - startRelPos[2]) / 2,
-                cy: rect.cy + (relPos[3] - startRelPos[3]) / 2,
-                hw: rect.hw + dx / 2,
-                hh: rect.hh - dy / 2,
-              });
+              if (keepAspectRatio) {
+                onRectChange({
+                  ...rect,
+                  cx: rect.cx + (sx * cos - sy * sin),
+                  cy: rect.cy + (-sx * sin - sy * cos),
+                  hw: rect.hw * scale,
+                  hh: rect.hh * scale,
+                });
+              } else {
+                onRectChange({
+                  ...rect,
+                  cx: rect.cx + (relPos[2] - startRelPos[2]) / 2,
+                  cy: rect.cy + (relPos[3] - startRelPos[3]) / 2,
+                  hw: rect.hw + dx / 2,
+                  hh: rect.hh - dy / 2,
+                });
+              }
               break;
             case 2: // lb
-              onRectChange({
-                ...rect,
-                cx: rect.cx + (relPos[2] - startRelPos[2]) / 2,
-                cy: rect.cy + (relPos[3] - startRelPos[3]) / 2,
-                hw: rect.hw - dx / 2,
-                hh: rect.hh + dy / 2,
-              });
+              if (keepAspectRatio) {
+                onRectChange({
+                  ...rect,
+                  cx: rect.cx + (-sx * cos + sy * sin),
+                  cy: rect.cy + (sx * sin + sy * cos),
+                  hw: rect.hw * scale,
+                  hh: rect.hh * scale,
+                });
+              } else {
+                onRectChange({
+                  ...rect,
+                  cx: rect.cx + (relPos[2] - startRelPos[2]) / 2,
+                  cy: rect.cy + (relPos[3] - startRelPos[3]) / 2,
+                  hw: rect.hw - dx / 2,
+                  hh: rect.hh + dy / 2,
+                });
+              }
               break;
             case 3: // rb
-              onRectChange({
-                ...rect,
-                cx: rect.cx + (relPos[2] - startRelPos[2]) / 2,
-                cy: rect.cy + (relPos[3] - startRelPos[3]) / 2,
-                hw: rect.hw + dx / 2,
-                hh: rect.hh + dy / 2,
-              });
+              if (keepAspectRatio) {
+                onRectChange({
+                  ...rect,
+                  cx: rect.cx + (sx * cos + sy * sin),
+                  cy: rect.cy + (-sx * sin + sy * cos),
+                  hw: rect.hw * scale,
+                  hh: rect.hh * scale,
+                });
+              } else {
+                onRectChange({
+                  ...rect,
+                  cx: rect.cx + (relPos[2] - startRelPos[2]) / 2,
+                  cy: rect.cy + (relPos[3] - startRelPos[3]) / 2,
+                  hw: rect.hw + dx / 2,
+                  hh: rect.hh + dy / 2,
+                });
+              }
               break;
             case 4: // mt
               onRectChange({
                 ...rect,
-                cx: rect.cx + (dy / 2) * sin,
-                cy: rect.cy + (dy / 2) * cos,
+                cx: rect.cx + (dy * sin) / 2,
+                cy: rect.cy + (dy * cos) / 2,
                 hh: rect.hh - dy / 2,
               });
               break;
             case 5: // mb
               onRectChange({
                 ...rect,
-                cx: rect.cx + (dy / 2) * sin,
-                cy: rect.cy + (dy / 2) * cos,
+                cx: rect.cx + (dy * sin) / 2,
+                cy: rect.cy + (dy * cos) / 2,
                 hh: rect.hh + dy / 2,
               });
               break;
             case 6: // ml
               onRectChange({
                 ...rect,
-                cx: rect.cx + (dx / 2) * cos,
-                cy: rect.cy - (dx / 2) * sin,
+                cx: rect.cx + (dx * cos) / 2,
+                cy: rect.cy - (dx * sin) / 2,
                 hw: rect.hw - dx / 2,
               });
               break;
             case 7: // mr
               onRectChange({
                 ...rect,
-                cx: rect.cx + (dx / 2) * cos,
-                cy: rect.cy - (dx / 2) * sin,
+                cx: rect.cx + (dx * cos) / 2,
+                cy: rect.cy - (dx * sin) / 2,
                 hw: rect.hw + dx / 2,
               });
               break;
