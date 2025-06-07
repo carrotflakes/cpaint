@@ -1,8 +1,9 @@
 import { create } from "zustand";
+import { storage } from "../libs/storage";
 import { useGlobalSettings } from "../store/globalSetting";
 import { ModalDialog } from "./ModalDialog";
+import { PressureCurveEditor } from "./PressureCurveEditor";
 import { pushToast } from "./Toasts";
-import { storage } from "../libs/storage";
 
 export const useSettingDialog = create<{
   show: boolean;
@@ -57,6 +58,13 @@ export function SettingDialog() {
               className="w-6 h-6"
             />
             <label htmlFor="wheelZoom">Wheel zoom</label>
+          </div>
+
+          <hr className="opacity-20" />
+
+          <div>
+            <div className="text-sm font-medium mb-2">Pen Pressure</div>
+            <PressureCurveEditor />
           </div>
 
           <hr className="opacity-20" />

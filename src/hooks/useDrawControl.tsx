@@ -10,6 +10,7 @@ import { LayerMod, State } from "../model/state";
 import { createOp, createTouch, useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
 import { SelectionRect } from "../components/overlays/SelectionRect";
+import { applyPressureCurve } from "../libs/pressureCurve";
 
 export function useDrawControl(
   containerRef: {
@@ -80,8 +81,8 @@ function startDrawing(
   setLock: (lock: boolean) => void,
   setLayerMod: (mod: LayerMod | null) => void
 ) {
-  const pos = computePos(e, container);
   const store = useAppState.getState();
+  const { pressureCurve } = useGlobalSettings.getState();
 
   const layerId =
     store.stateContainer.state.layers[store.uiState.layerIndex]?.id;
@@ -89,13 +90,16 @@ function startDrawing(
 
   const bucketFill = store.uiState.tool === "bucketFill";
 
+  const pos = computePos(e, container);
+  const pressure = applyPressureCurve(e.pressure, pressureCurve);
+
   const touch = createTouch(store);
   if (touch == null) return;
-  touch.stroke(pos[0], pos[1], e.pressure);
+  touch.stroke(pos[0], pos[1], pressure);
 
   let op = createOp(store);
   if (op == null) return;
-  opPush(op, pos, e.pressure);
+  opPush(op, pos, pressure);
 
   if (!store.uiState.erase) store.addColorToHistory(store.uiState.color);
 
@@ -107,12 +111,13 @@ function startDrawing(
 
   const onPointerMove = (e: PointerEvent) => {
     const pos = computePos(e, container);
+    const pressure = applyPressureCurve(e.pressure, pressureCurve);
 
     const viewScale = store.uiState.canvasView.scale;
     if (dist(lastPos, pos) * viewScale > (bucketFill ? 1 : 3)) {
-      opPush(op, pos, e.pressure);
+      opPush(op, pos, pressure);
 
-      touch.stroke(pos[0], pos[1], e.pressure);
+      touch.stroke(pos[0], pos[1], pressure);
       lastPos = pos;
       setLayerMod({
         layerId,
@@ -123,12 +128,13 @@ function startDrawing(
 
   const onPointerUp = (e: PointerEvent) => {
     const pos = computePos(e, container);
+    const pressure = applyPressureCurve(e.pressure, pressureCurve);
 
     // If the pointer is moved, we need to add the last position
     if (dist(lastPos, pos) > 0) {
-      opPush(op, pos, e.pressure);
+      opPush(op, pos, pressure);
 
-      touch.stroke(pos[0], pos[1], 0);
+      touch.stroke(pos[0], pos[1], pressure);
     }
 
     touch.end();
