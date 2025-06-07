@@ -1,4 +1,4 @@
-import { State } from "../model/state";
+import { newLayerId, State } from "../model/state";
 import { useAppState, AppState } from "../store/appState";
 import { useState } from "react";
 import { ReactComponent as IconEye } from "../assets/icons/eye.svg";
@@ -37,7 +37,7 @@ export function LayersBar() {
             op: "add",
             path: `/layers/${layers.length}`,
             value: {
-              id: `${Date.now() % 1000000}`,
+              id: newLayerId(),
               canvas,
               visible: true,
               opacity: 1,
@@ -248,6 +248,35 @@ function ContextMenuPopover({
     );
   };
 
+  const duplicateLayer = (index: number) => {
+    const layer = store.stateContainer.state.layers[index];
+    // Create a new canvas with the same content
+    const newCanvas = new MCanvas(layer.canvas.width, layer.canvas.height);
+    const newCtx = newCanvas.getContextWrite();
+    newCtx.drawImage(layer.canvas.getCanvas(), 0, 0);
+
+    store.apply(
+      {
+        type: "patch",
+        patches: [
+          {
+            op: "add",
+            path: `/layers/${index + 1}`,
+            value: {
+              id: newLayerId(),
+              canvas: newCanvas,
+              visible: true,
+              opacity: layer.opacity,
+              blendMode: layer.blendMode,
+            } satisfies State["layers"][number],
+          },
+        ],
+      },
+      null
+    );
+    closePopover();
+  };
+
   const deleteLayer = (index: number) => {
     const layers = store.stateContainer.state.layers;
     if (layers.length <= 1) {
@@ -311,6 +340,12 @@ function ContextMenuPopover({
           }
           className="w-full"
         />
+      </div>
+      <div
+        className="p-2 cursor-pointer hover:bg-gray-100"
+        onClick={() => duplicateLayer(layerIndex)}
+      >
+        Duplicate Layer
       </div>
       <div
         className="p-2 cursor-pointer hover:bg-gray-100"

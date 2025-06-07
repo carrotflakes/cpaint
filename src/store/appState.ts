@@ -9,7 +9,7 @@ import { startTouchBucketFill } from '../libs/touch/bucketFill';
 import { startTouchFill } from '../libs/touch/fill';
 import { BlendMode } from "../model/blendMode";
 import { Op } from '../model/op';
-import { State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
+import { newLayerId, State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
 import { MCanvas } from '../libs/mCanvas';
 
 type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
@@ -136,7 +136,7 @@ export const useAppState = create<AppState>()((set) => {
         stateContainer: StateContainerFromState({
           layers: [
             {
-              id: "0",
+              id: newLayerId(),
               canvas,
               visible: true,
               opacity: 1,

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useViewControl } from "../hooks/useViewControl";
 import { Op } from "../model/op";
-import { State, StateRender } from "../model/state";
+import { newLayerId, State, StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
 import { Rect, TransformRectHandles } from "./overlays/TransformRectHandles";
@@ -98,7 +98,7 @@ function applyAddImageAsLayer(addImageAsLayer: { image: MCanvas; rect: Rect }) {
         op: "add",
         path: `/layers/${store.stateContainer.state.layers.length}`,
         value: {
-          id: `${Date.now() % 1000000}`,
+          id: newLayerId(),
           canvas,
           visible: true,
           opacity: 1,

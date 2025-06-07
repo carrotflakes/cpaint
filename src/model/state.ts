@@ -44,7 +44,7 @@ export function StateContainerNew(
     state: {
       layers: [
         {
-          id: "0",
+          id: newLayerId(),
           canvas,
           visible: true,
           opacity: 1,
@@ -285,4 +285,8 @@ function getTmpCanvas(width: number, height: number) {
 export type LayerMod = {
   layerId: string;
   apply: (ctx: OffscreenCanvasRenderingContext2D) => void;
+}
+
+export function newLayerId() {
+  return `${Date.now() % 1000000}`;
 }
