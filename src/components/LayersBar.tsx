@@ -298,8 +298,68 @@ function ContextMenuPopover({
     closePopover();
   };
 
+  const mergeLayer = (index: number) => {
+    const layers = store.stateContainer.state.layers;
+    if (index === 0) {
+      alert("Cannot merge the bottom layer.");
+      return;
+    }
+
+    const currentLayer = layers[index];
+    const belowLayer = layers[index - 1];
+
+    const mergedCanvas = new MCanvas(
+      belowLayer.canvas.width,
+      belowLayer.canvas.height
+    );
+    const mergedCtx = mergedCanvas.getContextWrite();
+
+    mergedCtx.drawImage(belowLayer.canvas.getCanvas(), 0, 0);
+
+    mergedCtx.save();
+    mergedCtx.globalAlpha = currentLayer.opacity;
+    mergedCtx.globalCompositeOperation = currentLayer.blendMode;
+    mergedCtx.drawImage(currentLayer.canvas.getCanvas(), 0, 0);
+    mergedCtx.restore();
+
+    const mergedLayer = {
+      id: newLayerId(),
+      canvas: mergedCanvas,
+      visible: belowLayer.visible,
+      opacity: belowLayer.opacity,
+      blendMode: belowLayer.blendMode,
+    } satisfies State["layers"][number];
+
+    store.apply(
+      {
+        type: "patch",
+        patches: [
+          {
+            op: "remove",
+            path: `/layers/${index}`,
+          },
+          {
+            op: "replace",
+            path: `/layers/${index - 1}`,
+            value: mergedLayer,
+          },
+        ],
+      },
+      null
+    );
+
+    // Update the current layer index if necessary
+    store.update((draft) => {
+      if (draft.uiState.layerIndex >= index) {
+        draft.uiState.layerIndex = Math.max(0, draft.uiState.layerIndex - 1);
+      }
+    });
+
+    closePopover();
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col bg-gray-50">
       <div className="p-2 hover:bg-gray-100">
         <select
           value={store.stateContainer.state.layers[layerIndex].blendMode}
@@ -341,11 +401,30 @@ function ContextMenuPopover({
           className="w-full"
         />
       </div>
+
+      <hr className="opacity-20" />
+
       <div
         className="p-2 cursor-pointer hover:bg-gray-100"
         onClick={() => duplicateLayer(layerIndex)}
       >
         Duplicate Layer
+      </div>
+      <div
+        className="p-2 cursor-pointer hover:bg-gray-100 data-[disabled=true]:opacity-50 data-[disabled=true]:cursor-not-allowed"
+        data-disabled={layerIndex === 0}
+        onClick={() => {
+          if (layerIndex > 0) {
+            mergeLayer(layerIndex);
+          }
+        }}
+        title={
+          layerIndex === 0
+            ? "Cannot merge the bottom layer"
+            : "Merge with layer below"
+        }
+      >
+        Merge Down
       </div>
       <div
         className="p-2 cursor-pointer hover:bg-gray-100"
