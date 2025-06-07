@@ -3,6 +3,7 @@ import { JSX, useEffect, useState } from "react";
 import { computePos } from "../components/CanvasArea";
 import { CursorIndicator } from "../components/overlays/CursorIndicator";
 import { EyeDropper } from "../components/overlays/EyeDropper";
+import { LassoPath } from "../components/overlays/LassoPath";
 import { dist, Pos } from "../libs/geometry";
 import { Selection } from "../libs/selection";
 import { Op } from "../model/op";
@@ -196,6 +197,61 @@ function startSelection(
   const startPos = computePos(e, container);
   const store = useAppState.getState();
 
+  // Handle magic wand selection
+  if (store.uiState.selectionTool === "magicWand") {
+    const pos = computePos(e, container);
+    selectMagicWand(Math.round(pos[0]), Math.round(pos[1]));
+    return;
+  }
+
+  // Handle lasso selection
+  if (store.uiState.selectionTool === "lasso") {
+    const lassoPath: { x: number; y: number }[] = [
+      { x: startPos[0], y: startPos[1] },
+    ];
+
+    const onPointerMove = (e: PointerEvent) => {
+      const pos = computePos(e, container);
+
+      const lastPoint = lassoPath.at(-1)!;
+      const distance = Math.sqrt(
+        Math.pow(pos[0] - lastPoint.x, 2) + Math.pow(pos[1] - lastPoint.y, 2)
+      );
+
+      if (distance > 2) {
+        lassoPath.push({ x: pos[0], y: pos[1] });
+
+        setOverlay(<LassoPath path={[...lassoPath]} />);
+      }
+    };
+
+    const onPointerUp = () => {
+      // Close the path by connecting back to start if needed
+      if (lassoPath.length > 2) {
+        const firstPoint = lassoPath[0];
+        const lastPoint = lassoPath.at(-1)!;
+        const distance = Math.sqrt(
+          Math.pow(lastPoint.x - firstPoint.x, 2) +
+            Math.pow(lastPoint.y - firstPoint.y, 2)
+        );
+
+        // Only add closing point if the path isn't already closed
+        if (distance > 5) {
+          lassoPath.push({ x: firstPoint.x, y: firstPoint.y });
+        }
+
+        // Apply lasso selection
+        selectLasso(lassoPath);
+      }
+
+      setOverlay(null);
+    };
+
+    listenPointer(e.pointerId, setLock, onPointerMove, onPointerUp);
+    return;
+  }
+
+  // Handle rectangular and elliptical selection
   const onPointerMove = (e: PointerEvent) => {
     const pos = computePos(e, container);
     setOverlay(
@@ -214,7 +270,7 @@ function startSelection(
     const pos = computePos(e, container);
 
     // WIP select rect
-    select(startPos, pos);
+    selectRect(startPos, pos);
     setOverlay(null);
   };
 
@@ -265,7 +321,7 @@ function pixelColor(ctx: CanvasRenderingContext2D, x: number, y: number) {
   );
 }
 
-function select(startPos: [number, number], endPos: [number, number]) {
+function selectRect(startPos: [number, number], endPos: [number, number]) {
   const store = useAppState.getState();
   const firstCanvas = store.stateContainer.state.layers[0].canvas;
   const selection =
@@ -288,5 +344,32 @@ function select(startPos: [number, number], endPos: [number, number]) {
       store.uiState.selectionOperation
     );
   }
+  patchSelection(selection);
+}
+
+function selectLasso(path: Array<{ x: number; y: number }>) {
+  const store = useAppState.getState();
+  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const selection =
+    store.stateContainer.state.selection?.clone() ??
+    new Selection(firstCanvas.width, firstCanvas.height, false);
+
+  selection.addLasso(path, store.uiState.selectionOperation);
+  patchSelection(selection);
+}
+
+function selectMagicWand(x: number, y: number) {
+  const store = useAppState.getState();
+  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const selection =
+    store.stateContainer.state.selection?.clone() ??
+    new Selection(firstCanvas.width, firstCanvas.height, false);
+
+  selection.addMagicWand(
+    firstCanvas.getCanvas(),
+    x,
+    y,
+    store.uiState.selectionTolerance
+  );
   patchSelection(selection);
 }

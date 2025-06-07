@@ -476,10 +476,10 @@ export class Selection {
   /**
    * Add lasso selection for area enclosed by path
    */
-  addLasso(path: Array<{ x: number, y: number }>): void {
-    if (path.length < 3) {
-      return; // Need at least 3 points to form a polygon
-    }
+  addLasso(path: Array<{ x: number, y: number }>, operation: Operation): void {
+    // Need at least 3 points to form a polygon
+    if (path.length < 3)
+      return;
 
     // Get bounding box of the path to optimize iteration
     let minX = Math.floor(Math.min(...path.map(p => p.x)));
@@ -493,13 +493,47 @@ export class Selection {
     minY = Math.max(0, minY);
     maxY = Math.min(this.height - 1, maxY);
 
-    // Check each pixel in the bounding box
-    for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) {
-        if (isPointInPolygon(x, y, path)) {
-          this.setPixel(x, y, true);
+    const fill = (value: boolean) => {
+      for (let y = minY; y <= maxY; y++) {
+        for (let x = minX; x <= maxX; x++) {
+          if (isPointInPolygon(x, y, path)) {
+            this.setPixel(x, y, value);
+          }
         }
       }
+    };
+
+    switch (operation) {
+      case 'new':
+        this.clear(); // Clear existing selection
+        fill(true);
+        break;
+      case 'add':
+        fill(true);
+        break;
+      case 'subtract':
+        fill(false);
+        break;
+      case 'xor':
+        for (let y = minY; y <= maxY; y++) {
+          for (let x = minX; x <= maxX; x++) {
+            if (isPointInPolygon(x, y, path)) {
+              this.setPixel(x, y, !this.getPixel(x, y));
+            }
+          }
+        }
+        break;
+      case 'intersect':
+        for (let y = 0; y < this.height; y++) {
+          for (let x = 0; x < this.width; x++) {
+            if (!isPointInPolygon(x, y, path)) {
+              this.setPixel(x, y, false);
+            }
+          }
+        }
+        break;
+      default:
+        throw new Error(`Unsupported operation: ${operation}`);
     }
   }
 
