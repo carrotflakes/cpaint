@@ -69,7 +69,7 @@ export function startTouchParticle2({ width, color, opacity, canvasSize }: { wid
   };
 }
 
-export function startTouchParticle3({ width, color, opacity, canvasSize }: { width: number; color: string; opacity: number; canvasSize: [number, number]; }
+export function startTouchParticle3({ width, color, opacity, canvasSize, pressureToSize }: { width: number; color: string; opacity: number; canvasSize: [number, number]; pressureToSize: boolean; }
 ): Touch {
   const canvas = new OffscreenCanvas(canvasSize[0], canvasSize[1]);
 
@@ -86,7 +86,7 @@ export function startTouchParticle3({ width, color, opacity, canvasSize }: { wid
         if (!d) break;
         ctx.globalAlpha = opacity * d.pressure;
         ctx.beginPath();
-        ctx.arc(d.x, d.y, width, 0, Math.PI * 2);
+        ctx.arc(d.x, d.y, width * (pressureToSize ? d.pressure : 1), 0, Math.PI * 2);
         ctx.fill();
         path.next(1);
       }

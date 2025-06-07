@@ -629,6 +629,7 @@ function BrushSelector({
         "particle1",
         "particle2",
         "particle3",
+        "particle3.1",
         "pixel",
         "cat",
       ].map((type) => (

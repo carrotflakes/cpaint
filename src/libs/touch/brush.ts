@@ -18,7 +18,10 @@ export function startTouchBrush({ brushType, width, color, opacity, erase, alpha
       touch = startTouchParticle2({ width, color, opacity, canvasSize });
       break;
     case "particle3":
-      touch = startTouchParticle3({ width, color, opacity, canvasSize });
+      touch = startTouchParticle3({ width, color, opacity, canvasSize, pressureToSize: false });
+      break;
+    case "particle3.1":
+      touch = startTouchParticle3({ width, color, opacity, canvasSize, pressureToSize: true });
       break;
     case "cat":
       touch = startTouchCat({ width, color, opacity, canvasSize });
