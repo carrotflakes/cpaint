@@ -30,22 +30,9 @@ export function ToolBar() {
   const { uiState } = store;
   const [showBrushPreview, setShowBrushPreview] = useState(false);
   const [showBucketFill, setShowBucketFill] = useState(false);
+  const [showBrush, setShowBrush] = useState(false);
   const [showSelectionControls, setShowSelectionControls] = useState(false);
 
-  const controlPenWidth = useControl({
-    getValue: () => (uiState.penSize / penWidthMax) ** (1 / penWidthExp),
-    setValue: (v) =>
-      store.update((draft) => {
-        draft.uiState.penSize = Math.max(
-          Math.min(
-            Math.round(Math.max(0, v) ** penWidthExp * penWidthMax),
-            penWidthMax
-          ),
-          1
-        );
-      }),
-    sensitivity: 1 / 100,
-  });
   const controlOpacity = useControl({
     getValue: () => uiState.opacity,
     setValue: (v) =>
@@ -91,52 +78,7 @@ export function ToolBar() {
         </Popover.Portal>
       </Popover.Root>
 
-      <Popover.Root
-        open={controlPenWidth.show}
-        onOpenChange={controlPenWidth.setShow}
-      >
-        <Popover.Trigger asChild>
-          <div
-            className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
-            title="Pen width"
-            {...controlPenWidth.props}
-          >
-            {uiState.penSize}
-          </div>
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content
-            className="p-2 flex bg-white dark:bg-black shadow z-10"
-            sideOffset={5}
-            collisionPadding={8}
-            onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
-          >
-            <SliderV
-              value={(uiState.penSize / penWidthMax) ** (1 / penWidthExp)}
-              onChange={(value) =>
-                store.update((draft) => {
-                  draft.uiState.penSize = Math.round(
-                    value ** penWidthExp * penWidthMax
-                  );
-                })
-              }
-            />
-            <BrushPreview
-              brushType={uiState.brushType}
-              overwriteProps={{
-                color: uiState.color,
-                width: uiState.penSize,
-                opacity: uiState.opacity,
-              }}
-            />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-
-      <Popover.Root
-        open={controlOpacity.show}
-        onOpenChange={controlOpacity.setShow}
-      >
+      <Popover.Root open={controlOpacity.show}>
         <Popover.Trigger asChild>
           <div
             className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
@@ -149,6 +91,7 @@ export function ToolBar() {
         <Popover.Portal>
           <Popover.Content
             className="p-2 flex bg-white dark:bg-black shadow z-10"
+            side="right"
             sideOffset={5}
             collisionPadding={8}
             onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
@@ -167,38 +110,6 @@ export function ToolBar() {
                 color: uiState.color,
                 width: uiState.penSize,
                 opacity: uiState.opacity,
-              }}
-            />
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-
-      <Popover.Root open={showBrushPreview} onOpenChange={setShowBrushPreview}>
-        <Popover.Trigger asChild>
-          <div
-            className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
-            title="Brush type"
-          >
-            B
-          </div>
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content
-            className="max-h-[calc(100dvh-16px)] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto"
-            data-scroll={true}
-            side="right"
-            align="start"
-            sideOffset={5}
-            collisionPadding={8}
-            forceMount
-          >
-            <BrushSelector
-              brushType={uiState.brushType}
-              onChange={(brushType) => {
-                store.update((draft) => {
-                  draft.uiState.brushType = brushType;
-                });
-                setShowBrushPreview(false); // Close popover on select
               }}
             />
           </Popover.Content>
@@ -233,18 +144,69 @@ export function ToolBar() {
 
       <hr className="opacity-20" />
 
-      <div
-        className="cursor-pointer data-[selected=true]:text-blue-400"
-        data-selected={uiState.tool === "brush"}
-        onClick={() => {
-          store.update((draft) => {
-            draft.uiState.tool = "brush";
-          });
-        }}
-        title="Brush"
-      >
-        <IconPencil width={24} height={24} />
-      </div>
+      <Popover.Root open={uiState.tool === "brush" && showBrush}>
+        <Popover.Trigger asChild>
+          <div
+            className="cursor-pointer data-[selected=true]:text-blue-400"
+            data-selected={uiState.tool === "brush"}
+            onClick={() => {
+              if (uiState.tool === "brush") setShowBrush((x) => !x);
+              else setShowBrush(true);
+              store.update((draft) => {
+                draft.uiState.tool = "brush";
+              });
+            }}
+            title="Brush"
+          >
+            <IconPencil width={24} height={24} />
+          </div>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="p-2 flex flex-col gap-2 bg-gray-50 dark:bg-black shadow z-10"
+            side="right"
+            sideOffset={5}
+            collisionPadding={8}
+          >
+            <Popover.Root
+              open={showBrushPreview}
+              onOpenChange={setShowBrushPreview}
+            >
+              <Popover.Trigger asChild>
+                <div
+                  className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
+                  title="Brush type"
+                >
+                  B
+                </div>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  className="max-h-[calc(100dvh-16px)] p-2 bg-white dark:bg-black shadow z-10 overflow-y-auto"
+                  data-scroll={true}
+                  side="right"
+                  align="start"
+                  sideOffset={5}
+                  collisionPadding={8}
+                  forceMount
+                >
+                  <BrushSelector
+                    brushType={uiState.brushType}
+                    onChange={(brushType) => {
+                      store.update((draft) => {
+                        draft.uiState.brushType = brushType;
+                      });
+                      setShowBrushPreview(false); // Close popover on select
+                    }}
+                  />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+
+            <PenWidthControl />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
       <div
         className="cursor-pointer data-[selected=true]:text-blue-400"
@@ -458,6 +420,68 @@ function intoLayerTransformMode(store: AppState) {
   });
 }
 
+function PenWidthControl() {
+  const store = useAppState();
+  const { uiState } = store;
+
+  const controlPenWidth = useControl({
+    getValue: () => (uiState.penSize / penWidthMax) ** (1 / penWidthExp),
+    setValue: (v) =>
+      store.update((draft) => {
+        draft.uiState.penSize = Math.max(
+          Math.min(
+            Math.round(Math.max(0, v) ** penWidthExp * penWidthMax),
+            penWidthMax
+          ),
+          1
+        );
+      }),
+    sensitivity: 1 / 100,
+  });
+
+  return (
+    <Popover.Root open={controlPenWidth.show}>
+      <Popover.Trigger asChild>
+        <div
+          className="w-6 h-6 flex justify-center items-center rounded border-2 border-gray-300 bg-white dark:bg-black cursor-pointer"
+          title="Pen width"
+          {...controlPenWidth.props}
+        >
+          {uiState.penSize}
+        </div>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          className="p-2 flex bg-white dark:bg-black shadow z-10"
+          side="right"
+          sideOffset={5}
+          collisionPadding={8}
+          onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
+        >
+          <SliderV
+            value={(uiState.penSize / penWidthMax) ** (1 / penWidthExp)}
+            onChange={(value) =>
+              store.update((draft) => {
+                draft.uiState.penSize = Math.round(
+                  value ** penWidthExp * penWidthMax
+                );
+              })
+            }
+          />
+          <BrushPreview
+            brushType={uiState.brushType}
+            overwriteProps={{
+              color: uiState.color,
+              width: uiState.penSize,
+              opacity: uiState.opacity,
+            }}
+          />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
 function BucketFillTool() {
   const store = useAppState();
   const { uiState } = store;
@@ -561,15 +585,19 @@ function useControl({
     onPointerDown(pos) {
       setTemporalShow(true);
       const initValue = getValue();
+      let moved = false;
 
       return {
         onMove(pos_) {
           const dy = pos_[1] - pos[1];
           const value = initValue - dy * sensitivity;
           setValue(value);
+          moved = true;
         },
         onUp() {
           setTemporalShow(false);
+          // Toggle visibility if not moved
+          if (!moved) setShow((prev) => !prev);
         },
       };
     },
