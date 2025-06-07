@@ -1,12 +1,11 @@
+import { MCanvas } from "./mCanvas";
+
 export function blur(
-  canvasSrc: HTMLCanvasElement | OffscreenCanvas,
-  canvasDst: OffscreenCanvas,
+  canvasSrc: MCanvas,
+  canvasDst: MCanvas,
   blurAmount: number
 ) {
-  const ctxSrc = canvasSrc.getContext("2d", { willReadFrequently: true });
-  if (!ctxSrc) return;
-  const ctxDst = canvasDst.getContext("2d", { willReadFrequently: true });
-  if (!ctxDst) return;
+  const ctxDst = canvasDst.getContextWrite();
   ctxDst.filter = `blur(${blurAmount}px)`;
-  ctxDst.drawImage(canvasSrc, 0, 0);
+  ctxDst.drawImage(canvasSrc.getCanvas(), 0, 0);
 }

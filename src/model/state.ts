@@ -1,5 +1,6 @@
 import { applyPatches } from "../libs/applyPatches";
-import { applyImageDiff, canvasToImageDiff, ImageDiff } from "../libs/canvasUtil";
+import { applyImageDiff, canvasToImageDiff, ImageDiff } from "../libs/imageDiff";
+import { MCanvas } from "../libs/mCanvas";
 import { Patch } from "../libs/patch";
 import { Selection } from "../libs/selection";
 import { BlendMode } from "./blendMode";
@@ -9,7 +10,7 @@ import { OpTs, OpTsNew } from "./opts";
 export type State = Readonly<{
   layers: readonly {
     id: string;
-    canvas: OffscreenCanvas;
+    canvas: MCanvas;
     visible: boolean;
     opacity: number;
     blendMode: BlendMode;
@@ -37,8 +38,8 @@ export type StateDiff = {
 export function StateContainerNew(
   width: number,
   height: number,
-) {
-  const canvas = new OffscreenCanvas(width, height);
+): StateContainer {
+  const canvas = new MCanvas(width, height);
   return {
     state: {
       layers: [
@@ -78,15 +79,15 @@ export function StateContainerDo(
     if (!layer) {
       throw new Error(`Layer ${layerMod.layerId} not found`);
     }
-    const canvas = new OffscreenCanvas(
+    const canvas = new MCanvas(
       layer.canvas.width,
       layer.canvas.height,
     );
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const ctx = canvas.getContextWrite();
     if (!ctx) {
       throw new Error("Failed to get context");
     }
-    ctx.drawImage(layer.canvas, 0, 0);
+    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
     ctx.save();
     layerMod.apply(ctx);
     ctx.restore();
@@ -255,7 +256,7 @@ export function StateRender(
         throw new Error("Failed to get context");
       }
       layerCtx.clearRect(0, 0, canvas.width, canvas.height);
-      layerCtx.drawImage(layer.canvas, 0, 0);
+      layerCtx.drawImage(layer.canvas.getCanvas(), 0, 0);
       layerCtx.save();
       layerMod.apply(layerCtx);
       layerCtx.restore();
@@ -266,7 +267,7 @@ export function StateRender(
     } else {
       ctx.globalAlpha = layer.opacity;
       ctx.globalCompositeOperation = layer.blendMode;
-      ctx.drawImage(layer.canvas, 0, 0);
+      ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
     }
   }
   ctx.restore();

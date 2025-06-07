@@ -4,6 +4,7 @@ import { Storage } from "../libs/storage";
 import { BlendMode } from "../model/blendMode";
 import { StateContainerFromState } from "../model/state";
 import { useAppState } from "../store/appState";
+import { MCanvas } from "../libs/mCanvas";
 
 export function Files() {
   const [files, setFiles] = useState(
@@ -122,18 +123,16 @@ async function loadImage(storage: Storage, id: number) {
 
   const layers: {
     id: string;
-    canvas: OffscreenCanvas;
+    canvas: MCanvas;
     visible: boolean;
     opacity: number;
     blendMode: BlendMode;
   }[] = [];
   for (const layerData of imageData.layers) {
     const image = await blobToImage(layerData.canvas);
-    const canvas = new OffscreenCanvas(image.width, image.height);
+    const canvas = new MCanvas(image.width, image.height);
     {
-      const ctx = canvas.getContext("2d", {
-        willReadFrequently: true,
-      })!;
+      const ctx = canvas.getContextWrite();
       ctx.drawImage(image, 0, 0);
     }
     layers.push({

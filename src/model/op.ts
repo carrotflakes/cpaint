@@ -1,11 +1,12 @@
 import { produce } from "immer";
 import { Rect as TransformRect } from "../components/overlays/TransformRectHandles";
 import { applyPatches } from "../libs/applyPatches";
-import { canvasToImageDiff } from "../libs/canvasUtil";
+import { canvasToImageDiff } from "../libs/imageDiff";
 import { Patch } from "../libs/patch";
 import { startTouchBrush } from "../libs/touch/brush";
 import { startTouchFill } from "../libs/touch/fill";
 import type { State, StateDiff } from "./state";
+import { MCanvas } from "../libs/mCanvas";
 
 export type Op = {
   type: "stroke";
@@ -67,15 +68,12 @@ export function applyOp(
         opacity: op.opacity,
         erase: op.erase,
       });
-    const newCanvas = new OffscreenCanvas(
+    const newCanvas = new MCanvas(
       layer.canvas.width,
       layer.canvas.height,
     );
-    const ctx = newCanvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) {
-      throw new Error("Failed to get context");
-    }
-    ctx.drawImage(layer.canvas, 0, 0);
+    const ctx = newCanvas.getContextWrite();
+    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
 
     if (op.type === "stroke") {
       for (const p of op.path) {

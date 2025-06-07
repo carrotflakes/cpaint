@@ -11,6 +11,7 @@ import { ReactComponent as IconSave } from "../assets/icons/save.svg";
 import { useSettingDialog } from "./SettingDialog";
 import { pushToast } from "./Toasts";
 import { ModalDialog } from "./ModalDialog";
+import { MCanvas } from "../libs/mCanvas";
 
 export function Header() {
   const imageMeta = useAppState((store) => store.imageMeta);
@@ -240,7 +241,7 @@ async function save() {
   const thumbnail = await createThumbnail();
   const layers = [];
   for (const layer of state.stateContainer.state.layers) {
-    const blob = await layer.canvas.convertToBlob();
+    const blob = await layer.canvas.getCanvas().convertToBlob();
     layers.push({
       id: layer.id,
       canvas: blob,
@@ -274,7 +275,7 @@ function intoResizeCanvasMode(width: number, height: number) {
   useAppState.getState().update((state) => {
     state.mode = {
       type: "canvasResize",
-      rendered: canvas,
+      rendered: new MCanvas(canvas),
       size: [width, height],
       rect: {
         cx: width / 2,

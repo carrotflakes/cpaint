@@ -10,6 +10,7 @@ import { startTouchFill } from '../libs/touch/fill';
 import { BlendMode } from "../model/blendMode";
 import { Op } from '../model/op';
 import { State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
+import { MCanvas } from '../libs/mCanvas';
 
 type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
 
@@ -50,16 +51,17 @@ export type AppState = {
     rect: TransformRect
   } | {
     type: "canvasResize"
-    rendered: OffscreenCanvas
+    rendered: MCanvas
     size: [number, number]
     rect: TransformRect
   } | {
     type: "addImageAsLayer"
-    image: OffscreenCanvas
+    image: MCanvas
     rect: TransformRect
   }
   stateContainer: StateContainer
 
+  canvasSize: () => { width: number; height: number }
   apply: (op: Op, transfer: ((ctx: OffscreenCanvasRenderingContext2D) => void) | null) => void
   new: (size: [number, number]) => void
   undo: () => void
@@ -99,6 +101,9 @@ export const useAppState = create<AppState>()((set) => {
     },
     stateContainer: StateContainerNew(400, 400),
 
+    canvasSize() {
+      return this.stateContainer.state.layers[0].canvas;
+    },
     apply(op, transfer) {
       set(state => ({
         stateContainer: StateContainerDo(state.stateContainer, op, transfer && op.type !== "patch" ? {
@@ -119,8 +124,8 @@ export const useAppState = create<AppState>()((set) => {
     },
     openAsNewFile(image: HTMLImageElement) {
       const { width, height } = image;
-      const canvas = new OffscreenCanvas(width, height);
-      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+      const canvas = new MCanvas(width, height);
+      const ctx = canvas.getContextWrite();
       ctx.drawImage(image, 0, 0);
       set(() => ({
         imageMeta: {
@@ -144,8 +149,8 @@ export const useAppState = create<AppState>()((set) => {
     },
     importAsLayer(image: HTMLImageElement) {
       const { width, height } = image;
-      const canvas = new OffscreenCanvas(width, height);
-      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+      const canvas = new MCanvas(width, height);
+      const ctx = canvas.getContextWrite();
       ctx.drawImage(image, 0, 0);
       const firstCanvas = useAppState.getState().stateContainer.state.layers[0].canvas;
       set(() => ({
@@ -259,7 +264,7 @@ export function createTouch(store: AppState) {
         opacity: store.uiState.opacity,
         erase: store.uiState.erase,
         tolerance: store.uiState.bucketFillTolerance,
-        imageData: canvas.getContext("2d", { willReadFrequently: true })!.getImageData(0, 0, canvas.width, canvas.height),
+        imageData: canvas.getContextRead().getImageData(0, 0, canvas.width, canvas.height),
       });
     default:
       return null;
@@ -270,7 +275,7 @@ export function applyEffect() {
   const store = useAppState.getState();
   const layerOrg =
     store.stateContainer.state.layers[store.uiState.layerIndex];
-  const canvas = new OffscreenCanvas(
+  const canvas = new MCanvas(
     layerOrg.canvas.width,
     layerOrg.canvas.height
   );

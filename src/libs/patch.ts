@@ -1,6 +1,7 @@
+import { MCanvas } from "./mCanvas";
 import { Selection } from "./selection";
 
-export type Obj = string | number | boolean | null | readonly Obj[] | { readonly [key: string]: Obj } | OffscreenCanvas | Selection;
+export type Obj = string | number | boolean | null | readonly Obj[] | { readonly [key: string]: Obj } | MCanvas | Selection;
 
 export type Patch = {
   op: "add",

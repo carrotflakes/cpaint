@@ -7,6 +7,7 @@ import { ReactComponent as IconMenu } from "../assets/icons/menu.svg";
 import { ReactComponent as IconLayers } from "../assets/icons/layers.svg";
 import { BlendMode } from "../model/blendMode";
 import * as Popover from "@radix-ui/react-popover";
+import { MCanvas } from "../libs/mCanvas";
 
 export function LayersBar() {
   const store = useAppState();
@@ -24,7 +25,7 @@ export function LayersBar() {
   const addLayer = () => {
     const layers = store.stateContainer.state.layers;
     const firstLayer = layers[0];
-    const canvas = new OffscreenCanvas(
+    const canvas = new MCanvas(
       firstLayer.canvas.width,
       firstLayer.canvas.height
     );

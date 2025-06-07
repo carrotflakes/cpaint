@@ -8,6 +8,7 @@ import {
   TransformRectHandles,
 } from "./overlays/TransformRectHandles";
 import { Selection } from "../libs/selection";
+import { MCanvas } from "../libs/mCanvas";
 
 export default function Transform() {
   const store = useAppState();
@@ -118,24 +119,20 @@ export default function Transform() {
   );
 }
 
-function splitCanvasBySelection(canvas: OffscreenCanvas, selection: Selection) {
-  const ctx = canvas.getContext("2d", { willFrequentyRead: true })!;
+function splitCanvasBySelection(canvas: MCanvas, selection: Selection) {
+  const ctx = canvas.getContextRead();
   const targetID = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const baseID = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
   selection.clipImageData(targetID);
-  const target = new OffscreenCanvas(canvas.width, canvas.height);
-  target
-    .getContext("2d", { willFrequentyRead: true })!
-    .putImageData(targetID, 0, 0);
+  const target = new MCanvas(canvas.width, canvas.height);
+  target.getContextWrite().putImageData(targetID, 0, 0);
 
   const selectionInverted = selection.clone();
   selectionInverted.invert();
   selectionInverted.clipImageData(baseID);
-  const base = new OffscreenCanvas(canvas.width, canvas.height);
-  base
-    .getContext("2d", { willFrequentyRead: true })!
-    .putImageData(baseID, 0, 0);
+  const base = new MCanvas(canvas.width, canvas.height);
+  base.getContextWrite().putImageData(baseID, 0, 0);
 
   return { base, target };
 }

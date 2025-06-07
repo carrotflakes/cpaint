@@ -1,3 +1,5 @@
+import { MCanvas } from "./mCanvas";
+
 export type ImageDiff = Readonly<{
   rect: {
     x: number;
@@ -10,13 +12,10 @@ export type ImageDiff = Readonly<{
 
 // This function applies the image diff to the canvas and returns the previous image data
 export function applyImageDiff(
-  canvas: OffscreenCanvas,
+  canvas: MCanvas,
   diff: ImageDiff,
 ): ImageDiff {
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) {
-    throw new Error("Failed to get context");
-  }
+  const ctx = canvas.getContextWrite();
   if (diff.rect) {
     const imageData = ctx.getImageData(
       diff.rect.x,
@@ -45,18 +44,15 @@ export function applyImageDiff(
 }
 
 export function canvasToImageDiff(
-  canvas1: OffscreenCanvas,
-  canvas2: OffscreenCanvas,
+  canvas1: MCanvas,
+  canvas2: MCanvas,
 ): ImageDiff | null {
   if (canvas1.width !== canvas2.width || canvas1.height !== canvas2.height) {
     throw new Error("Canvas sizes do not match");
   }
 
-  const ctx1 = canvas1.getContext("2d", { willReadFrequently: true });
-  const ctx2 = canvas2.getContext("2d", { willReadFrequently: true });
-  if (!ctx1 || !ctx2) {
-    throw new Error("Failed to get context");
-  }
+  const ctx1 = canvas1.getContextRead();
+  const ctx2 = canvas2.getContextRead();
 
   const width = canvas1.width;
   const height = canvas1.height;
@@ -93,36 +89,4 @@ export function canvasToImageDiff(
     rect: { x: minX, y: minY, width: diffWidth, height: diffHeight },
     image: diffImageData,
   };
-}
-
-export function canvasRect(canvas: OffscreenCanvas) {
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) {
-    throw new Error("Failed to get context");
-  }
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  let minX = canvas.width, minY = canvas.height, maxX = -1, maxY = -1;
-  for (let y = 0; y < canvas.height; y++) {
-    for (let x = 0; x < canvas.width; x++) {
-      const index = (y * canvas.width + x) * 4;
-      if (
-        imageData.data[index] !== 0 ||
-        imageData.data[index + 1] !== 0 ||
-        imageData.data[index + 2] !== 0 ||
-        imageData.data[index + 3] !== 0
-      ) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
-    }
-  }
-  if (maxX === -1) return null;
-  return {
-    x: minX,
-    y: minY,
-    width: maxX - minX + 1,
-    height: maxY - minY + 1,
-  }
 }

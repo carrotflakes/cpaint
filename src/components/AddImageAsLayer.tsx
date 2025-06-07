@@ -5,6 +5,7 @@ import { State, StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
 import { Rect, TransformRectHandles } from "./overlays/TransformRectHandles";
+import { MCanvas } from "../libs/mCanvas";
 
 export default function AddImageAsLayer() {
   const store = useAppState();
@@ -80,17 +81,12 @@ export default function AddImageAsLayer() {
   );
 }
 
-function applyAddImageAsLayer(addImageAsLayer: {
-  image: OffscreenCanvas;
-  rect: Rect;
-}) {
+function applyAddImageAsLayer(addImageAsLayer: { image: MCanvas; rect: Rect }) {
   const store = useAppState.getState();
   const { width, height } = store.stateContainer.state.layers[0].canvas;
 
-  const canvas = new OffscreenCanvas(width, height);
-  const ctx = canvas.getContext("2d", {
-    willReadFrequently: true,
-  })!;
+  const canvas = new MCanvas(width, height);
+  const ctx = canvas.getContextWrite();
 
   const { image, rect } = addImageAsLayer;
   renderImage(ctx, image, rect);
@@ -119,7 +115,7 @@ function applyAddImageAsLayer(addImageAsLayer: {
 
 function renderImage(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-  image: OffscreenCanvas,
+  image: MCanvas,
   rect: Rect
 ) {
   ctx.save();
@@ -127,6 +123,6 @@ function renderImage(
   ctx.rotate(rect.angle);
   ctx.scale((rect.hw * 2) / image.width, (rect.hh * 2) / image.height);
   ctx.translate(-image.width / 2, -image.height / 2);
-  ctx.drawImage(image, 0, 0);
+  ctx.drawImage(image.getCanvas(), 0, 0);
   ctx.restore();
 }

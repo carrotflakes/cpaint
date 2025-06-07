@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useAppState } from "../../store/appState";
+import { MCanvas } from "../../libs/mCanvas";
 
 export type Rect = {
   cx: number; // Center X coordinate
@@ -360,8 +361,8 @@ function computeHandlePositions(
 }
 
 export function makeApply(
-  baseCanvas: OffscreenCanvas | null,
-  canvas: OffscreenCanvas,
+  baseCanvas: MCanvas | null,
+  canvas: MCanvas,
   rect: Rect
 ) {
   return (
@@ -370,12 +371,12 @@ export function makeApply(
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (baseCanvas)
-      ctx.drawImage(baseCanvas, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(baseCanvas.getCanvas(), 0, 0, canvas.width, canvas.height);
     ctx.translate(rect.cx, rect.cy);
     ctx.rotate(rect.angle);
     ctx.scale((rect.hw * 2) / canvas.width, (rect.hh * 2) / canvas.height);
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
-    ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(canvas.getCanvas(), 0, 0, canvas.width, canvas.height);
     ctx.restore();
   };
 }
