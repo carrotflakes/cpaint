@@ -135,10 +135,15 @@ export function LayersBar() {
                     const parent = e.currentTarget.parentElement;
                     if (!parent) return;
                     const children = Array.from(parent.children);
-                    for (let idx = 0; idx < children.length; idx++) {
-                      const rect = children[idx].getBoundingClientRect();
-                      if (touchY >= rect.top && touchY <= rect.bottom) {
-                        setDragOverIndex(idx);
+                    for (const child of children) {
+                      const rect = child.getBoundingClientRect();
+                      const layerIndex = child.getAttribute("data-layer-index");
+                      if (
+                        touchY >= rect.top &&
+                        touchY <= rect.bottom &&
+                        layerIndex
+                      ) {
+                        setDragOverIndex(+layerIndex);
                         break;
                       }
                     }
@@ -150,6 +155,7 @@ export function LayersBar() {
                     setDraggedIndex(null);
                     setDragOverIndex(null);
                   }}
+                  data-layer-index={i}
                 >
                   <button
                     className="w-8 h-8 cursor-pointer"
