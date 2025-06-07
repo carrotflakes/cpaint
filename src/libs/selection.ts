@@ -505,7 +505,7 @@ export class Selection {
 
   /**
    * Clip ImageData to selection area
-   * Returns new ImageData with pixels outside selection made transparent
+   * This modifies the imageData in place, setting non-selected pixels to transparent
    */
   clipImageData(imageData: ImageData) {
     if (imageData.width !== this.width || imageData.height !== this.height) {
@@ -517,10 +517,31 @@ export class Selection {
       const pixelIndex = i * 4;
 
       if (!isSelected) {
-        imageData.data[pixelIndex] = 0;     // R
-        imageData.data[pixelIndex + 1] = 0; // G
-        imageData.data[pixelIndex + 2] = 0; // B
-        imageData.data[pixelIndex + 3] = 0; // A (transparent)
+        imageData.data[pixelIndex] = 0;
+        imageData.data[pixelIndex + 1] = 0;
+        imageData.data[pixelIndex + 2] = 0;
+        imageData.data[pixelIndex + 3] = 0;
+      }
+    }
+  }
+
+  /**
+   * Transfer selected pixels to another imageData
+   */
+  transferImageData(imageDataSrc: ImageData, imageDataDst: ImageData): void {
+    if (imageDataSrc.width !== this.width || imageDataSrc.height !== this.height ||
+      imageDataDst.width !== this.width || imageDataDst.height !== this.height) {
+      throw new Error("ImageData dimensions must match selection dimensions");
+    }
+
+    for (let i = 0; i < this.data.length; i++) {
+      if (this.data[i] > 0) {
+        const idx = i * 4;
+
+        imageDataDst.data[idx] = imageDataSrc.data[idx];
+        imageDataDst.data[idx + 1] = imageDataSrc.data[idx + 1];
+        imageDataDst.data[idx + 2] = imageDataSrc.data[idx + 2];
+        imageDataDst.data[idx + 3] = imageDataSrc.data[idx + 3];
       }
     }
   }

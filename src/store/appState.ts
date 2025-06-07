@@ -279,7 +279,23 @@ export function applyEffect() {
     layerOrg.canvas.width,
     layerOrg.canvas.height
   );
-  blur(layerOrg.canvas, canvas, 5);
+
+  const apply = (src: MCanvas, dst: MCanvas) => blur(src, dst, 5);
+
+  const selection = store.stateContainer.state.selection;
+  if (selection) {
+    apply(layerOrg.canvas, canvas);
+    const selectionInverted = selection.clone();
+    selectionInverted.invert();
+    const imageDataOrg = layerOrg.canvas.getContextRead().getImageData(0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContextWrite();
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    selectionInverted.transferImageData(imageDataOrg, imageData);
+    ctx.putImageData(imageData, 0, 0);
+  } else {
+    apply(layerOrg.canvas, canvas);
+  }
+
   const layer = {
     ...layerOrg,
     canvas,
