@@ -44,7 +44,7 @@ function App() {
   }, []);
 
   return (
-    <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden touch-none text-gray-800 dark:text-gray-100 relative">
+    <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden text-gray-800 dark:text-gray-100 relative">
       <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-300">
         <Header />
       </div>

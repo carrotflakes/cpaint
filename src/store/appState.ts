@@ -13,10 +13,9 @@ import { BlendMode } from "../model/blendMode";
 import { Op } from '../model/op';
 import { newLayerId, State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
 
-type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
-
+export type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
 export type SelectionOperation = 'new' | 'add' | 'subtract' | 'intersect';
-export type SelectionTool = 'rectangle' | 'ellipse' | 'lasso' | 'magicWand';
+export type SelectionTool = 'rectangle' | 'ellipse' | 'lasso' | 'magicWand' | 'paint';
 
 export type AppState = {
   imageMeta: null | {
