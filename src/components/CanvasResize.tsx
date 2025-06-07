@@ -9,6 +9,7 @@ import {
   Rect,
   TransformRectHandles,
 } from "./overlays/TransformRectHandles";
+import { MCanvas } from "../libs/mCanvas";
 
 export default function CanvasResize() {
   const store = useAppState();
@@ -90,13 +91,8 @@ function applyCanvasResize(canvasResize: {
   const store = useAppState.getState();
 
   const layers = store.stateContainer.state.layers.map((layer) => {
-    const canvas = new OffscreenCanvas(
-      canvasResize.size[0],
-      canvasResize.size[1]
-    );
-    const ctx = canvas.getContext("2d", {
-      willReadFrequently: true,
-    })!;
+    const canvas = new MCanvas(canvasResize.size[0], canvasResize.size[1]);
+    const ctx = canvas.getContextWrite();
     makeApply(null, layer.canvas, canvasResize.rect)(ctx);
     return {
       ...layer,
