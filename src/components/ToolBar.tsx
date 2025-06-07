@@ -441,14 +441,17 @@ function intoLayerTransformMode(store: AppState) {
   store.update((draft) => {
     const canvas =
       draft.stateContainer.state.layers[draft.uiState.layerIndex].canvas;
+    const bbox =
+      draft.stateContainer.state.selection?.getBounds() ?? canvas.getBbox();
+    if (!bbox) return;
     draft.mode = {
       type: "layerTransform",
       layerIndex: draft.uiState.layerIndex,
       rect: {
-        cx: canvas.width / 2,
-        cy: canvas.height / 2,
-        hw: canvas.width / 2,
-        hh: canvas.height / 2,
+        cx: bbox.width / 2 + bbox.x,
+        cy: bbox.height / 2 + bbox.y,
+        hw: bbox.width / 2,
+        hh: bbox.height / 2,
         angle: 0,
       },
     };

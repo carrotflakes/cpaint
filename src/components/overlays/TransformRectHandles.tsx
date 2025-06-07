@@ -369,9 +369,8 @@ export function makeApply(
     ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D
   ) => {
     ctx.save();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (baseCanvas)
-      ctx.drawImage(baseCanvas.getCanvas(), 0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    if (baseCanvas) ctx.drawImage(baseCanvas.getCanvas(), 0, 0);
     ctx.translate(rect.cx, rect.cy);
     ctx.rotate(rect.angle);
     ctx.scale((rect.hw * 2) / canvas.width, (rect.hh * 2) / canvas.height);

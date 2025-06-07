@@ -21,14 +21,16 @@ export default function Transform() {
   const canvases = useMemo(() => {
     if (!layerTransform) return null;
 
-    const selection = store.stateContainer.state.selection;
     const canvas =
-      store.stateContainer.state.layers[layerTransform.layerIndex ?? 0].canvas;
-    if (!selection)
-      return {
-        base: null,
-        target: canvas,
-      };
+      store.stateContainer.state.layers[layerTransform.layerIndex].canvas;
+
+    let selection = store.stateContainer.state.selection;
+    if (!selection) {
+      const bbox = canvas.getBbox();
+      if (!bbox) throw new Error("Canvas is empty");
+      selection = new Selection(canvas.width, canvas.height);
+      selection.addRect(bbox.x, bbox.y, bbox.width, bbox.height, "new");
+    }
 
     return splitCanvasBySelection(canvas, selection);
   }, [
@@ -45,8 +47,7 @@ export default function Transform() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    const layer =
-      store.stateContainer.state.layers[layerTransform.layerIndex ?? 0];
+    const layer = store.stateContainer.state.layers[layerTransform.layerIndex];
     const touch = {
       layerId: layer.id,
       apply: makeApply(canvases.base, canvases.target, layerTransform.rect),
@@ -120,13 +121,16 @@ export default function Transform() {
 }
 
 function splitCanvasBySelection(canvas: MCanvas, selection: Selection) {
+  const bbox = selection.getBounds();
+  if (!bbox) throw new Error("Selection bounds not found");
+
   const ctx = canvas.getContextRead();
-  const targetID = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const baseID = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const targetID = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
   selection.clipImageData(targetID);
-  const target = new MCanvas(canvas.width, canvas.height);
-  target.getContextWrite().putImageData(targetID, 0, 0);
+  const target = new MCanvas(bbox.width, bbox.height);
+  target.getContextWrite().putImageData(targetID, -bbox.x, -bbox.y);
 
   const selectionInverted = selection.clone();
   selectionInverted.invert();
