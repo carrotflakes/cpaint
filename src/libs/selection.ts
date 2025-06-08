@@ -579,6 +579,26 @@ export class Selection {
       }
     }
   }
+
+  setCanvasClip(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
+    ctx.beginPath();
+    for (let y = 0; y < this.height; y++) {
+      let flg = false;
+      for (let x = 0; x < this.width + 1; x++) {
+        if (this.getPixel(x, y) !== flg) {
+          flg = !flg;
+          if (flg) {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + 1);
+          } else {
+            ctx.lineTo(x, y + 1);
+            ctx.lineTo(x, y);
+          }
+        }
+      }
+    }
+    ctx.clip();
+  }
 }
 
 /**

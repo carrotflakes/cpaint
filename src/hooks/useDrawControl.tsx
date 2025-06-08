@@ -13,6 +13,7 @@ import {
   createTouch,
   patchSelection,
   useAppState,
+  wrapTransferWithClip,
 } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
 import { SelectionRect } from "../components/overlays/SelectionRect";
@@ -101,6 +102,10 @@ function startDrawing(
 
   const touch = createTouch(store);
   if (touch == null) return;
+  touch.transfer = wrapTransferWithClip(
+    touch.transfer,
+    store.stateContainer.state.selection
+  );
   touch.stroke(pos[0], pos[1], pressure);
 
   let op = createOp(store);

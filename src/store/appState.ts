@@ -12,6 +12,7 @@ import { startTouchFill } from '../libs/touch/fill';
 import { BlendMode } from "../model/blendMode";
 import { Op } from '../model/op';
 import { newLayerId, State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
+import { CanvasContext } from '../libs/touch';
 
 export type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
 export type SelectionOperation = 'new' | 'add' | 'subtract' | 'intersect';
@@ -269,6 +270,20 @@ export function createTouch(store: AppState) {
     default:
       return null;
   }
+}
+
+export function wrapTransferWithClip(
+  transfer: (ctx: CanvasContext) => void,
+  selection: Selection | null,
+): (ctx: CanvasContext) => void {
+  if (!selection)
+    return transfer;
+  return (ctx) => {
+    ctx.save();
+    selection.setCanvasClip(ctx);
+    transfer(ctx);
+    ctx.restore();
+  };
 }
 
 export function applyEffect() {
