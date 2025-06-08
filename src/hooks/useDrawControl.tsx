@@ -142,7 +142,7 @@ function startDrawing(
     const pressure = applyPressureCurve(e.pressure, pressureCurve);
 
     // If the pointer is moved, we need to add the last position
-    if (dist(lastPos, pos) > 0) {
+    if (e.type === "pointerup" && dist(lastPos, pos) > 0) {
       opPush(op, pos, pressure);
 
       touch.stroke(pos[0], pos[1], pressure);
@@ -186,6 +186,9 @@ function startEyeDropper(
     updateEyeDropper(pos);
   };
   const onPointerUp = (e: PointerEvent) => {
+    if (e.type === "pointercancel")
+      return;
+
     const pos = computePos(e, container);
     updateEyeDropper(pos, true);
   };
@@ -237,7 +240,7 @@ function startSelection(
         const lastPoint = lassoPath.at(-1)!;
         const distance = Math.sqrt(
           Math.pow(lastPoint.x - firstPoint.x, 2) +
-            Math.pow(lastPoint.y - firstPoint.y, 2)
+          Math.pow(lastPoint.y - firstPoint.y, 2)
         );
 
         // Only add closing point if the path isn't already closed
