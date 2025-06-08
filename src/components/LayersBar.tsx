@@ -164,7 +164,7 @@ export function LayersBar() {
                     setDraggedIndex(i);
                   }}
                 >
-                  <IconDotsV width={24} height={24} />
+                  <IconDotsV width={16} height={24} />
                 </div>
                 <button
                   className="w-8 h-8 cursor-pointer"
