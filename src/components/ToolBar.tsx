@@ -363,7 +363,7 @@ export function ToolBar() {
             );
           })
         }
-        title="Zoom"
+        title="Zoom in"
       >
         <IconPlus width={24} height={24} />
       </div>
@@ -378,7 +378,7 @@ export function ToolBar() {
             );
           })
         }
-        title="Unzoom"
+        title="Zoom out"
       >
         <IconMinus width={24} height={24} />
       </div>
