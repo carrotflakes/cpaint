@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useDisableScroll } from "../hooks/useDisableScroll";
+import { usePointerClick } from "../hooks/usePointerClick";
 import { useAppState } from "../store/appState";
 import AddImageAsLayer from "./AddImageAsLayer";
 import CanvasResize from "./CanvasResize";
@@ -15,6 +16,7 @@ import Transform from "./Transform";
 
 function App() {
   useDisableScroll();
+  usePointerClick();
 
   const store = useAppState();
 
