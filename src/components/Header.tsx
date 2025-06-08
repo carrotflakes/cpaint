@@ -126,10 +126,13 @@ function FileInfo({
   setPopoverOpen: (v: boolean) => void;
   onResizeClick: () => void;
 }) {
+  const store = useAppState();
+  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+
   const [editName, setEditName] = useState(imageMeta?.name || "");
 
   return (
-    <div className="flex flex-col gap-2 items-center">
+    <div className="flex flex-col gap-2 items-start">
       <input
         className="min-w-52 border rounded px-2 py-1 text-black dark:text-white bg-white dark:bg-gray-800"
         value={editName}
@@ -147,11 +150,14 @@ function FileInfo({
           }
         }}
       />
+      <div className="text-sm text-gray-500 dark:text-gray-400">
+        {firstCanvas.width} x {firstCanvas.height} px
+      </div>
       <button
         className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"
         onClick={onResizeClick}
       >
-        Resize Canvas
+        Resize
       </button>
       <button
         className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"
