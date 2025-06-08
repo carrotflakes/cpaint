@@ -24,15 +24,16 @@ export default function CanvasArea({
     height: 0,
   });
 
-  const handleResize = () => {
-    if (containerRef.current) {
-      setContainerSize({
-        width: containerRef.current.clientWidth,
-        height: containerRef.current.clientHeight,
-      });
-    }
-  };
   useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        setContainerSize({
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight,
+        });
+      }
+    };
+
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => {

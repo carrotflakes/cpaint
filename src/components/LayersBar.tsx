@@ -1,5 +1,5 @@
 import * as Popover from "@radix-ui/react-popover";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ReactComponent as IconDotsV } from "../assets/icons/dots-six-vertical.svg";
 import { ReactComponent as IconEyeSlash } from "../assets/icons/eye-slash.svg";
 import { ReactComponent as IconEye } from "../assets/icons/eye.svg";
@@ -12,6 +12,7 @@ import { AppState, useAppState } from "../store/appState";
 
 export function LayersBar() {
   const store = useAppState();
+  const layers = store.stateContainer.state.layers;
   const [popoverOpen, setPopoverOpen] = useState<{
     open: boolean;
     layerIndex: number;
@@ -23,8 +24,7 @@ export function LayersBar() {
 
   const [layersVisible, setLayersVisible] = useState(true);
 
-  const addLayer = () => {
-    const layers = store.stateContainer.state.layers;
+  const addLayer = useCallback(() => {
     const firstLayer = layers[0];
     const canvas = new MCanvas(
       firstLayer.canvas.width,
@@ -49,41 +49,48 @@ export function LayersBar() {
       },
       null
     );
-  };
+  }, [store.apply, layers]);
 
-  const toggleVisibility = (index: number) => {
-    const layer = store.stateContainer.state.layers[index];
-    store.apply(
-      {
-        type: "patch",
-        patches: [
-          {
-            op: "replace",
-            path: `/layers/${index}/visible`,
-            value: !layer.visible satisfies State["layers"][number]["visible"],
-          },
-        ],
-      },
-      null
-    );
-  };
+  const toggleVisibility = useCallback(
+    (index: number) => {
+      const layer = layers[index];
+      store.apply(
+        {
+          type: "patch",
+          patches: [
+            {
+              op: "replace",
+              path: `/layers/${index}/visible`,
+              value:
+                !layer.visible satisfies State["layers"][number]["visible"],
+            },
+          ],
+        },
+        null
+      );
+    },
+    [store.apply, layers]
+  );
 
-  const moveLayer = (from: number, to: number) => {
-    if (from === to) return;
-    store.apply(
-      {
-        type: "patch",
-        patches: [
-          {
-            op: "move",
-            from: `/layers/${from}`,
-            to: `/layers/${to > from ? to + 1 : to}`,
-          },
-        ],
-      },
-      null
-    );
-  };
+  const moveLayer = useCallback(
+    (from: number, to: number) => {
+      if (from === to) return;
+      store.apply(
+        {
+          type: "patch",
+          patches: [
+            {
+              op: "move",
+              from: `/layers/${from}`,
+              to: `/layers/${to > from ? to + 1 : to}`,
+            },
+          ],
+        },
+        null
+      );
+    },
+    [store.apply]
+  );
 
   return (
     <div className="max-h-full flex flex-col items-stretch bg-gray-50 dark:bg-gray-800 border-l border-b border-gray-300">
@@ -248,131 +255,143 @@ function ContextMenuPopover({
   closePopover: () => void;
   store: AppState;
 }) {
-  const updateOpacity = (index: number, opacity: number) => {
-    store.apply(
-      {
-        type: "patch",
-        patches: [
-          {
-            op: "replace",
-            path: `/layers/${index}/opacity`,
-            value: opacity satisfies State["layers"][number]["opacity"],
-          },
-        ],
-      },
-      null
-    );
-  };
+  const updateOpacity = useCallback(
+    (index: number, opacity: number) => {
+      store.apply(
+        {
+          type: "patch",
+          patches: [
+            {
+              op: "replace",
+              path: `/layers/${index}/opacity`,
+              value: opacity satisfies State["layers"][number]["opacity"],
+            },
+          ],
+        },
+        null
+      );
+    },
+    [store.apply]
+  );
 
-  const duplicateLayer = (index: number) => {
-    const layer = store.stateContainer.state.layers[index];
-    // Create a new canvas with the same content
-    const newCanvas = new MCanvas(layer.canvas.width, layer.canvas.height);
-    const newCtx = newCanvas.getContextWrite();
-    newCtx.drawImage(layer.canvas.getCanvas(), 0, 0);
+  const duplicateLayer = useCallback(
+    (index: number) => {
+      const layer = store.stateContainer.state.layers[index];
+      // Create a new canvas with the same content
+      const newCanvas = new MCanvas(layer.canvas.width, layer.canvas.height);
+      const newCtx = newCanvas.getContextWrite();
+      newCtx.drawImage(layer.canvas.getCanvas(), 0, 0);
 
-    store.apply(
-      {
-        type: "patch",
-        patches: [
-          {
-            op: "add",
-            path: `/layers/${index + 1}`,
-            value: {
-              id: newLayerId(),
-              canvas: newCanvas,
-              visible: true,
-              opacity: layer.opacity,
-              blendMode: layer.blendMode,
-            } satisfies State["layers"][number],
-          },
-        ],
-      },
-      null
-    );
-    closePopover();
-  };
+      store.apply(
+        {
+          type: "patch",
+          patches: [
+            {
+              op: "add",
+              path: `/layers/${index + 1}`,
+              value: {
+                id: newLayerId(),
+                canvas: newCanvas,
+                visible: true,
+                opacity: layer.opacity,
+                blendMode: layer.blendMode,
+              } satisfies State["layers"][number],
+            },
+          ],
+        },
+        null
+      );
+      closePopover();
+    },
+    [store, closePopover]
+  );
 
-  const deleteLayer = (index: number) => {
-    const layers = store.stateContainer.state.layers;
-    if (layers.length <= 1) {
-      alert("Cannot delete the last layer.");
-      return;
-    }
-    store.apply(
-      {
-        type: "patch",
-        patches: [
-          {
-            op: "remove",
-            path: `/layers/${index}`,
-          },
-        ],
-      },
-      null
-    );
-    closePopover();
-  };
-
-  const mergeLayer = (index: number) => {
-    const layers = store.stateContainer.state.layers;
-    if (index === 0) {
-      alert("Cannot merge the bottom layer.");
-      return;
-    }
-
-    const currentLayer = layers[index];
-    const belowLayer = layers[index - 1];
-
-    const mergedCanvas = new MCanvas(
-      belowLayer.canvas.width,
-      belowLayer.canvas.height
-    );
-    const mergedCtx = mergedCanvas.getContextWrite();
-
-    mergedCtx.drawImage(belowLayer.canvas.getCanvas(), 0, 0);
-
-    mergedCtx.save();
-    mergedCtx.globalAlpha = currentLayer.opacity;
-    mergedCtx.globalCompositeOperation = currentLayer.blendMode;
-    mergedCtx.drawImage(currentLayer.canvas.getCanvas(), 0, 0);
-    mergedCtx.restore();
-
-    const mergedLayer = {
-      id: newLayerId(),
-      canvas: mergedCanvas,
-      visible: belowLayer.visible,
-      opacity: belowLayer.opacity,
-      blendMode: belowLayer.blendMode,
-    } satisfies State["layers"][number];
-
-    store.apply(
-      {
-        type: "patch",
-        patches: [
-          {
-            op: "remove",
-            path: `/layers/${index}`,
-          },
-          {
-            op: "replace",
-            path: `/layers/${index - 1}`,
-            value: mergedLayer,
-          },
-        ],
-      },
-      null
-    );
-
-    // Update the current layer index if necessary
-    store.update((draft) => {
-      if (draft.uiState.layerIndex >= index) {
-        draft.uiState.layerIndex = Math.max(0, draft.uiState.layerIndex - 1);
+  const deleteLayer = useCallback(
+    (index: number) => {
+      const layers = store.stateContainer.state.layers;
+      if (layers.length <= 1) {
+        alert("Cannot delete the last layer.");
+        return;
       }
-    });
+      store.apply(
+        {
+          type: "patch",
+          patches: [
+            {
+              op: "remove",
+              path: `/layers/${index}`,
+            },
+          ],
+        },
+        null
+      );
+      closePopover();
+    },
+    [store, closePopover]
+  );
 
-    closePopover();
-  };
+  const mergeLayer = useCallback(
+    (index: number) => {
+      const layers = store.stateContainer.state.layers;
+      if (index === 0) {
+        alert("Cannot merge the bottom layer.");
+        return;
+      }
+
+      const currentLayer = layers[index];
+      const belowLayer = layers[index - 1];
+
+      const mergedCanvas = new MCanvas(
+        belowLayer.canvas.width,
+        belowLayer.canvas.height
+      );
+      const mergedCtx = mergedCanvas.getContextWrite();
+
+      mergedCtx.drawImage(belowLayer.canvas.getCanvas(), 0, 0);
+
+      mergedCtx.save();
+      mergedCtx.globalAlpha = currentLayer.opacity;
+      mergedCtx.globalCompositeOperation = currentLayer.blendMode;
+      mergedCtx.drawImage(currentLayer.canvas.getCanvas(), 0, 0);
+      mergedCtx.restore();
+
+      const mergedLayer = {
+        id: newLayerId(),
+        canvas: mergedCanvas,
+        visible: belowLayer.visible,
+        opacity: belowLayer.opacity,
+        blendMode: belowLayer.blendMode,
+      } satisfies State["layers"][number];
+
+      store.apply(
+        {
+          type: "patch",
+          patches: [
+            {
+              op: "remove",
+              path: `/layers/${index}`,
+            },
+            {
+              op: "replace",
+              path: `/layers/${index - 1}`,
+              value: mergedLayer,
+            },
+          ],
+        },
+        null
+      );
+
+      // Update the current layer index if necessary
+      store.update((draft) => {
+        if (draft.uiState.layerIndex >= index) {
+          draft.uiState.layerIndex = Math.max(0, draft.uiState.layerIndex - 1);
+        }
+      });
+
+      closePopover();
+    },
+    [store, closePopover]
+  );
 
   return (
     <div className="flex flex-col bg-gray-50">
