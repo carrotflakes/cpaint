@@ -157,7 +157,8 @@ function FileInfo({
         }}
       />
       <div className="text-sm text-gray-500 dark:text-gray-400">
-        {firstCanvas.width} x {firstCanvas.height} px
+        {firstCanvas.width.toLocaleString("en-US")} x{" "}
+        {firstCanvas.height.toLocaleString("en-US")} px
       </div>
       <button
         className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"

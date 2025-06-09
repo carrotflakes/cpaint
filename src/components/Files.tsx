@@ -16,6 +16,7 @@ export function Files() {
     id: number;
     name: string;
   } | null>(null);
+  const [showCustomSizeDialog, setShowCustomSizeDialog] = useState(false);
 
   const storage = useStorage();
   const { executeWithGuard } = useUnsavedChangesGuard();
@@ -45,24 +46,30 @@ export function Files() {
       <div className="flex gap-2 flex-wrap">
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
+          onClick={() => setShowCustomSizeDialog(true)}
+        >
+          Custom Size...
+        </button>
+        <button
+          className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => newFile([400, 400])}
         >
-          New File 400x400
+          {(400).toLocaleString("en-US")} x {(400).toLocaleString("en-US")} px
         </button>
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => newFile([2000, 2000])}
         >
-          New File 2000x2000
+          {(2000).toLocaleString("en-US")} x {(2000).toLocaleString("en-US")} px
         </button>
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => newFile([4000, 4000])}
         >
-          New File 4000x4000
+          {(4000).toLocaleString("en-US")} x {(4000).toLocaleString("en-US")} px
         </button>
         <label className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer">
-          Open Local File
+          Open Local File...
           <input
             type="file"
             accept="image/*"
@@ -123,6 +130,16 @@ export function Files() {
           onCancel={() => setFileToDelete(null)}
         />
       )}
+
+      {showCustomSizeDialog && (
+        <CustomSizeDialog
+          onCreateFile={(width, height) => {
+            newFile([width, height]);
+            setShowCustomSizeDialog(false);
+          }}
+          onCancel={() => setShowCustomSizeDialog(false)}
+        />
+      )}
     </div>
   );
 }
@@ -154,6 +171,84 @@ function DeleteDialog({
           onClick={onDelete}
         >
           Delete
+        </button>
+      </div>
+    </ModalDialog>
+  );
+}
+
+function CustomSizeDialog({
+  onCreateFile,
+  onCancel,
+}: {
+  onCreateFile: (width: number, height: number) => void;
+  onCancel: () => void;
+}) {
+  const [width, setWidth] = useState("800");
+  const [height, setHeight] = useState("600");
+
+  const handleCreate = () => {
+    const w = parseInt(width, 10);
+    const h = parseInt(height, 10);
+
+    if (isNaN(w) || isNaN(h) || w <= 0 || h <= 0) {
+      alert("Please enter valid dimensions (positive numbers)");
+      return;
+    }
+
+    if (w > 10000 || h > 10000) {
+      alert("Maximum canvas size is 10000 x 10000 pixels");
+      return;
+    }
+
+    onCreateFile(w, h);
+  };
+
+  return (
+    <ModalDialog onClickOutside={onCancel}>
+      <h2 className="text-xl font-semibold mb-4">Custom Canvas Size</h2>
+      <div className="mb-4">
+        <div className="flex gap-4 items-center mb-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium">Width (px)</label>
+            <input
+              type="number"
+              value={width}
+              onChange={(e) => setWidth(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-w-0 w-24"
+              min="1"
+              max="10000"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium">Height (px)</label>
+            <input
+              type="number"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-w-0 w-24"
+              min="1"
+              max="10000"
+            />
+          </div>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Maximum size: {(10000).toLocaleString("en-US")} x{" "}
+          {(10000).toLocaleString("en-US")} pixels
+        </p>
+      </div>
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={handleCreate}
+        >
+          Create
         </button>
       </div>
     </ModalDialog>
