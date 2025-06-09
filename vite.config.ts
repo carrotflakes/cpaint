@@ -11,6 +11,7 @@ export default defineConfig({
     tailwindcss(),
     svgr({ icon: true }),
     VitePWA({
+      registerType: 'autoUpdate',
       manifest: {
         name: "cpaint",
         short_name: "cpaint",
