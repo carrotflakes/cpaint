@@ -296,7 +296,7 @@ export function PressureCurveEditor({ className }: { className?: string }) {
 
         <button
           onClick={resetCurve}
-          className="px-2 py-1 text-xs rounded bg-gray-200 hover:bg-gray-300 transition-colors"
+          className="px-2 py-1 text-xs rounded text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors"
         >
           Reset
         </button>

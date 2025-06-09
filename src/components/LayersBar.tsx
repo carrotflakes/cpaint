@@ -394,7 +394,7 @@ function ContextMenuPopover({
   );
 
   return (
-    <div className="flex flex-col bg-gray-50">
+    <div className="flex flex-col text-gray-800 bg-gray-50">
       <div className="p-2 hover:bg-gray-100">
         <select
           value={store.stateContainer.state.layers[layerIndex].blendMode}

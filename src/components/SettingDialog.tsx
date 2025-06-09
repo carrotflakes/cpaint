@@ -103,7 +103,7 @@ export function SettingDialog() {
 
           <div className="flex gap-2">
             <button
-              className="px-2 py-1 rounded font-semibold bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
+              className="px-2 py-1 rounded font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
               onClick={() => {
                 pushToast("\uD83C\uDF1F（ゝω・）vｷｬﾋﾟ");
               }}
@@ -111,7 +111,7 @@ export function SettingDialog() {
               Toast test
             </button>
             <button
-              className="px-2 py-1 rounded font-semibold bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
+              className="px-2 py-1 rounded font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
               onClick={() => {
                 pushToast("(｡╹ω╹｡)", true);
               }}
