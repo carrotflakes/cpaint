@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Storage, storage as storageInstance } from "../libs/storage";
+import { Storage, storage as storageInstance } from "../libs/Storage";
 
 export function useStorage() {
   const [storage, setStorage] = useState(null as null | Storage);

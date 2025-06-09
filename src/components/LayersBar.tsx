@@ -5,7 +5,7 @@ import { ReactComponent as IconEyeSlash } from "../assets/icons/eye-slash.svg";
 import { ReactComponent as IconEye } from "../assets/icons/eye.svg";
 import { ReactComponent as IconLayers } from "../assets/icons/layers.svg";
 import { ReactComponent as IconMenu } from "../assets/icons/menu.svg";
-import { MCanvas } from "../libs/mCanvas";
+import { MCanvas } from "../libs/MCanvas";
 import { BlendMode } from "../model/blendMode";
 import { newLayerId, State } from "../model/state";
 import { AppState, useAppState } from "../store/appState";

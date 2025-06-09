@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useAppState } from "../../store/appState";
-import { MCanvas } from "../../libs/mCanvas";
+import { MCanvas } from "../../libs/MCanvas";
 
 export type Rect = {
   cx: number; // Center X coordinate

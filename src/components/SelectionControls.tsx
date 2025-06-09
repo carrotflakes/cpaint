@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Selection } from "../libs/selection";
+import { Selection } from "../libs/Selection";
 import {
   patchSelection,
   SelectionOperation,

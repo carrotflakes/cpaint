@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { storage } from "../libs/storage";
+import { storage } from "../libs/Storage";
 import { useGlobalSettings } from "../store/globalSetting";
 import { ModalDialog } from "./ModalDialog";
 import { PressureCurveEditor } from "./PressureCurveEditor";

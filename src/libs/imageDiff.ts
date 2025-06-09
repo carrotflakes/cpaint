@@ -1,4 +1,4 @@
-import { MCanvas } from "./mCanvas";
+import { MCanvas } from "./MCanvas";
 
 export type ImageDiff = Readonly<{
   rect: {

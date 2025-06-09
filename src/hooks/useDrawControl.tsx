@@ -5,7 +5,7 @@ import { CursorIndicator } from "../components/overlays/CursorIndicator";
 import { EyeDropper } from "../components/overlays/EyeDropper";
 import { LassoPath } from "../components/overlays/LassoPath";
 import { dist, Pos } from "../libs/geometry";
-import { Selection } from "../libs/selection";
+import { Selection } from "../libs/Selection";
 import { Op } from "../model/op";
 import { LayerMod } from "../model/state";
 import {

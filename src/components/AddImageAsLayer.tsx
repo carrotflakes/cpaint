@@ -5,7 +5,7 @@ import { newLayerId, State, StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
 import { Rect, TransformRectHandles } from "./overlays/TransformRectHandles";
-import { MCanvas } from "../libs/mCanvas";
+import { MCanvas } from "../libs/MCanvas";
 
 export default function AddImageAsLayer() {
   const store = useAppState();

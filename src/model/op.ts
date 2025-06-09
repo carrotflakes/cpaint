@@ -6,7 +6,7 @@ import { Patch } from "../libs/patch";
 import { startTouchBrush } from "../libs/touch/brush";
 import { startTouchFill } from "../libs/touch/fill";
 import type { State, StateDiff } from "./state";
-import { MCanvas } from "../libs/mCanvas";
+import { MCanvas } from "../libs/MCanvas";
 
 export type Op = {
   type: "stroke";

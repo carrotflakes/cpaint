@@ -1,8 +1,8 @@
 import { applyPatches } from "../libs/applyPatches";
 import { applyImageDiff, canvasToImageDiff, ImageDiff } from "../libs/imageDiff";
-import { MCanvas } from "../libs/mCanvas";
+import { MCanvas } from "../libs/MCanvas";
 import { Patch } from "../libs/patch";
-import { Selection } from "../libs/selection";
+import { Selection } from "../libs/Selection";
 import { BlendMode } from "./blendMode";
 import { applyOp, mergeOp, shrinkPatches, type Op } from "./op";
 import { OpTs, OpTsNew } from "./opts";

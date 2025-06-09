@@ -2,8 +2,8 @@ import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
 import { Rect as TransformRect } from '../components/overlays/TransformRectHandles';
 import { blur } from '../libs/imageFx';
-import { MCanvas } from '../libs/mCanvas';
-import { Selection } from '../libs/selection';
+import { MCanvas } from '../libs/MCanvas';
+import { Selection } from '../libs/Selection';
 import {
   startTouchBrush,
 } from "../libs/touch/brush";

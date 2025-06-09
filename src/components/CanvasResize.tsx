@@ -9,7 +9,7 @@ import {
   Rect,
   TransformRectHandles,
 } from "./overlays/TransformRectHandles";
-import { MCanvas } from "../libs/mCanvas";
+import { MCanvas } from "../libs/MCanvas";
 
 export default function CanvasResize() {
   const store = useAppState();

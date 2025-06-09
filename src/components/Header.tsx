@@ -1,7 +1,7 @@
 import * as Popover from "@radix-ui/react-popover";
 import { useState } from "react";
 import logo from "../assets/cpaint.svg";
-import { storage } from "../libs/storage";
+import { storage } from "../libs/Storage";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
@@ -12,7 +12,7 @@ import { ReactComponent as IconSave } from "../assets/icons/save.svg";
 import { useSettingDialog } from "./SettingDialog";
 import { pushToast } from "./Toasts";
 import { ModalDialog } from "./ModalDialog";
-import { MCanvas } from "../libs/mCanvas";
+import { MCanvas } from "../libs/MCanvas";
 
 export function Header() {
   const imageMeta = useAppState((store) => store.imageMeta);

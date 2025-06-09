@@ -7,8 +7,8 @@ import {
   makeApply,
   TransformRectHandles,
 } from "./overlays/TransformRectHandles";
-import { Selection } from "../libs/selection";
-import { MCanvas } from "../libs/mCanvas";
+import { Selection } from "../libs/Selection";
+import { MCanvas } from "../libs/MCanvas";
 
 export default function Transform() {
   const store = useAppState();

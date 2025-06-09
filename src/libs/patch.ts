@@ -1,5 +1,5 @@
-import { MCanvas } from "./mCanvas";
-import { Selection } from "./selection";
+import { MCanvas } from "./MCanvas";
+import { Selection } from "./Selection";
 
 export type Obj = string | number | boolean | null | readonly Obj[] | { readonly [key: string]: Obj } | MCanvas | Selection;
 

@@ -1,4 +1,4 @@
-import { MCanvas } from "./mCanvas";
+import { MCanvas } from "./MCanvas";
 
 export function blur(
   canvasSrc: MCanvas,

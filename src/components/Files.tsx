@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
-import { MCanvas } from "../libs/mCanvas";
-import { Storage } from "../libs/storage";
+import { MCanvas } from "../libs/MCanvas";
+import { Storage } from "../libs/Storage";
 import { BlendMode } from "../model/blendMode";
 import { StateContainerFromState } from "../model/state";
 import { useAppState } from "../store/appState";
