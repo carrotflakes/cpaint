@@ -269,10 +269,10 @@ function Thumbnail(props: { id: number }) {
   }, [storage]);
 
   return (
-    <div className="w-40 h-40 flex justify-center items-center">
+    <div className="w-40 h-40 grid place-items-center">
       {thumbnail && (
         <img
-          className="object-contain"
+          className="max-w-40 max-h-40 object-contain"
           src={thumbnail}
           style={{
             backgroundImage: CHECK_PATTERN,
