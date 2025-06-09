@@ -273,7 +273,7 @@ async function save() {
       s.savedState = s.stateContainer.state;
     });
 
-    pushToast("Image saved successfully");
+    pushToast("Image saved successfully", true);
   } catch (error) {
     console.error("Failed to save image:", error);
     pushToast("Failed to save image: " + error);

@@ -87,26 +87,38 @@ export function SettingDialog() {
 
           <hr className="opacity-20" />
 
-          <button
-            className="px-4 py-2 rounded font-semibold bg-red-700 text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 transition-colors cursor-pointer"
-            onClick={() => {
-              if (confirm("Delete all data?")) {
-                storage.deleteDatabase();
-                pushToast("All data deleted.");
-              }
-            }}
-          >
-            Delete storage
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="px-2 py-1 rounded font-semibold bg-red-700 text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 transition-colors cursor-pointer"
+              onClick={() => {
+                if (confirm("Delete all data?")) {
+                  storage.deleteDatabase();
+                  pushToast("All data deleted.");
+                }
+              }}
+            >
+              Delete storage
+            </button>
+          </div>
 
-          <button
-            className="px-4 py-2 rounded font-semibold bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
-            onClick={() => {
-              pushToast("\uD83C\uDF1F（ゝω・）vｷｬﾋﾟ");
-            }}
-          >
-            Toast test
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="px-2 py-1 rounded font-semibold bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
+              onClick={() => {
+                pushToast("\uD83C\uDF1F（ゝω・）vｷｬﾋﾟ");
+              }}
+            >
+              Toast test
+            </button>
+            <button
+              className="px-2 py-1 rounded font-semibold bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
+              onClick={() => {
+                pushToast("(｡╹ω╹｡)", true);
+              }}
+            >
+              Toast auto hide
+            </button>
+          </div>
 
           {/* Build date display */}
           <div className="mt-4 text-xs opacity-40 select-text">
