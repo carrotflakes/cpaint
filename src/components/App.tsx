@@ -75,7 +75,10 @@ function App() {
         ))}
 
       {!store.imageMeta && (
-        <div className="grow flex items-stretch bg-gray-200 dark:bg-gray-800">
+        <div
+          className="grow min-h-0 flex items-stretch bg-gray-200 dark:bg-gray-800 overflow-y-auto"
+          data-scroll
+        >
           <Files />
         </div>
       )}
