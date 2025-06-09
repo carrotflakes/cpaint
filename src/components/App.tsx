@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useBeforeUnload } from "../hooks/useBeforeUnload";
 import { useDisableScroll } from "../hooks/useDisableScroll";
 import { usePointerClick } from "../hooks/usePointerClick";
 import { useAppState } from "../store/appState";
@@ -13,10 +14,13 @@ import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
 import Transform from "./Transform";
+import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 
 function App() {
   useDisableScroll();
   usePointerClick();
+  useBeforeUnload();
+  useReportUncaughtError();
 
   const store = useAppState();
 
@@ -35,15 +39,7 @@ function App() {
     };
     window.addEventListener("keydown", keyDown);
     return () => window.removeEventListener("keydown", keyDown);
-  }, [store]);
-
-  useEffect(() => {
-    const onError = (event: ErrorEvent) => {
-      pushToast("Uncaught error occurred: " + event.error.message);
-    };
-    window.addEventListener("error", onError);
-    return () => window.removeEventListener("error", onError);
-  }, []);
+  }, [store.uiState, store.undo, store.redo]);
 
   return (
     <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden text-gray-800 dark:text-gray-100 relative">
@@ -85,12 +81,21 @@ function App() {
       )}
 
       <Toasts />
-
       <SettingDialog />
-
       <ImageDropTarget />
+      <UnsavedChangesDialog />
     </div>
   );
 }
 
 export default App;
+
+function useReportUncaughtError() {
+  useEffect(() => {
+    const onError = (event: ErrorEvent) => {
+      pushToast("Uncaught error occurred: " + event.error.message);
+    };
+    window.addEventListener("error", onError);
+    return () => window.removeEventListener("error", onError);
+  }, []);
+}

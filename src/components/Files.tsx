@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
+import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import { Storage } from "../libs/storage";
 import { BlendMode } from "../model/blendMode";
 import { StateContainerFromState } from "../model/state";
@@ -12,6 +13,7 @@ export function Files() {
   );
 
   const storage = useStorage();
+  const { executeWithGuard } = useUnsavedChangesGuard();
 
   const load = useCallback(() => {
     storage?.getAllImageMetas()?.then((images) => {
@@ -23,9 +25,14 @@ export function Files() {
     load();
   }, [load]);
 
-  const newFile = useCallback((size: [number, number]) => {
-    useAppState.getState().new(size);
-  }, []);
+  const newFile = useCallback(
+    (size: [number, number]) => {
+      executeWithGuard(() => {
+        useAppState.getState().new(size);
+      }, "Creating a new file will discard your current unsaved changes.");
+    },
+    [executeWithGuard]
+  );
 
   return (
     <div className="p-4 flex flex-col gap-4 text-gray-800 dark:text-gray-200">
@@ -58,12 +65,14 @@ export function Files() {
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
-              const { loadImageFromFile } = await import(
-                "../libs/loadImageFile"
-              );
-              const img = await loadImageFromFile(file);
-              useAppState.getState().openAsNewFile(img);
-              load();
+              executeWithGuard(async () => {
+                const { loadImageFromFile } = await import(
+                  "../libs/loadImageFile"
+                );
+                const img = await loadImageFromFile(file);
+                useAppState.getState().openAsNewFile(img);
+                load();
+              }, "Opening a file will discard your current unsaved changes.");
             }}
           />
         </label>
@@ -75,13 +84,20 @@ export function Files() {
           <div
             key={file.id}
             className="p-4 flex flex-col gap-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-900"
-            onClick={() => storage && loadImage(storage, file.id)}
+            onClick={() =>
+              storage &&
+              executeWithGuard(
+                () => loadImage(storage, file.id),
+                `Loading "${file.name}" will discard your current unsaved changes.`
+              )
+            }
           >
             <span translate="no">{file.name}</span>
             <Thumbnail id={file.id} />
             <button
               className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 storage?.deleteImage(file.id);
                 load();
               }}
@@ -149,9 +165,11 @@ async function loadImage(storage: Storage, id: number) {
     selection: null,
   };
   useAppState.setState(() => {
+    const stateContainer = StateContainerFromState(state);
     return {
       imageMeta,
-      stateContainer: StateContainerFromState(state),
+      stateContainer,
+      savedState: stateContainer.state,
     };
   });
 }

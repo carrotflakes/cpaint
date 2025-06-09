@@ -61,6 +61,7 @@ export type AppState = {
     rect: TransformRect
   }
   stateContainer: StateContainer
+  savedState: State | null
 
   canvasSize: () => { width: number; height: number }
   apply: (op: Op, transfer: ((ctx: OffscreenCanvasRenderingContext2D) => void) | null) => void
@@ -71,9 +72,10 @@ export type AppState = {
   openAsNewFile: (image: HTMLImageElement) => void
   importAsLayer: (image: HTMLImageElement) => void
   addColorToHistory: (color: string) => void
+  hasUnsavedChanges: () => boolean
 };
 
-export const useAppState = create<AppState>()((set) => {
+export const useAppState = create<AppState>()((set, get) => {
   return ({
     imageMeta: null,
     uiState: {
@@ -101,6 +103,7 @@ export const useAppState = create<AppState>()((set) => {
       type: "draw",
     },
     stateContainer: StateContainerNew(400, 400),
+    savedState: null,
 
     canvasSize() {
       return this.stateContainer.state.layers[0].canvas;
@@ -114,13 +117,15 @@ export const useAppState = create<AppState>()((set) => {
       }))
     },
     new(size: [number, number]) {
+      const stateContainer = StateContainerNew(size[0], size[1]);
       set(() => ({
         imageMeta: {
           id: Date.now(),
           name: new Date().toISOString().split(".")[0].replace(/:/g, "-"),
           createdAt: Date.now(),
         },
-        stateContainer: StateContainerNew(size[0], size[1]),
+        stateContainer,
+        savedState: stateContainer.state,
       }))
     },
     openAsNewFile(image: HTMLImageElement) {
@@ -128,24 +133,26 @@ export const useAppState = create<AppState>()((set) => {
       const canvas = new MCanvas(width, height);
       const ctx = canvas.getContextWrite();
       ctx.drawImage(image, 0, 0);
+      const stateContainer = StateContainerFromState({
+        layers: [
+          {
+            id: newLayerId(),
+            canvas,
+            visible: true,
+            opacity: 1,
+            blendMode: "source-over" as BlendMode,
+          },
+        ],
+        selection: null,
+      });
       set(() => ({
         imageMeta: {
           id: Date.now(),
           name: "Imported Image",
           createdAt: Date.now(),
         },
-        stateContainer: StateContainerFromState({
-          layers: [
-            {
-              id: newLayerId(),
-              canvas,
-              visible: true,
-              opacity: 1,
-              blendMode: "source-over" as BlendMode,
-            },
-          ],
-          selection: null,
-        }),
+        stateContainer,
+        savedState: stateContainer.state,
       }));
     },
     importAsLayer(image: HTMLImageElement) {
@@ -190,6 +197,11 @@ export const useAppState = create<AppState>()((set) => {
         stateContainer: StateContainerRedo(state.stateContainer),
       })
       )
+    },
+    hasUnsavedChanges() {
+      const state = get();
+      return !!state.imageMeta &&
+        state.savedState !== state.stateContainer.state;
     },
 
     update(update) {

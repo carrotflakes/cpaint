@@ -4,6 +4,7 @@ import logo from "../assets/cpaint.svg";
 import { storage } from "../libs/storage";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
+import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import { ReactComponent as IconCaretLeft } from "../assets/icons/caret-left.svg";
 import { ReactComponent as IconFrameCorners } from "../assets/icons/frame-corners.svg";
 import { ReactComponent as IconGear } from "../assets/icons/gear.svg";
@@ -15,8 +16,10 @@ import { MCanvas } from "../libs/mCanvas";
 
 export function Header() {
   const imageMeta = useAppState((store) => store.imageMeta);
+  const hasUnsavedChanges = useAppState((store) => store.hasUnsavedChanges());
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [resizeDialogOpen, setResizeDialogOpen] = useState(false);
+  const { executeWithGuard } = useUnsavedChangesGuard();
 
   return (
     <div className="h-10 px-2 flex items-center gap-2 overflow-x-auto">
@@ -24,8 +27,10 @@ export function Header() {
         <div
           className="basis-6 cursor-pointer"
           onClick={() => {
-            useAppState.setState({
-              imageMeta: null,
+            executeWithGuard(() => {
+              useAppState.setState({
+                imageMeta: null,
+              });
             });
           }}
           title="Back to home"
@@ -50,6 +55,7 @@ export function Header() {
               translate="no"
             >
               {imageMeta.name}
+              {hasUnsavedChanges ? " *" : ""}
             </div>
           </Popover.Trigger>
           <Popover.Portal>
@@ -80,7 +86,7 @@ export function Header() {
           onClick={() => {
             save();
           }}
-          title="Save"
+          title={hasUnsavedChanges ? "Save (unsaved changes)" : "Save"}
         >
           <IconSave width={24} height={24} />
         </div>
@@ -244,22 +250,34 @@ async function save() {
 
   if (!meta) return;
 
-  const thumbnail = await createThumbnail();
-  const layers = [];
-  for (const layer of state.stateContainer.state.layers) {
-    const blob = await layer.canvas.getCanvas().convertToBlob();
-    layers.push({
-      id: layer.id,
-      canvas: blob,
-      visible: layer.visible,
-      opacity: layer.opacity,
-      blendMode: layer.blendMode,
+  try {
+    const thumbnail = await createThumbnail();
+    const layers = [];
+    for (const layer of state.stateContainer.state.layers) {
+      const blob = await layer.canvas.getCanvas().convertToBlob();
+      layers.push({
+        id: layer.id,
+        canvas: blob,
+        visible: layer.visible,
+        opacity: layer.opacity,
+        blendMode: layer.blendMode,
+      });
+    }
+    const imageData = {
+      layers,
+    };
+    await storage.putImage(meta, imageData, thumbnail);
+
+    // Mark as saved after successful save
+    state.update((s) => {
+      s.savedState = s.stateContainer.state;
     });
+
+    pushToast("Image saved successfully");
+  } catch (error) {
+    console.error("Failed to save image:", error);
+    pushToast("Failed to save image: " + error);
   }
-  const imageData = {
-    layers,
-  };
-  await storage.putImage(meta, imageData, thumbnail);
 }
 
 function createThumbnail() {
