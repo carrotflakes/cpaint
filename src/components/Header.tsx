@@ -34,7 +34,7 @@ export function Header() {
         </div>
       ) : (
         <div className="self-center">
-          <img src={logo} alt="cpaint" />
+          <img src={logo} alt="cpaint" draggable={false} />
         </div>
       )}
 
