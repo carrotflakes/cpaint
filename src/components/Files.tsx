@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
+import { MCanvas } from "../libs/mCanvas";
 import { Storage } from "../libs/storage";
 import { BlendMode } from "../model/blendMode";
 import { StateContainerFromState } from "../model/state";
 import { useAppState } from "../store/appState";
-import { MCanvas } from "../libs/mCanvas";
+import { ModalDialog } from "./ModalDialog";
 
 export function Files() {
   const [files, setFiles] = useState(
     null as null | { id: number; name: string }[]
   );
+  const [fileToDelete, setFileToDelete] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
 
   const storage = useStorage();
   const { executeWithGuard } = useUnsavedChangesGuard();
@@ -98,8 +103,7 @@ export function Files() {
               className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
-                storage?.deleteImage(file.id);
-                load();
+                setFileToDelete(file);
               }}
             >
               Delete
@@ -107,7 +111,52 @@ export function Files() {
           </div>
         ))}
       </div>
+
+      {fileToDelete && (
+        <DeleteDialog
+          fileName={fileToDelete.name}
+          onDelete={() => {
+            storage?.deleteImage(fileToDelete.id);
+            load();
+            setFileToDelete(null);
+          }}
+          onCancel={() => setFileToDelete(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function DeleteDialog({
+  fileName,
+  onDelete,
+  onCancel,
+}: {
+  fileName: string;
+  onDelete: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <ModalDialog onClickOutside={onCancel}>
+      <h2 className="text-xl font-semibold mb-4">Delete File</h2>
+      <p className="mb-4">
+        Are you sure you want to delete the file <strong>{fileName}</strong>?
+      </p>
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          onClick={onDelete}
+        >
+          Delete
+        </button>
+      </div>
+    </ModalDialog>
   );
 }
 
