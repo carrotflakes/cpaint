@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
+import { CHECK_PATTERN } from "../libs/check";
 import { MCanvas } from "../libs/MCanvas";
 import { Storage } from "../libs/Storage";
 import { BlendMode } from "../model/blendMode";
@@ -268,9 +269,15 @@ function Thumbnail(props: { id: number }) {
   }, [storage]);
 
   return (
-    <div className="w-40 h-40 bg-gray-200">
+    <div className="w-40 h-40 flex justify-center items-center">
       {thumbnail && (
-        <img className="w-40 h-40 object-contain bg-white" src={thumbnail} />
+        <img
+          className="object-contain"
+          src={thumbnail}
+          style={{
+            backgroundImage: CHECK_PATTERN,
+          }}
+        />
       )}
     </div>
   );
