@@ -1,18 +1,18 @@
 import * as Popover from "@radix-ui/react-popover";
 import { useState } from "react";
 import logo from "../assets/cpaint.svg";
-import { storage } from "../libs/Storage";
-import { StateRender } from "../model/state";
-import { useAppState } from "../store/appState";
-import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import { ReactComponent as IconCaretLeft } from "../assets/icons/caret-left.svg";
 import { ReactComponent as IconFrameCorners } from "../assets/icons/frame-corners.svg";
 import { ReactComponent as IconGear } from "../assets/icons/gear.svg";
 import { ReactComponent as IconSave } from "../assets/icons/save.svg";
+import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
+import { MCanvas } from "../libs/MCanvas";
+import { StateRender } from "../model/state";
+import { useAppState } from "../store/appState";
+import { save } from "../store/save";
+import { ModalDialog } from "./ModalDialog";
 import { useSettingDialog } from "./SettingDialog";
 import { pushToast } from "./Toasts";
-import { ModalDialog } from "./ModalDialog";
-import { MCanvas } from "../libs/MCanvas";
 
 export function Header() {
   const imageMeta = useAppState((store) => store.imageMeta);
@@ -243,51 +243,6 @@ function ResizeCanvasDialog({ onClose }: { onClose: () => void }) {
       </div>
     </ModalDialog>
   );
-}
-
-async function save() {
-  const state = useAppState.getState();
-  const meta = state.imageMeta;
-
-  if (!meta) return;
-
-  try {
-    const thumbnail = await createThumbnail();
-    const layers = [];
-    for (const layer of state.stateContainer.state.layers) {
-      const blob = await layer.canvas.getCanvas().convertToBlob();
-      layers.push({
-        id: layer.id,
-        canvas: blob,
-        visible: layer.visible,
-        opacity: layer.opacity,
-        blendMode: layer.blendMode,
-      });
-    }
-    const imageData = {
-      layers,
-    };
-    await storage.putImage(meta, imageData, thumbnail);
-
-    // Mark as saved after successful save
-    state.update((s) => {
-      s.savedState = s.stateContainer.state;
-    });
-
-    pushToast("Image saved successfully", true);
-  } catch (error) {
-    console.error("Failed to save image:", error);
-    pushToast("Failed to save image: " + error);
-  }
-}
-
-function createThumbnail() {
-  const state = useAppState.getState();
-  const c = state.stateContainer.state.layers[0].canvas;
-  const canvas = new OffscreenCanvas(c.width, c.height);
-  const ctx = canvas.getContext("2d")!;
-  StateRender(state.stateContainer.state.layers, ctx, null);
-  return canvas.convertToBlob();
 }
 
 function intoResizeCanvasMode(width: number, height: number) {

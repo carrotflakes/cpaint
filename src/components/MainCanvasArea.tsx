@@ -3,6 +3,7 @@ import { useDrawControl } from "../hooks/useDrawControl";
 import { useViewControl } from "../hooks/useViewControl";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
+import { save } from "../store/save";
 import CanvasArea from "./CanvasArea";
 import { SelectionOverlay } from "./overlays/SelectionOverlay";
 
@@ -50,6 +51,10 @@ function useKeyboardShortcuts() {
         });
       if (e.key === "f")
         useAppState.setState({ uiState: { ...store.uiState, tool: "fill" } });
+      if (e.ctrlKey && e.key === "s") {
+        e.preventDefault();
+        save();
+      }
       if (e.ctrlKey && e.key === "z") store.undo();
       if (e.ctrlKey && e.key === "Z") store.redo();
     };
