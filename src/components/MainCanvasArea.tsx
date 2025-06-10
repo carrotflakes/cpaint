@@ -14,6 +14,7 @@ export default function MainCanvasArea() {
 
   const { layerMod, overlay } = useDrawControl(containerRef, canvasRef);
   useViewControl(containerRef);
+  useKeyboardShortcuts();
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -34,4 +35,25 @@ export default function MainCanvasArea() {
       <SelectionOverlay />
     </CanvasArea>
   );
+}
+
+function useKeyboardShortcuts() {
+  const store = useAppState();
+
+  useEffect(() => {
+    const keyDown = (e: KeyboardEvent) => {
+      if (e.key === "p")
+        useAppState.setState({ uiState: { ...store.uiState, tool: "brush" } });
+      if (e.key === "e")
+        useAppState.getState().update((draft) => {
+          draft.uiState.erase = !draft.uiState.erase;
+        });
+      if (e.key === "f")
+        useAppState.setState({ uiState: { ...store.uiState, tool: "fill" } });
+      if (e.ctrlKey && e.key === "z") store.undo();
+      if (e.ctrlKey && e.key === "Z") store.redo();
+    };
+    window.addEventListener("keydown", keyDown);
+    return () => window.removeEventListener("keydown", keyDown);
+  }, [store.uiState, store.undo, store.redo]);
 }

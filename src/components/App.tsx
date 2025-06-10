@@ -22,24 +22,8 @@ function App() {
   useBeforeUnload();
   useReportUncaughtError();
 
-  const store = useAppState();
-
-  useEffect(() => {
-    const keyDown = (e: KeyboardEvent) => {
-      if (e.key === "p")
-        useAppState.setState({ uiState: { ...store.uiState, tool: "brush" } });
-      if (e.key === "e")
-        useAppState.getState().update((draft) => {
-          draft.uiState.erase = !draft.uiState.erase;
-        });
-      if (e.key === "f")
-        useAppState.setState({ uiState: { ...store.uiState, tool: "fill" } });
-      if (e.ctrlKey && e.key === "z") store.undo();
-      if (e.ctrlKey && e.key === "Z") store.redo();
-    };
-    window.addEventListener("keydown", keyDown);
-    return () => window.removeEventListener("keydown", keyDown);
-  }, [store.uiState, store.undo, store.redo]);
+  const imageMeta = useAppState((s) => s.imageMeta);
+  const mode = useAppState((s) => s.mode);
 
   return (
     <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden text-gray-800 dark:text-gray-100 relative">
@@ -47,16 +31,16 @@ function App() {
         <Header />
       </div>
 
-      {store.imageMeta &&
-        (store.mode.type === "layerTransform" ? (
+      {imageMeta &&
+        (mode.type === "layerTransform" ? (
           <div className="grow bg-gray-200 dark:bg-gray-800">
             <Transform />
           </div>
-        ) : store.mode.type === "canvasResize" ? (
+        ) : mode.type === "canvasResize" ? (
           <div className="grow bg-gray-200 dark:bg-gray-800">
             <CanvasResize />
           </div>
-        ) : store.mode.type === "addImageAsLayer" ? (
+        ) : mode.type === "addImageAsLayer" ? (
           <div className="grow bg-gray-200 dark:bg-gray-800">
             <AddImageAsLayer />
           </div>
@@ -74,7 +58,7 @@ function App() {
           </div>
         ))}
 
-      {!store.imageMeta && (
+      {!imageMeta && (
         <div
           className="grow min-h-0 flex items-stretch bg-gray-200 dark:bg-gray-800 overflow-y-auto"
           data-scroll
