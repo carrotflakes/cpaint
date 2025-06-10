@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.1.13",
+    "ag-psd": "^28.1.0",
     "color-convert": "^2.0.1",
     "immer": "^10.1.1",
     "react": "^19.1.0",

@@ -175,6 +175,15 @@ function FileInfo({
       >
         Export PNG
       </button>
+      <button
+        className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"
+        onClick={() => {
+          exportToPSD();
+          setPopoverOpen(false);
+        }}
+      >
+        Export PSD
+      </button>
     </div>
   );
 }
@@ -290,4 +299,40 @@ async function exportToPNG() {
   document.body.removeChild(link);
 
   URL.revokeObjectURL(url);
+}
+
+async function exportToPSD() {
+  const state = useAppState.getState();
+  const meta = state.imageMeta;
+
+  if (!meta) return;
+
+  try {
+    const { exportToPSD: performPSDExport } = await import("../libs/psdExport");
+    const res = await performPSDExport(state.stateContainer.state);
+
+    // Report unsupported blend modes
+    if (res.unsupportedBlendModes.size > 0) {
+      const modes = Array.from(res.unsupportedBlendModes).join(", ");
+      pushToast(
+        `[exportToPSD] Unsupported blend modes converted to normal: ${modes}`
+      );
+    }
+
+    // Download file
+    const blob = new Blob([res.buffer], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${meta.name}.psd`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Failed to export PSD:", error);
+    pushToast("Failed to export PSD: " + error);
+  }
 }
