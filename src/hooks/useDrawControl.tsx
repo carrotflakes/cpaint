@@ -1,10 +1,12 @@
 import * as color from "color-convert";
-import { JSX, useEffect, useState } from "react";
+import { JSX, useEffect, useRef, useState } from "react";
 import { computePos } from "../components/CanvasArea";
 import { CursorIndicator } from "../components/overlays/CursorIndicator";
 import { EyeDropper } from "../components/overlays/EyeDropper";
 import { LassoPath } from "../components/overlays/LassoPath";
+import { SelectionRect } from "../components/overlays/SelectionRect";
 import { dist, Pos } from "../libs/geometry";
+import { applyPressureCurve } from "../libs/pressureCurve";
 import { Selection } from "../libs/Selection";
 import { Op } from "../model/op";
 import { LayerMod } from "../model/state";
@@ -16,8 +18,6 @@ import {
   wrapTransferWithClip,
 } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
-import { SelectionRect } from "../components/overlays/SelectionRect";
-import { applyPressureCurve } from "../libs/pressureCurve";
 
 export function useDrawControl(
   containerRef: {
@@ -28,17 +28,17 @@ export function useDrawControl(
   }
 ) {
   const { touchToDraw } = useGlobalSettings((state) => state);
-  const [lock, setLock] = useState(false);
+  const lockRef = useRef(false);
   const [layerMod, setLayerMod] = useState<null | LayerMod>(null);
   const [overlay, setOverlay] = useState<JSX.Element | null>(null);
 
   useEffect(() => {
-    if (lock) return;
-
     const container = containerRef.current;
     if (!container) return;
 
     const onPointerDown = (e: PointerEvent) => {
+      if (lockRef.current) return;
+
       e.preventDefault();
 
       if (
@@ -51,20 +51,20 @@ export function useDrawControl(
           case "brush":
           case "bucketFill":
           case "fill":
-            startDrawing(container, e, setLock, setLayerMod);
+            startDrawing(container, e, lockRef, setLayerMod);
             break;
           case "eyeDropper":
             canvasRef.current &&
               startEyeDropper(
                 container,
                 e,
-                setLock,
+                lockRef,
                 canvasRef.current,
                 setOverlay
               );
             break;
           case "selection":
-            startSelection(container, e, setLock, setOverlay);
+            startSelection(container, e, lockRef, setOverlay);
             break;
         }
       }
@@ -85,7 +85,7 @@ export function useDrawControl(
 function startDrawing(
   container: HTMLDivElement,
   e: PointerEvent,
-  setLock: (lock: boolean) => void,
+  lockRef: React.RefObject<boolean>,
   setLayerMod: (mod: LayerMod | null) => void
 ) {
   const store = useAppState.getState();
@@ -154,13 +154,13 @@ function startDrawing(
     setLayerMod(null);
   };
 
-  listenPointer(e.pointerId, setLock, onPointerMove, onPointerUp);
+  listenPointer(e.pointerId, lockRef, onPointerMove, onPointerUp);
 }
 
 function startEyeDropper(
   container: HTMLDivElement,
   e: PointerEvent,
-  setLock: (lock: boolean) => void,
+  lockRef: React.RefObject<boolean>,
   canvas: HTMLCanvasElement,
   setOverlay: (overlay: JSX.Element | null) => void
 ) {
@@ -186,20 +186,19 @@ function startEyeDropper(
     updateEyeDropper(pos);
   };
   const onPointerUp = (e: PointerEvent) => {
-    if (e.type === "pointercancel")
-      return;
+    if (e.type === "pointercancel") return;
 
     const pos = computePos(e, container);
     updateEyeDropper(pos, true);
   };
 
-  listenPointer(e.pointerId, setLock, onPointerMove, onPointerUp);
+  listenPointer(e.pointerId, lockRef, onPointerMove, onPointerUp);
 }
 
 function startSelection(
   container: HTMLDivElement,
   e: PointerEvent,
-  setLock: (lock: boolean) => void,
+  lockRef: React.RefObject<boolean>,
   setOverlay: (overlay: JSX.Element | null) => void
 ) {
   const startPos = computePos(e, container);
@@ -240,7 +239,7 @@ function startSelection(
         const lastPoint = lassoPath.at(-1)!;
         const distance = Math.sqrt(
           Math.pow(lastPoint.x - firstPoint.x, 2) +
-          Math.pow(lastPoint.y - firstPoint.y, 2)
+            Math.pow(lastPoint.y - firstPoint.y, 2)
         );
 
         // Only add closing point if the path isn't already closed
@@ -255,7 +254,7 @@ function startSelection(
       setOverlay(null);
     };
 
-    listenPointer(e.pointerId, setLock, onPointerMove, onPointerUp);
+    listenPointer(e.pointerId, lockRef, onPointerMove, onPointerUp);
     return;
   }
 
@@ -282,16 +281,16 @@ function startSelection(
     setOverlay(null);
   };
 
-  listenPointer(e.pointerId, setLock, onPointerMove, onPointerUp);
+  listenPointer(e.pointerId, lockRef, onPointerMove, onPointerUp);
 }
 
 function listenPointer(
   pointerId: number,
-  setLock: (lock: boolean) => void,
+  lockRef: React.RefObject<boolean>,
   onPointerMove: (e: PointerEvent) => void,
   onPointerUp: (e: PointerEvent) => void
 ) {
-  setLock(true);
+  lockRef.current = true;
   const onMove = (e: PointerEvent) => {
     if (e.pointerId !== pointerId) return;
     onPointerMove(e);
@@ -299,7 +298,7 @@ function listenPointer(
   const onUp = (e: PointerEvent) => {
     if (e.pointerId !== pointerId) return;
     onPointerUp(e);
-    setLock(false);
+    lockRef.current = false;
     window.removeEventListener("pointermove", onMove);
     window.removeEventListener("pointerup", onUp);
     window.removeEventListener("pointercancel", onUp);
