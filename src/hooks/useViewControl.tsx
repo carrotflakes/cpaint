@@ -117,6 +117,13 @@ export function useViewControl(
               };
             });
           } else {
+            const pos = state.pointers[pi].pos;
+            useAppState.getState().update((draft) => {
+              draft.uiState.canvasView.pan = [
+                draft.uiState.canvasView.pan[0] + (e.clientX - pos[0]),
+                draft.uiState.canvasView.pan[1] + (e.clientY - pos[1]),
+              ];
+            });
             state.pointers[pi].pos = [e.clientX, e.clientY];
           }
         }
