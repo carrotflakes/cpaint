@@ -18,6 +18,7 @@ export function Files() {
     name: string;
   } | null>(null);
   const [showCustomSizeDialog, setShowCustomSizeDialog] = useState(false);
+  const [whiteBg, setWhiteBg] = useState(true);
 
   const storage = useStorage();
   const { executeWithGuard } = useUnsavedChangesGuard();
@@ -33,9 +34,9 @@ export function Files() {
   }, [load]);
 
   const newFile = useCallback(
-    (size: [number, number]) => {
+    (size: [number, number], whiteBackground: boolean = true) => {
       executeWithGuard(() => {
-        useAppState.getState().new(size);
+        useAppState.getState().new(size, whiteBackground);
       }, "Creating a new file will discard your current unsaved changes.");
     },
     [executeWithGuard]
@@ -44,7 +45,7 @@ export function Files() {
   return (
     <div className="p-4 flex flex-col gap-4 text-gray-800 dark:text-gray-200">
       <h2 className="text-2xl">New</h2>
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap items-center">
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
           onClick={() => setShowCustomSizeDialog(true)}
@@ -53,19 +54,19 @@ export function Files() {
         </button>
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
-          onClick={() => newFile([400, 400])}
+          onClick={() => newFile([400, 400], whiteBg)}
         >
           {(400).toLocaleString("en-US")} x {(400).toLocaleString("en-US")} px
         </button>
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
-          onClick={() => newFile([2000, 2000])}
+          onClick={() => newFile([2000, 2000], whiteBg)}
         >
           {(2000).toLocaleString("en-US")} x {(2000).toLocaleString("en-US")} px
         </button>
         <button
           className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
-          onClick={() => newFile([4000, 4000])}
+          onClick={() => newFile([4000, 4000], whiteBg)}
         >
           {(4000).toLocaleString("en-US")} x {(4000).toLocaleString("en-US")} px
         </button>
@@ -88,6 +89,15 @@ export function Files() {
               }, "Opening a file will discard your current unsaved changes.");
             }}
           />
+        </label>
+        <label className="flex items-center gap-1 select-none cursor-pointer">
+          <input
+            type="checkbox"
+            checked={whiteBg}
+            onChange={(e) => setWhiteBg(e.target.checked)}
+            className="w-6 h-6"
+          />
+          Add white background
         </label>
       </div>
 
@@ -134,11 +144,12 @@ export function Files() {
 
       {showCustomSizeDialog && (
         <CustomSizeDialog
-          onCreateFile={(width, height) => {
-            newFile([width, height]);
+          onCreateFile={(width, height, whiteBackground) => {
+            newFile([width, height], whiteBackground);
             setShowCustomSizeDialog(false);
           }}
           onCancel={() => setShowCustomSizeDialog(false)}
+          defaultWhiteBg={whiteBg}
         />
       )}
     </div>
@@ -181,12 +192,19 @@ function DeleteDialog({
 function CustomSizeDialog({
   onCreateFile,
   onCancel,
+  defaultWhiteBg = true,
 }: {
-  onCreateFile: (width: number, height: number) => void;
+  onCreateFile: (
+    width: number,
+    height: number,
+    whiteBackground: boolean
+  ) => void;
   onCancel: () => void;
+  defaultWhiteBg?: boolean;
 }) {
   const [width, setWidth] = useState("800");
   const [height, setHeight] = useState("600");
+  const [whiteBg, setWhiteBg] = useState(defaultWhiteBg);
 
   const handleCreate = () => {
     const w = parseInt(width, 10);
@@ -202,55 +220,68 @@ function CustomSizeDialog({
       return;
     }
 
-    onCreateFile(w, h);
+    onCreateFile(w, h, whiteBg);
   };
 
   return (
     <ModalDialog onClickOutside={onCancel}>
-      <h2 className="text-xl font-semibold mb-4">Custom Canvas Size</h2>
-      <div className="mb-4">
-        <div className="flex gap-4 items-center mb-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Width (px)</label>
-            <input
-              type="number"
-              value={width}
-              onChange={(e) => setWidth(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-w-0 w-24"
-              min="1"
-              max="10000"
-            />
+      <div className="flex flex-col gap-4">
+        <h2 className="text-xl font-semibold">Custom Canvas Size</h2>
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-4 items-center">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Width (px)</label>
+              <input
+                type="number"
+                value={width}
+                onChange={(e) => setWidth(e.target.value)}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-w-0 w-24"
+                min="1"
+                max="10000"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Height (px)</label>
+              <input
+                type="number"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-w-0 w-24"
+                min="1"
+                max="10000"
+              />
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Height (px)</label>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Maximum size: {(10000).toLocaleString("en-US")} x{" "}
+            {(10000).toLocaleString("en-US")} pixels
+          </p>
+
+          <label className="flex items-center gap-1 select-none cursor-pointer">
             <input
-              type="number"
-              value={height}
-              onChange={(e) => setHeight(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-w-0 w-24"
-              min="1"
-              max="10000"
+              type="checkbox"
+              checked={whiteBg}
+              onChange={(e) => setWhiteBg(e.target.checked)}
+              className="w-6 h-6"
             />
-          </div>
+            Add white background
+          </label>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Maximum size: {(10000).toLocaleString("en-US")} x{" "}
-          {(10000).toLocaleString("en-US")} pixels
-        </p>
-      </div>
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
-          onClick={onCancel}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          onClick={handleCreate}
-        >
-          Create
-        </button>
+
+        <div className="flex justify-end gap-2">
+          <button
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={handleCreate}
+          >
+            Create
+          </button>
+        </div>
       </div>
     </ModalDialog>
   );

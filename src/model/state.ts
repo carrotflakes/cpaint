@@ -38,19 +38,35 @@ export type StateDiff = {
 export function StateContainerNew(
   width: number,
   height: number,
+  addWhiteBackground: boolean,
 ): StateContainer {
-  const canvas = new MCanvas(width, height);
+  const layers = [
+    {
+      id: newLayerId(),
+      canvas: new MCanvas(width, height),
+      visible: true,
+      opacity: 1,
+      blendMode: "source-over" as BlendMode,
+    },
+  ];
+
+  if (addWhiteBackground) {
+    const canvas = new MCanvas(width, height);
+    const ctx = canvas.getContextWrite();
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, width, height);
+    layers.unshift({
+      id: "bg",
+      canvas,
+      visible: true,
+      opacity: 1,
+      blendMode: "source-over" as BlendMode,
+    });
+  }
+
   return {
     state: {
-      layers: [
-        {
-          id: newLayerId(),
-          canvas,
-          visible: true,
-          opacity: 1,
-          blendMode: "source-over" as BlendMode,
-        },
-      ],
+      layers,
       selection: null,
     },
     backward: [],

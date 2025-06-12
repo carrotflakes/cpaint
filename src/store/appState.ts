@@ -65,7 +65,7 @@ export type AppState = {
 
   canvasSize: () => { width: number; height: number }
   apply: (op: Op, transfer: ((ctx: OffscreenCanvasRenderingContext2D) => void) | null) => void
-  new: (size: [number, number]) => void
+  new: (size: [number, number], addWhiteBackground?: boolean) => void
   undo: () => void
   redo: () => void
   update: (update: (draft: WritableDraft<AppState>) => void) => void
@@ -102,7 +102,7 @@ export const useAppState = create<AppState>()((set, get) => {
     mode: {
       type: "draw",
     },
-    stateContainer: StateContainerNew(400, 400),
+    stateContainer: StateContainerNew(400, 400, false),
     savedState: null,
 
     canvasSize() {
@@ -116,13 +116,17 @@ export const useAppState = create<AppState>()((set, get) => {
         } : null),
       }))
     },
-    new(size: [number, number]) {
-      const stateContainer = StateContainerNew(size[0], size[1]);
-      set(() => ({
+    new(size: [number, number], addWhiteBackground: boolean = false) {
+      const stateContainer = StateContainerNew(size[0], size[1], addWhiteBackground);
+      set((s) => ({
         imageMeta: {
           id: Date.now(),
           name: new Date().toISOString().split(".")[0].replace(/:/g, "-"),
           createdAt: Date.now(),
+        },
+        uiState: {
+          ...s.uiState,
+          layerIndex: stateContainer.state.layers.length - 1,
         },
         stateContainer,
         savedState: stateContainer.state,
