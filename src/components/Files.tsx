@@ -45,31 +45,44 @@ export function Files() {
   return (
     <div className="p-4 flex flex-col gap-4 text-gray-800 dark:text-gray-200">
       <h2 className="text-2xl">New</h2>
-      <div className="flex gap-2 flex-wrap items-center">
-        <button
-          className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
-          onClick={() => setShowCustomSizeDialog(true)}
-        >
-          Custom Size...
-        </button>
-        <button
-          className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
-          onClick={() => newFile([400, 400], whiteBg)}
-        >
-          {(400).toLocaleString("en-US")} x {(400).toLocaleString("en-US")} px
-        </button>
-        <button
-          className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
-          onClick={() => newFile([2000, 2000], whiteBg)}
-        >
-          {(2000).toLocaleString("en-US")} x {(2000).toLocaleString("en-US")} px
-        </button>
-        <button
-          className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
-          onClick={() => newFile([4000, 4000], whiteBg)}
-        >
-          {(4000).toLocaleString("en-US")} x {(4000).toLocaleString("en-US")} px
-        </button>
+      <div className="flex flex-col items-start gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          <button
+            className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
+            onClick={() => setShowCustomSizeDialog(true)}
+          >
+            Custom Size...
+          </button>
+          <button
+            className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
+            onClick={() => newFile([400, 400], whiteBg)}
+          >
+            {(400).toLocaleString("en-US")} x {(400).toLocaleString("en-US")} px
+          </button>
+          <button
+            className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
+            onClick={() => newFile([2000, 2000], whiteBg)}
+          >
+            {(2000).toLocaleString("en-US")} x {(2000).toLocaleString("en-US")}{" "}
+            px
+          </button>
+          <button
+            className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
+            onClick={() => newFile([4000, 4000], whiteBg)}
+          >
+            {(4000).toLocaleString("en-US")} x {(4000).toLocaleString("en-US")}{" "}
+            px
+          </button>
+          <label className="flex items-center gap-1 select-none cursor-pointer">
+            <input
+              type="checkbox"
+              checked={whiteBg}
+              onChange={(e) => setWhiteBg(e.target.checked)}
+              className="w-6 h-6"
+            />
+            Add white background
+          </label>
+        </div>
         <label className="p-2 rounded bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer">
           Open Local File...
           <input
@@ -89,15 +102,6 @@ export function Files() {
               }, "Opening a file will discard your current unsaved changes.");
             }}
           />
-        </label>
-        <label className="flex items-center gap-1 select-none cursor-pointer">
-          <input
-            type="checkbox"
-            checked={whiteBg}
-            onChange={(e) => setWhiteBg(e.target.checked)}
-            className="w-6 h-6"
-          />
-          Add white background
         </label>
       </div>
 
