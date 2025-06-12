@@ -15,7 +15,7 @@ export default function AddImageAsLayer() {
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
-  useViewControl(containerRef, true);
+  useViewControl(containerRef);
 
   useEffect(() => {
     if (!addImageAsLayer) return;

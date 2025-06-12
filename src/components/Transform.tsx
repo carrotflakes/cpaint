@@ -39,7 +39,7 @@ export default function Transform() {
     layerTransform?.layerIndex,
   ]);
 
-  useViewControl(containerRef, true);
+  useViewControl(containerRef);
 
   useEffect(() => {
     if (!layerTransform || !canvases) return;

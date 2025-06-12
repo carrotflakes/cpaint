@@ -25,12 +25,15 @@ export function useDrawControl(
   },
   canvasRef: {
     current: HTMLCanvasElement | null;
-  }
+  },
+  drawOrPanningRef: { current: "draw" | "panning" | null }
 ) {
   const { touchToDraw } = useGlobalSettings((state) => state);
   const lockRef = useRef(false);
-  const [layerMod, setLayerMod] = useState<null | LayerMod>(null);
-  const [overlay, setOverlay] = useState<JSX.Element | null>(null);
+  const [ret, setRet] = useState<{
+    layerMod?: LayerMod;
+    overlay?: JSX.Element;
+  }>({});
 
   useEffect(() => {
     const container = containerRef.current;
@@ -51,7 +54,7 @@ export function useDrawControl(
           case "brush":
           case "bucketFill":
           case "fill":
-            startDrawing(container, e, lockRef, setLayerMod);
+            startDrawing(container, e, lockRef, drawOrPanningRef, setRet);
             break;
           case "eyeDropper":
             canvasRef.current &&
@@ -59,12 +62,13 @@ export function useDrawControl(
                 container,
                 e,
                 lockRef,
+                drawOrPanningRef,
                 canvasRef.current,
-                setOverlay
+                setRet
               );
             break;
           case "selection":
-            startSelection(container, e, lockRef, setOverlay);
+            startSelection(container, e, lockRef, drawOrPanningRef, setRet);
             break;
         }
       }
@@ -77,8 +81,8 @@ export function useDrawControl(
   }, [containerRef, touchToDraw]);
 
   return {
-    layerMod,
-    overlay: overlay ?? <CursorIndicator containerRef={containerRef} />,
+    layerMod: ret.layerMod ?? null,
+    overlay: ret.overlay ?? <CursorIndicator containerRef={containerRef} />,
   };
 }
 
@@ -86,7 +90,8 @@ function startDrawing(
   container: HTMLDivElement,
   e: PointerEvent,
   lockRef: React.RefObject<boolean>,
-  setLayerMod: (mod: LayerMod | null) => void
+  drawOrPanningRef: { current: "draw" | "panning" | null },
+  setRet: (ret: { layerMod?: LayerMod; overlay?: JSX.Element }) => void
 ) {
   const store = useAppState.getState();
   const { pressureCurve } = useGlobalSettings.getState();
@@ -115,9 +120,11 @@ function startDrawing(
   if (!store.uiState.erase) store.addColorToHistory(store.uiState.color);
 
   let lastPos = pos;
-  setLayerMod({
-    layerId,
-    apply: touch.transfer,
+  setRet({
+    layerMod: {
+      layerId,
+      apply: touch.transfer,
+    },
   });
 
   const onPointerMove = (e: PointerEvent) => {
@@ -130,9 +137,11 @@ function startDrawing(
 
       touch.stroke(pos[0], pos[1], pressure);
       lastPos = pos;
-      setLayerMod({
-        layerId,
-        apply: touch.transfer,
+      setRet({
+        layerMod: {
+          layerId,
+          apply: touch.transfer,
+        },
       });
     }
   };
@@ -150,19 +159,25 @@ function startDrawing(
 
     touch.end();
     store.apply(op, touch.transfer);
-
-    setLayerMod(null);
   };
 
-  listenPointer(e.pointerId, lockRef, onPointerMove, onPointerUp);
+  listenPointer(
+    e.pointerId,
+    lockRef,
+    drawOrPanningRef,
+    setRet,
+    onPointerMove,
+    onPointerUp
+  );
 }
 
 function startEyeDropper(
   container: HTMLDivElement,
   e: PointerEvent,
   lockRef: React.RefObject<boolean>,
+  drawOrPanningRef: { current: "draw" | "panning" | null },
   canvas: HTMLCanvasElement,
-  setOverlay: (overlay: JSX.Element | null) => void
+  setRet: (ret: { layerMod?: LayerMod; overlay?: JSX.Element }) => void
 ) {
   const pos = computePos(e, container);
 
@@ -173,9 +188,10 @@ function startEyeDropper(
       useAppState.getState().update((draft) => {
         draft.uiState.color = color;
       });
-      setOverlay(null);
     } else {
-      setOverlay(<EyeDropper color={color} pos={pos} />);
+      setRet({
+        overlay: <EyeDropper color={color} pos={pos} />,
+      });
     }
   };
 
@@ -192,14 +208,22 @@ function startEyeDropper(
     updateEyeDropper(pos, true);
   };
 
-  listenPointer(e.pointerId, lockRef, onPointerMove, onPointerUp);
+  listenPointer(
+    e.pointerId,
+    lockRef,
+    drawOrPanningRef,
+    setRet,
+    onPointerMove,
+    onPointerUp
+  );
 }
 
 function startSelection(
   container: HTMLDivElement,
   e: PointerEvent,
   lockRef: React.RefObject<boolean>,
-  setOverlay: (overlay: JSX.Element | null) => void
+  drawOrPanningRef: { current: "draw" | "panning" | null },
+  setRet: (ret: { layerMod?: LayerMod; overlay?: JSX.Element }) => void
 ) {
   const startPos = computePos(e, container);
   const store = useAppState.getState();
@@ -228,7 +252,9 @@ function startSelection(
       if (distance > 2) {
         lassoPath.push({ x: pos[0], y: pos[1] });
 
-        setOverlay(<LassoPath path={[...lassoPath]} />);
+        setRet({
+          overlay: <LassoPath path={[...lassoPath]} />,
+        });
       }
     };
 
@@ -250,59 +276,90 @@ function startSelection(
         // Apply lasso selection
         selectLasso(lassoPath);
       }
-
-      setOverlay(null);
     };
 
-    listenPointer(e.pointerId, lockRef, onPointerMove, onPointerUp);
+    listenPointer(
+      e.pointerId,
+      lockRef,
+      drawOrPanningRef,
+      setRet,
+      onPointerMove,
+      onPointerUp
+    );
     return;
   }
 
   // Handle rectangular and elliptical selection
   const onPointerMove = (e: PointerEvent) => {
     const pos = computePos(e, container);
-    setOverlay(
-      <SelectionRect
-        rect={{
-          x: Math.min(startPos[0], pos[0]),
-          y: Math.min(startPos[1], pos[1]),
-          width: Math.abs(pos[0] - startPos[0]),
-          height: Math.abs(pos[1] - startPos[1]),
-        }}
-        ellipse={store.uiState.selectionTool === "ellipse"}
-      />
-    );
+    setRet({
+      overlay: (
+        <SelectionRect
+          rect={{
+            x: Math.min(startPos[0], pos[0]),
+            y: Math.min(startPos[1], pos[1]),
+            width: Math.abs(pos[0] - startPos[0]),
+            height: Math.abs(pos[1] - startPos[1]),
+          }}
+          ellipse={store.uiState.selectionTool === "ellipse"}
+        />
+      ),
+    });
   };
   const onPointerUp = (e: PointerEvent) => {
     const pos = computePos(e, container);
 
     // WIP select rect
     selectRect(startPos, pos);
-    setOverlay(null);
   };
 
-  listenPointer(e.pointerId, lockRef, onPointerMove, onPointerUp);
+  listenPointer(
+    e.pointerId,
+    lockRef,
+    drawOrPanningRef,
+    setRet,
+    onPointerMove,
+    onPointerUp
+  );
 }
 
 function listenPointer(
   pointerId: number,
   lockRef: React.RefObject<boolean>,
+  drawOrPanningRef: { current: "draw" | "panning" | null },
+  setRet: (ret: { layerMod?: LayerMod; overlay?: JSX.Element }) => void,
   onPointerMove: (e: PointerEvent) => void,
   onPointerUp: (e: PointerEvent) => void
 ) {
   lockRef.current = true;
-  const onMove = (e: PointerEvent) => {
-    if (e.pointerId !== pointerId) return;
-    onPointerMove(e);
-  };
-  const onUp = (e: PointerEvent) => {
-    if (e.pointerId !== pointerId) return;
-    onPointerUp(e);
+
+  const cleanup = () => {
     lockRef.current = false;
+    if (drawOrPanningRef?.current === "draw") drawOrPanningRef.current = null;
+    setRet({});
+
     window.removeEventListener("pointermove", onMove);
     window.removeEventListener("pointerup", onUp);
     window.removeEventListener("pointercancel", onUp);
   };
+
+  const onMove = (e: PointerEvent) => {
+    if (e.pointerId !== pointerId) return;
+    if (drawOrPanningRef?.current && drawOrPanningRef.current !== "draw") {
+      cleanup();
+      return;
+    }
+    if (drawOrPanningRef) drawOrPanningRef.current = "draw";
+
+    onPointerMove(e);
+  };
+
+  const onUp = (e: PointerEvent) => {
+    if (e.pointerId !== pointerId) return;
+    onPointerUp(e);
+    cleanup();
+  };
+
   window.addEventListener("pointermove", onMove);
   window.addEventListener("pointerup", onUp);
   window.addEventListener("pointercancel", onUp);

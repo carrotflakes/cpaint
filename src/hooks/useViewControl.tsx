@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import {
-  dist,
-  Pos,
   calculateTransformedPoint,
+  dist,
   normalizeAngle,
+  Pos,
 } from "../libs/geometry";
 import { useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
@@ -12,10 +12,9 @@ export function useViewControl(
   containerRef: {
     current: HTMLDivElement | null;
   },
-  noDraw?: boolean
+  drawOrPanningRef?: { current: "draw" | "panning" | null }
 ) {
-  const { wheelZoom, touchToDraw, angleSnapDivisor } = useGlobalSettings();
-  const allowTouch = noDraw || !touchToDraw;
+  const { wheelZoom, angleSnapDivisor } = useGlobalSettings();
 
   useEffect(() => {
     const container = containerRef.current;
@@ -25,6 +24,7 @@ export function useViewControl(
       | null
       | {
           type: "panning";
+          active: boolean;
           pointers: { id: number; pos: [number, number] }[];
           angleUnnormalized: number;
         }
@@ -45,9 +45,10 @@ export function useViewControl(
             pointerId: e.pointerId,
           };
         }
-        if (allowTouch && e.pointerType === "touch") {
+        if (e.pointerType === "touch") {
           state = {
             type: "panning",
+            active: false,
             pointers: [{ id: e.pointerId, pos: [e.clientX, e.clientY] }],
             angleUnnormalized: store.uiState.canvasView.angle,
           };
@@ -56,19 +57,29 @@ export function useViewControl(
       }
 
       if (state.type === "panning") {
-        if (e.pointerType === "touch" && state.pointers.length < 2)
+        if (e.pointerType === "touch" && state.pointers.length < 2) {
+          state.active = true;
           state.pointers.push({
             id: e.pointerId,
             pos: [e.clientX, e.clientY],
           });
+          if (drawOrPanningRef && drawOrPanningRef.current == null)
+            drawOrPanningRef.current = "panning";
+        }
         return;
       }
     };
 
     const onPointerMove = (e: PointerEvent) => {
       if (!state) return;
+      if (drawOrPanningRef?.current && drawOrPanningRef.current !== "panning") {
+        state = null;
+        return;
+      }
 
       if (state.type === "panning") {
+        if (!state.active) return;
+
         const pi = state.pointers.findIndex((p) => p.id === e.pointerId);
         if (pi === -1) return;
 
@@ -147,6 +158,11 @@ export function useViewControl(
 
       if (state.type === "panning") {
         state.pointers = state.pointers.filter((p) => p.id !== e.pointerId);
+        if (state.pointers.length === 0) {
+          state = null;
+          if (drawOrPanningRef?.current === "panning")
+            drawOrPanningRef.current = null;
+        }
         return;
       }
 
@@ -169,7 +185,7 @@ export function useViewControl(
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  }, [containerRef, angleSnapDivisor, allowTouch]);
+  }, [angleSnapDivisor]);
 
   useEffect(() => {
     const container = containerRef.current;

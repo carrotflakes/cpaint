@@ -13,8 +13,13 @@ export default function MainCanvasArea() {
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
-  const { layerMod, overlay } = useDrawControl(containerRef, canvasRef);
-  useViewControl(containerRef);
+  const drawOrPanningRef = useRef<"draw" | "panning" | null>(null);
+  const { layerMod, overlay } = useDrawControl(
+    containerRef,
+    canvasRef,
+    drawOrPanningRef
+  );
+  useViewControl(containerRef, drawOrPanningRef);
   useKeyboardShortcuts();
 
   useEffect(() => {

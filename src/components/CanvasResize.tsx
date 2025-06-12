@@ -18,7 +18,7 @@ export default function CanvasResize() {
   const containerRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
-  useViewControl(containerRef, true);
+  useViewControl(containerRef);
 
   useEffect(() => {
     if (!canvasResize) return;
