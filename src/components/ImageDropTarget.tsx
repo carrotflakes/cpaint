@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
+import { loadImageFromFile } from "../libs/loadImageFile";
 import { useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
-import { loadImageFromFile } from "../libs/loadImageFile";
+import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 
 export function ImageDropTarget() {
-  const store = useAppState();
   const [importImageFile, setImportImageFile] = useState<File | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
@@ -15,7 +15,10 @@ export function ImageDropTarget() {
       setIsDraggingOver(false);
       if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
         const file = e.dataTransfer.files[0];
-        if (file.type.startsWith("image/")) {
+        if (
+          file.type.startsWith("image/") ||
+          file.name.match(/\.(jpg|jpeg|png|gif|webp|psd)$/i)
+        ) {
           setImportImageFile(file);
         } else {
           pushToast("Please drop an image file.");
@@ -65,37 +68,74 @@ export function ImageDropTarget() {
         </div>
       )}
       {importImageFile && (
-        <ModalDialog onClickOutside={() => setImportImageFile(null)}>
-          <div className="flex flex-col gap-4 p-4">
-            <h2 className="text-lg font-semibold">Import Image</h2>
-            <p>How would you like to import this image?</p>
-            <div className="flex gap-2">
-              <button
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 cursor-pointer"
-                onClick={async () => {
-                  if (!importImageFile) return;
-                  const img = await loadImageFromFile(importImageFile);
-                  store.openAsNewFile(img);
-                  setImportImageFile(null);
-                }}
-              >
-                Open as New File
-              </button>
-              <button
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 cursor-pointer"
-                onClick={async () => {
-                  if (!importImageFile) return;
-                  const img = await loadImageFromFile(importImageFile);
-                  store.importAsLayer(img);
-                  setImportImageFile(null);
-                }}
-              >
-                Import as Layer
-              </button>
-            </div>
-          </div>
-        </ModalDialog>
+        <ImportImage
+          onClose={() => setImportImageFile(null)}
+          file={importImageFile}
+        />
       )}
     </>
+  );
+}
+
+function ImportImage({ onClose, file }: { onClose: () => void; file: File }) {
+  const store = useAppState();
+  const isPsd = file.name.match(/\.psd$/i);
+
+  const { executeWithGuard } = useUnsavedChangesGuard();
+
+  return (
+    <ModalDialog onClickOutside={onClose}>
+      <div className="flex flex-col gap-4 p-4">
+        <h2 className="text-lg font-semibold">Import Image</h2>
+
+        <p>How would you like to import this image?</p>
+
+        <p className="text-sm text-gray-500">
+          <span translate="no">{file.name}</span> (
+          {Math.round(file.size / 1024).toLocaleString("en-US")} KB)
+        </p>
+
+        {isPsd && (
+          <p className="text-red-800">
+            Loading PSD files is still an experimental feature. Opening a PSD
+            file may result in loss of layer information.
+          </p>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 cursor-pointer"
+            onClick={async () => {
+              executeWithGuard(async () => {
+                if (isPsd) {
+                  const { loadPsdFromFile } = await import("../libs/psdImport");
+                  const psdData = await loadPsdFromFile(file);
+                  store.openPsdAsNewFile(psdData);
+                } else {
+                  const img = await loadImageFromFile(file);
+                  store.openAsNewFile(img);
+                }
+              });
+              onClose();
+            }}
+          >
+            Open as New File
+          </button>
+
+          {store.imageMeta && !isPsd && (
+            <button
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 cursor-pointer"
+              onClick={async () => {
+                const img = await loadImageFromFile(file);
+                store.importAsLayer(img);
+                onClose();
+              }}
+            >
+              Import as Layer
+            </button>
+          )}
+        </div>
+      </div>
+    </ModalDialog>
   );
 }

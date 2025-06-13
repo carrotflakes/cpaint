@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import { CHECK_PATTERN } from "../libs/check";
+import { loadImageFromFile } from "../libs/loadImageFile";
 import { MCanvas } from "../libs/MCanvas";
 import { Storage } from "../libs/Storage";
 import { BlendMode } from "../model/blendMode";
 import { StateContainerFromState } from "../model/state";
 import { useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
+import { pushToast } from "./Toasts";
 
 export function Files() {
   const [files, setFiles] = useState(
@@ -87,17 +89,28 @@ export function Files() {
           Open Local File...
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,.psd"
             style={{ display: "none" }}
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
               executeWithGuard(async () => {
-                const { loadImageFromFile } = await import(
-                  "../libs/loadImageFile"
-                );
-                const img = await loadImageFromFile(file);
-                useAppState.getState().openAsNewFile(img);
+                const fileExtension = file.name.toLowerCase().split(".").pop();
+
+                if (fileExtension === "psd") {
+                  const { loadPsdFromFile } = await import(
+                    "../libs/psdImport"
+                  );
+                  const psdData = await loadPsdFromFile(file);
+                  useAppState.getState().openPsdAsNewFile(psdData);
+                } else {
+                  try {
+                    const img = await loadImageFromFile(file);
+                    useAppState.getState().openAsNewFile(img);
+                  } catch (e) {
+                    pushToast("" + e);
+                  }
+                }
                 load();
               }, "Opening a file will discard your current unsaved changes.");
             }}

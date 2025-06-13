@@ -70,6 +70,7 @@ export type AppState = {
   redo: () => void
   update: (update: (draft: WritableDraft<AppState>) => void) => void
   openAsNewFile: (image: HTMLImageElement) => void
+  openPsdAsNewFile: (psdData: { width: number; height: number; layers: State['layers'] }) => void
   importAsLayer: (image: HTMLImageElement) => void
   addColorToHistory: (color: string) => void
   hasUnsavedChanges: () => boolean
@@ -147,6 +148,21 @@ export const useAppState = create<AppState>()((set, get) => {
             blendMode: "source-over" as BlendMode,
           },
         ],
+        selection: null,
+      });
+      set(() => ({
+        imageMeta: {
+          id: Date.now(),
+          name: "Imported Image",
+          createdAt: Date.now(),
+        },
+        stateContainer,
+        savedState: stateContainer.state,
+      }));
+    },
+    openPsdAsNewFile(psdData: { width: number; height: number; layers: State['layers'] }) {
+      const stateContainer = StateContainerFromState({
+        layers: psdData.layers,
         selection: null,
       });
       set(() => ({
