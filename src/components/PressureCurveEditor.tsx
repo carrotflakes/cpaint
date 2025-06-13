@@ -1,18 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  applyPressureCurve,
   DEFAULT_PRESSURE_CURVE,
   generateCurvePoints,
+  PressureCurve,
   PressureCurvePoint,
 } from "../libs/pressureCurve";
-import { useGlobalSettings } from "../store/globalSetting";
+import { startTouchBrush } from "../libs/touch/brush";
 
-export function PressureCurveEditor({ className }: { className?: string }) {
+export function PressureCurveEditor({
+  className,
+  pressureCurve,
+  setPressureCurve,
+}: {
+  className?: string;
+  pressureCurve: PressureCurve;
+  setPressureCurve: (points: PressureCurve) => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null!);
   const [dragging, setDragging] = useState<number | null>(null); // Index of the control point being dragged
-  const globalSettings = useGlobalSettings();
+  const [inputValue, setInputValue] = useState<number>(0);
 
+  const dpr = window.devicePixelRatio ?? 1;
   const width = 200;
-  const height = 150;
+  const height = 200;
   const padding = 20;
   const plotWidth = width - padding * 2;
   const plotHeight = height - padding * 2;
@@ -36,7 +47,6 @@ export function PressureCurveEditor({ className }: { className?: string }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
     ctx.resetTransform();
     ctx.scale(dpr, dpr);
 
@@ -87,32 +97,46 @@ export function PressureCurveEditor({ className }: { className?: string }) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Draw the pressure curve
-    if (globalSettings.pressureCurve.enabled) {
-      const curvePoints = generateCurvePoints(
-        globalSettings.pressureCurve.points,
-        100
-      );
-
-      ctx.strokeStyle = "#3b82f6";
-      ctx.lineWidth = 2;
+    // Draw input/output value line
+    if (inputValue > 0) {
+      const inputX = padding + inputValue * plotWidth;
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 1;
       ctx.beginPath();
+      ctx.moveTo(inputX, padding);
+      ctx.lineTo(inputX, padding + plotHeight);
+      ctx.stroke();
 
-      curvePoints.forEach((point, i) => {
-        const [x, y] = toCanvas(point);
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-      });
-
+      const outputY =
+        padding +
+        (1 - applyPressureCurve(inputValue, pressureCurve)) * plotHeight;
+      ctx.strokeStyle = "#f59e0b";
+      ctx.beginPath();
+      ctx.moveTo(padding, outputY);
+      ctx.lineTo(padding + plotWidth, outputY);
       ctx.stroke();
     }
 
+    // Draw the pressure curve
+    const curvePoints = generateCurvePoints(pressureCurve.points, 100);
+
+    ctx.strokeStyle = "#3b82f6";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    curvePoints.forEach((point, i) => {
+      const [x, y] = toCanvas(point);
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+
+    ctx.stroke();
+
     // Draw control points
-    const points = globalSettings.pressureCurve.points;
-    points.forEach((point, i) => {
+    pressureCurve.points.forEach((point, i) => {
       const [x, y] = toCanvas(point);
 
       // Control points 1 and 2 are draggable
@@ -136,29 +160,27 @@ export function PressureCurveEditor({ className }: { className?: string }) {
     });
 
     // Draw control lines
-    if (globalSettings.pressureCurve.enabled) {
-      ctx.strokeStyle = "#9ca3af";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([2, 2]);
+    ctx.strokeStyle = "#9ca3af";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
 
-      // Line from start to control1
-      const [x0, y0] = toCanvas(points[0]);
-      const [x1, y1] = toCanvas(points[1]);
-      ctx.beginPath();
-      ctx.moveTo(x0, y0);
-      ctx.lineTo(x1, y1);
-      ctx.stroke();
+    // Line from start to control1
+    const [x0, y0] = toCanvas(pressureCurve.points[0]);
+    const [x1, y1] = toCanvas(pressureCurve.points[1]);
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
 
-      // Line from control2 to end
-      const [x2, y2] = toCanvas(points[2]);
-      const [x3, y3] = toCanvas(points[3]);
-      ctx.beginPath();
-      ctx.moveTo(x2, y2);
-      ctx.lineTo(x3, y3);
-      ctx.stroke();
+    // Line from control2 to end
+    const [x2, y2] = toCanvas(pressureCurve.points[2]);
+    const [x3, y3] = toCanvas(pressureCurve.points[3]);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x3, y3);
+    ctx.stroke();
 
-      ctx.setLineDash([]);
-    }
+    ctx.setLineDash([]);
 
     // Labels
     ctx.fillStyle = "#374151";
@@ -182,10 +204,9 @@ export function PressureCurveEditor({ className }: { className?: string }) {
     const y = e.clientY - rect.top;
 
     // Check if clicking on a draggable control point
-    const points = globalSettings.pressureCurve.points;
     for (let i = 1; i <= 2; i++) {
       // Only control points 1 and 2 are draggable
-      const [px, py] = toCanvas(points[i]);
+      const [px, py] = toCanvas(pressureCurve.points[i]);
       const dist = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
       if (dist <= 8) {
         setDragging(i);
@@ -208,17 +229,10 @@ export function PressureCurveEditor({ className }: { className?: string }) {
     const newPoint = fromCanvas(x, y);
 
     // Update the control point
-    const newPoints = [
-      ...globalSettings.pressureCurve.points,
-    ] as typeof globalSettings.pressureCurve.points;
+    const newPoints = [...pressureCurve.points] as typeof pressureCurve.points;
     newPoints[dragging] = newPoint;
 
-    useGlobalSettings.setState({
-      pressureCurve: {
-        ...globalSettings.pressureCurve,
-        points: newPoints,
-      },
-    });
+    setPressureCurve({ ...pressureCurve, points: newPoints });
   };
 
   const handlePointerUp = () => {
@@ -226,81 +240,154 @@ export function PressureCurveEditor({ className }: { className?: string }) {
   };
 
   const resetCurve = () => {
-    useGlobalSettings.setState({
-      pressureCurve: {
-        ...globalSettings.pressureCurve,
-        points: DEFAULT_PRESSURE_CURVE.points,
-      },
+    setPressureCurve({
+      ...pressureCurve,
+      points: [...DEFAULT_PRESSURE_CURVE.points],
     });
   };
 
   useEffect(() => {
     drawCurve();
-  }, [globalSettings.pressureCurve]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-
-    drawCurve();
-  }, []);
+  }, [pressureCurve, dragging, inputValue, dpr]);
 
   return (
-    <div className={className}>
+    <div
+      className={"flex gap-2 overflow-x-auto " + (className ?? "")}
+      data-scroll
+    >
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="pressureCurveEnabled"
-            checked={globalSettings.pressureCurve.enabled}
-            onChange={(e) =>
-              useGlobalSettings.setState({
-                pressureCurve: {
-                  ...globalSettings.pressureCurve,
-                  enabled: e.target.checked,
-                },
-              })
-            }
-            className="w-4 h-4"
-          />
-          <label htmlFor="pressureCurveEnabled" className="text-sm font-medium">
-            Enable Pressure Curve
-          </label>
-        </div>
-
-        <div className="relative">
+        <div className="self-center relative">
           <canvas
             ref={canvasRef}
             className="cursor-pointer touch-none"
+            width={(width * dpr) | 0}
+            height={(height * dpr) | 0}
+            style={{
+              width: `${width}px`,
+              height: `${height}px`,
+            }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
           />
 
-          {!globalSettings.pressureCurve.enabled && (
+          {!pressureCurve.enabled && (
             <div className="absolute inset-0 bg-gray-50/75 rounded flex items-center justify-center">
               <span className="text-sm text-gray-900">Disabled</span>
             </div>
           )}
         </div>
 
-        <p className="text-xs text-gray-600">
-          Drag the blue control points to adjust the pressure curve.
-        </p>
-
         <button
           onClick={resetCurve}
-          className="px-2 py-1 text-xs rounded text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors"
+          className="self-start px-2 py-1 text-xs rounded text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors"
         >
-          Reset
+          Reset Curve
         </button>
       </div>
+
+      <TestCanvas pressureCurve={pressureCurve} onInputValue={setInputValue} />
     </div>
   );
+}
+
+function TestCanvas({
+  pressureCurve,
+  onInputValue,
+}: {
+  pressureCurve: PressureCurve;
+  onInputValue: (value: number) => void;
+}) {
+  const dpr = window.devicePixelRatio ?? 1;
+  const width = 240;
+  const height = 240;
+
+  const canvasRef = useRef<HTMLCanvasElement>(null!);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, [dpr]);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const { width, height } = canvas;
+
+    function computePos(e: PointerEvent) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * dpr;
+      const y = (e.clientY - rect.top) * dpr;
+      return [x, y];
+    }
+
+    const pointerId = e.pointerId;
+    const touch = startTouchBrush({
+      brushType: "particle1",
+      width: (10 * dpr) | 0,
+      color: "#000",
+      opacity: 1,
+      erase: false,
+      alphaLock: false,
+      canvasSize: [width, height],
+    });
+    const pos = computePos(e.nativeEvent);
+    onInputValue(getPressure(e.nativeEvent));
+    const pressure = applyPressureCurve(
+      getPressure(e.nativeEvent),
+      pressureCurve
+    );
+    touch.stroke(pos[0], pos[1], pressure);
+
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, width, height);
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) return;
+
+      const pos = computePos(e);
+      onInputValue(getPressure(e));
+      const pressure = applyPressureCurve(getPressure(e), pressureCurve);
+      touch.stroke(pos[0], pos[1], pressure);
+
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, width, height);
+      touch.transfer(ctx);
+    };
+    const onPointerUp = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) return;
+
+      onInputValue(0);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+  };
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="touch-none"
+      width={(width * dpr) | 0}
+      height={(height * dpr) | 0}
+      style={{
+        width: `${width}px`,
+        height: `${height}px`,
+      }}
+      onPointerDown={onPointerDown}
+    />
+  );
+}
+
+function getPressure(e: PointerEvent) {
+  // NOTE: e.pressure will be 0 for touch events on iPad chrome.
+  return e.pointerType === "touch" && e.pressure === 0 ? 0.5 : e.pressure;
 }

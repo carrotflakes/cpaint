@@ -10,6 +10,7 @@ import { Header } from "./Header";
 import { ImageDropTarget } from "./ImageDropTarget";
 import { LayersBar } from "./LayersBar";
 import MainCanvasArea from "./MainCanvasArea";
+import { PenPressureDialog } from "./PenPressureDialog";
 import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
@@ -69,6 +70,7 @@ function App() {
 
       <Toasts />
       <SettingDialog />
+      <PenPressureDialog />
       <ImageDropTarget />
       <UnsavedChangesDialog />
     </div>

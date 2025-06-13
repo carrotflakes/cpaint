@@ -46,7 +46,7 @@ export function ToolBar() {
   return (
     <div
       className="h-full p-2 flex flex-col gap-2 overflow-y-auto"
-      data-scroll={true}
+      data-scroll
     >
       <Popover.Root>
         <Popover.Trigger asChild>

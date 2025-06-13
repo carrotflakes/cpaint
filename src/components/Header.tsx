@@ -95,7 +95,7 @@ export function Header() {
       <div
         className="basis-6 cursor-pointer"
         onClick={() => {
-          useSettingDialog.getState().toggleShow();
+          useSettingDialog.getState().setShow(true);
         }}
         title="Settings"
       >

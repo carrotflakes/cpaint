@@ -50,7 +50,7 @@ export function BrushPreview({
     }
     touch.end();
     touch.transfer(ctx);
-  }, [brushType, JSON.stringify(overwriteProps)]);
+  }, [brushType, JSON.stringify(overwriteProps), dpr]);
 
   return (
     <canvas
