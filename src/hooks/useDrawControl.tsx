@@ -103,7 +103,7 @@ function startDrawing(
   const bucketFill = store.uiState.tool === "bucketFill";
 
   const pos = computePos(e, container);
-  const pressure = applyPressureCurve(e.pressure, pressureCurve);
+  const pressure = applyPressureCurve(getPressure(e), pressureCurve);
 
   const touch = createTouch(store);
   if (touch == null) return;
@@ -129,7 +129,7 @@ function startDrawing(
 
   const onPointerMove = (e: PointerEvent) => {
     const pos = computePos(e, container);
-    const pressure = applyPressureCurve(e.pressure, pressureCurve);
+    const pressure = applyPressureCurve(getPressure(e), pressureCurve);
 
     const viewScale = store.uiState.canvasView.scale;
     if (dist(lastPos, pos) * viewScale > (bucketFill ? 1 : 3)) {
@@ -383,6 +383,11 @@ function pixelColor(ctx: CanvasRenderingContext2D, x: number, y: number) {
     "#" +
     color.rgb.hex([imageData.data[0], imageData.data[1], imageData.data[2]])
   );
+}
+
+function getPressure(e: PointerEvent) {
+  // NOTE: e.pressure will be 0 for touch events on iPad chrome.
+  return e.pointerType === "touch" && e.pressure === 0 ? 0.5 : e.pressure;
 }
 
 function selectRect(startPos: [number, number], endPos: [number, number]) {
