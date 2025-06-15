@@ -119,6 +119,7 @@ export function useViewControl(
             const pan = [pan_[0] - panOffset[0], pan_[1] - panOffset[1]] as Pos;
 
             draft.uiState.canvasView = {
+              ...draft.uiState.canvasView,
               pan,
               angle:
                 angleSnapDivisor > 0

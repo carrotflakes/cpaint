@@ -20,6 +20,7 @@ import { applyEffect, AppState, useAppState } from "../store/appState";
 import { BrushPreview } from "./BrushPreview";
 import { ColorPalette } from "./ColorPalette";
 import { SelectionControls } from "./SelectionControls";
+import { ViewControls } from "./ViewControls";
 
 const penWidthExp = 2;
 const penWidthMax = 1000;
@@ -32,6 +33,7 @@ export function ToolBar() {
   const [showBucketFill, setShowBucketFill] = useState(false);
   const [showBrush, setShowBrush] = useState(false);
   const [showSelectionControls, setShowSelectionControls] = useState(false);
+  const [showViewControls, setShowViewControls] = useState(false);
 
   const controlOpacity = useControl({
     getValue: () => uiState.opacity,
@@ -44,10 +46,7 @@ export function ToolBar() {
 
   const currentLayer = store.stateContainer.state.layers[uiState.layerIndex];
   return (
-    <div
-      className="h-full p-2 flex flex-col gap-2 overflow-y-auto"
-      data-scroll
-    >
+    <div className="h-full p-2 flex flex-col gap-2 overflow-y-auto" data-scroll>
       <Popover.Root>
         <Popover.Trigger asChild>
           <div
@@ -383,21 +382,31 @@ export function ToolBar() {
         <IconMinus width={24} height={24} />
       </div>
 
-      <div
-        className="cursor-pointer data-[selected=false]:opacity-50"
-        onClick={() =>
-          store.update((draft) => {
-            draft.uiState.canvasView = {
-              angle: 0,
-              scale: 1,
-              pan: [0, 0],
-            };
-          })
-        }
-        title="Reset view"
-      >
-        <IconMagnifyingGlass width={24} height={24} />
-      </div>
+      <Popover.Root open={showViewControls} onOpenChange={setShowViewControls}>
+        <Popover.Trigger asChild>
+          <div
+            className="cursor-pointer data-[selected=true]:text-blue-400"
+            data-selected={showViewControls}
+            onClick={() => setShowViewControls((x) => !x)}
+            title="View Controls"
+          >
+            <IconMagnifyingGlass width={24} height={24} />
+          </div>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="max-h-[calc(100dvh-16px)] p-2 bg-gray-50 dark:bg-black shadow z-10 overflow-y-auto"
+            data-scroll={true}
+            side="right"
+            align="start"
+            sideOffset={5}
+            collisionPadding={8}
+            forceMount
+          >
+            <ViewControls />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
     </div>
   );
 }

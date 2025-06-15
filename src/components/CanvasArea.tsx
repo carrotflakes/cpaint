@@ -14,6 +14,8 @@ export default function CanvasArea({
     angle: number;
     scale: number;
     pan: [number, number];
+    flipX: boolean;
+    flipY: boolean;
   };
   containerRef: { current: HTMLDivElement | null };
   canvasRef: { current: HTMLCanvasElement | null };
@@ -80,8 +82,12 @@ export function viewToTransform(canvasView: {
   angle: number;
   scale: number;
   pan: [number, number];
+  flipX: boolean;
+  flipY: boolean;
 }): string {
-  return `translate(${canvasView.pan[0]}px, ${canvasView.pan[1]}px) rotate(${canvasView.angle}rad) scale(${canvasView.scale})`;
+  const sx = canvasView.scale * (canvasView.flipX ? -1 : 1);
+  const sy = canvasView.scale * (canvasView.flipY ? -1 : 1);
+  return `translate(${canvasView.pan[0]}px, ${canvasView.pan[1]}px) rotate(${canvasView.angle}rad) scale(${sx}, ${sy})`;
 }
 
 export function viewToSVGTransform(
@@ -89,12 +95,16 @@ export function viewToSVGTransform(
     angle: number;
     scale: number;
     pan: [number, number];
+    flipX: boolean;
+    flipY: boolean;
   },
   canvasSize: { width: number; height: number }
 ): string {
+  const sx = canvasView.scale * (canvasView.flipX ? -1 : 1);
+  const sy = canvasView.scale * (canvasView.flipY ? -1 : 1);
   return `translate(${canvasView.pan[0]} ${canvasView.pan[1]}) rotate(${
     (canvasView.angle / (2 * Math.PI)) * 360
-  }) scale(${canvasView.scale}) translate(${-canvasSize.width / 2} ${
+  }) scale(${sx} ${sy}) translate(${-canvasSize.width / 2} ${
     -canvasSize.height / 2
   })`;
 }
@@ -118,8 +128,9 @@ export function computePos(
   ];
   const sin = Math.sin(-cv.angle);
   const cos = Math.cos(-cv.angle);
-  return [
-    pos_[0] * cos - pos_[1] * sin + firstCanvas.width / 2,
-    pos_[0] * sin + pos_[1] * cos + firstCanvas.height / 2,
-  ];
+  let x = pos_[0] * cos - pos_[1] * sin;
+  let y = pos_[0] * sin + pos_[1] * cos;
+  if (cv.flipX) x = -x;
+  if (cv.flipY) y = -y;
+  return [x + firstCanvas.width / 2, y + firstCanvas.height / 2];
 }

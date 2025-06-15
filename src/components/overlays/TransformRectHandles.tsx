@@ -20,6 +20,7 @@ export function TransformRectHandles({
   canvasSize: { width: number; height: number };
 }) {
   const view = useAppState((state) => state.uiState.canvasView);
+  const flippedAngle = view.angle * ((+view.flipX + +view.flipY) % 2 ? -1 : 1);
   const polygonRef = useRef<SVGPolygonElement | null>(null);
   const rotateHandleRef = useRef<SVGCircleElement | null>(null);
   const handlesRef = useRef<SVGGElement | null>(null);
@@ -32,21 +33,21 @@ export function TransformRectHandles({
     const cy = canvasSize.height / 2;
     const px = x - cx;
     const py = y - cy;
-    const sin = Math.sin(view.angle);
-    const cos = Math.cos(view.angle);
+    const sin = Math.sin(flippedAngle);
+    const cos = Math.cos(flippedAngle);
     const rx = px * cos - py * sin;
     const ry = px * sin + py * cos;
-    const sx = rx * view.scale;
-    const sy = ry * view.scale;
+    const sx = rx * view.scale * (view.flipX ? -1 : 1);
+    const sy = ry * view.scale * (view.flipY ? -1 : 1);
     return [sx + view.pan[0], sy + view.pan[1]];
   }
   function toCanvas([sx, sy]: [number, number]): [number, number] {
     const cx = canvasSize.width / 2;
     const cy = canvasSize.height / 2;
-    const px = (sx - view.pan[0]) / view.scale;
-    const py = (sy - view.pan[1]) / view.scale;
-    const sin = Math.sin(-view.angle);
-    const cos = Math.cos(-view.angle);
+    const px = ((sx - view.pan[0]) / view.scale) * (view.flipX ? -1 : 1);
+    const py = ((sy - view.pan[1]) / view.scale) * (view.flipY ? -1 : 1);
+    const sin = Math.sin(-flippedAngle);
+    const cos = Math.cos(-flippedAngle);
     const rx = px * cos - py * sin;
     const ry = px * sin + py * cos;
     return [rx + cx, ry + cy];
@@ -87,7 +88,10 @@ export function TransformRectHandles({
       const svgX = e.clientX - bbox.left - bbox.width / 2;
       const svgY = e.clientY - bbox.top - bbox.height / 2;
       const [centerX, centerY] = toScreen([rect.cx, rect.cy]);
-      return Math.atan2(svgY - centerY, svgX - centerX);
+      return (
+        Math.atan2(svgY - centerY, svgX - centerX) *
+        ((+view.flipX + +view.flipY) % 2 ? -1 : 1)
+      );
     }
 
     return addPointerEventsHandler(handle, lockRef, (e) => {

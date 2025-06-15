@@ -41,6 +41,8 @@ export type AppState = {
       angle: number
       scale: number
       pan: [number, number]
+      flipX: boolean
+      flipY: boolean
     }
     colorHistory: string[]
   }
@@ -97,6 +99,8 @@ export const useAppState = create<AppState>()((set, get) => {
         angle: 0,
         scale: 1,
         pan: [0, 0],
+        flipX: false,
+        flipY: false,
       },
       colorHistory: [],
     },
