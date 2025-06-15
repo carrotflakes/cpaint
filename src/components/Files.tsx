@@ -98,9 +98,7 @@ export function Files() {
                 const fileExtension = file.name.toLowerCase().split(".").pop();
 
                 if (fileExtension === "psd") {
-                  const { loadPsdFromFile } = await import(
-                    "../libs/psdImport"
-                  );
+                  const { loadPsdFromFile } = await import("../libs/psdImport");
                   const psdData = await loadPsdFromFile(file);
                   useAppState.getState().openPsdAsNewFile(psdData);
                 } else {
@@ -108,7 +106,7 @@ export function Files() {
                     const img = await loadImageFromFile(file);
                     useAppState.getState().openAsNewFile(img);
                   } catch (e) {
-                    pushToast("" + e);
+                    pushToast("" + e, { type: "error" });
                   }
                 }
                 load();

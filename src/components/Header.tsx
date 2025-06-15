@@ -108,7 +108,9 @@ export function Header() {
           onClick={() => {
             if (document.fullscreenElement) document.exitFullscreen();
             else
-              document.body.requestFullscreen().catch((e) => pushToast("" + e));
+              document.body
+                .requestFullscreen()
+                .catch((e) => pushToast("" + e, { type: "error" }));
           }}
           title="Fullscreen"
         >
@@ -315,7 +317,8 @@ async function exportToPSD() {
     if (res.unsupportedBlendModes.size > 0) {
       const modes = Array.from(res.unsupportedBlendModes).join(", ");
       pushToast(
-        `[exportToPSD] Unsupported blend modes converted to normal: ${modes}`
+        `[exportToPSD] Unsupported blend modes converted to normal: ${modes}`,
+        { type: "warning" }
       );
     }
 
@@ -333,6 +336,6 @@ async function exportToPSD() {
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error("Failed to export PSD:", error);
-    pushToast("Failed to export PSD: " + error);
+    pushToast("Failed to export PSD: " + error, { type: "error" });
   }
 }

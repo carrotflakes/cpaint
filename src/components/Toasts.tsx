@@ -28,15 +28,26 @@ function Toast({ message }: { message: Message }) {
     }
   }, [message.autoHide]);
 
+  const icon = {
+    info: "ℹ️",
+    warning: "⚠️",
+    error: "❌",
+    success: "✨",
+    none: "",
+  }[message.type ?? "none"];
+
   return (
     <div
-      className={`w-64 flex items-center shadow p-2 rounded bg-white pointer-events-auto fade-in-out transition-opacity duration-1000 ${
+      className={`min-w-64 flex items-center shadow p-2 rounded bg-white pointer-events-auto fade-in-out transition-opacity duration-1000 ${
         isFading ? "opacity-0" : "opacity-100"
       }`}
     >
-      <div className="grow select-text">{message.text}</div>
+      <div className="grow">
+        <span>{icon}</span>&nbsp;
+        <span className="select-text">{message.text}</span>
+      </div>
       <div
-        className="shrink-0 w-5 text-black/50 hover:text-black/100 cursor-pointer"
+        className="shrink-0 w-5 text-gray-800/25 hover:text-gray-800/100 cursor-pointer"
         onClick={() => useStore.getState().removeMessage(message.id)}
       >
         <IconClose width={24} height={24} />
@@ -45,27 +56,33 @@ function Toast({ message }: { message: Message }) {
   );
 }
 
+export type MessageType = "info" | "warning" | "error" | "success";
+
 type Message = {
   id: number;
   text: string;
   autoHide: boolean;
+  type: MessageType | null;
 };
 
 export type State = {
   id: number;
   messages: Message[];
-  pushMessage: (message: string, autoHide?: boolean) => void;
+  pushMessage: (
+    message: string,
+    args?: { autoHide?: boolean; type?: MessageType | null }
+  ) => void;
   removeMessage: (id: number) => void;
 };
 
 export const useStore = create<State>()((set, get) => ({
   id: 1,
   messages: [],
-  pushMessage(message, autoHide = false) {
+  pushMessage(message, { autoHide = false, type = null } = {}) {
     const id = get().id;
     set((state) => ({
       id: state.id + 1,
-      messages: [...state.messages, { id, text: message, autoHide }],
+      messages: [...state.messages, { id, text: message, autoHide, type }],
     }));
 
     if (autoHide) {
@@ -81,6 +98,9 @@ export const useStore = create<State>()((set, get) => ({
   },
 }));
 
-export function pushToast(message: string, autoHide?: boolean) {
-  useStore.getState().pushMessage(message, autoHide);
+export function pushToast(
+  message: string,
+  args?: { autoHide?: boolean; type?: MessageType | null }
+) {
+  useStore.getState().pushMessage(message, args);
 }

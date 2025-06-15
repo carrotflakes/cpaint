@@ -21,7 +21,9 @@ export function ImageDropTarget() {
         ) {
           setImportImageFile(file);
         } else {
-          pushToast("Please drop an image file.");
+          pushToast("Please drop an image file.", {
+            type: "info",
+          });
         }
       }
     };

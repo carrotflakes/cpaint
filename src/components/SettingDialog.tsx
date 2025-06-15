@@ -94,7 +94,7 @@ export function SettingDialog() {
             onClick={() => {
               if (confirm("Delete all data?")) {
                 storage.deleteDatabase();
-                pushToast("All data deleted.");
+                pushToast("All data deleted.", { type: "warning" });
               }
             }}
           >
@@ -106,7 +106,16 @@ export function SettingDialog() {
           <button
             className="px-2 py-1 rounded font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
             onClick={() => {
-              pushToast("\uD83C\uDF1F（ゝω・）vｷｬﾋﾟ");
+              const toasts = [
+                { message: "（ゝω・）vｷｬﾋﾟ", type: "success" },
+                { message: "◝(*'▿'*)◜", type: "info" },
+                { message: "ʅ(◔౪◔ ) ʃ", type: "warning" },
+                { message: "(∩´﹏`∩);", type: "error" },
+                { message: "✌('ω'✌ )三✌('ω')✌三( ✌'ω')✌", type: null },
+              ] as const;
+              const { message, type } =
+                toasts[Math.floor(Math.random() * toasts.length)];
+              pushToast(message, { type });
             }}
           >
             Toast test
@@ -114,7 +123,7 @@ export function SettingDialog() {
           <button
             className="px-2 py-1 rounded font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
             onClick={() => {
-              pushToast("(｡╹ω╹｡)", true);
+              pushToast("(｡╹ω╹｡)", { autoHide: true });
             }}
           >
             Toast auto hide

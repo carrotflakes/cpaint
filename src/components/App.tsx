@@ -82,7 +82,9 @@ export default App;
 function useReportUncaughtError() {
   useEffect(() => {
     const onError = (event: ErrorEvent) => {
-      pushToast("Uncaught error occurred: " + event.error.message);
+      pushToast("Uncaught error occurred: " + event.error.message, {
+        type: "error",
+      });
     };
     window.addEventListener("error", onError);
     return () => window.removeEventListener("error", onError);

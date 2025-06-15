@@ -32,10 +32,13 @@ export async function save() {
       s.savedState = s.stateContainer.state;
     });
 
-    pushToast("Image saved successfully", true);
+    pushToast("Saved", {
+      autoHide: true,
+      type: "success",
+    });
   } catch (error) {
     console.error("Failed to save image:", error);
-    pushToast("Failed to save image: " + error);
+    pushToast("Failed to save image: " + error, { type: "error" });
   }
 }
 
