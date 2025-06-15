@@ -16,7 +16,7 @@ import { ReactComponent as IconSparkle } from "../assets/icons/sparkle.svg";
 import { ReactComponent as IconUndo } from "../assets/icons/undo.svg";
 import { usePointer } from "../hooks/usePointer";
 import { StateContainerHasRedo, StateContainerHasUndo } from "../model/state";
-import { applyEffect, AppState, useAppState } from "../store/appState";
+import { appApplyEffect, AppState, useAppState } from "../store/appState";
 import { BrushPreview } from "./BrushPreview";
 import { ColorPalette } from "./ColorPalette";
 import { SelectionControls } from "./SelectionControls";
@@ -34,6 +34,7 @@ export function ToolBar() {
   const [showBrush, setShowBrush] = useState(false);
   const [showSelectionControls, setShowSelectionControls] = useState(false);
   const [showViewControls, setShowViewControls] = useState(false);
+  const [showEffects, setShowEffects] = useState(false);
 
   const controlOpacity = useControl({
     getValue: () => uiState.opacity,
@@ -315,16 +316,31 @@ export function ToolBar() {
         <IconArrowsOutCardinal width={24} height={24} />
       </div>
 
-      <div
-        className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={true}
-        title="Effects"
-        onClick={() => {
-          applyEffect();
-        }}
-      >
-        <IconSparkle width={24} height={24} />
-      </div>
+      <Popover.Root open={showEffects} onOpenChange={setShowEffects}>
+        <Popover.Trigger asChild>
+          <div
+            className="cursor-pointer data-[selected=true]:text-blue-400"
+            data-selected={showEffects}
+            onClick={() => setShowEffects((x) => !x)}
+            title="Effects"
+          >
+            <IconSparkle width={24} height={24} />
+          </div>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            className="max-h-[calc(100dvh-16px)] p-2 bg-gray-50 dark:bg-black shadow z-10 overflow-y-auto"
+            data-scroll={true}
+            side="right"
+            align="start"
+            sideOffset={5}
+            collisionPadding={8}
+            forceMount
+          >
+            <EffectsMenu onEffectSelect={() => setShowEffects(false)} />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
       <hr className="opacity-20" />
 
@@ -652,6 +668,37 @@ function BrushSelector({
           data-selected={brushType === type}
         >
           <BrushPreview brushType={type} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
+  const effects = [
+    { type: "blur", label: "Blur" },
+    { type: "naiveBlur", label: "Blur (Naive)" },
+  ] as const;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {effects.map((effect) => (
+        <button
+          key={effect.type}
+          className="p-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded"
+          onClick={() => {
+            if (effect.type === "blur") {
+              appApplyEffect({ type: "blur", radius: 5 });
+            } else if (effect.type === "naiveBlur") {
+              appApplyEffect({
+                type: "naiveBlur",
+                radius: 5,
+              });
+            }
+            onEffectSelect();
+          }}
+        >
+          {effect.label}
         </button>
       ))}
     </div>

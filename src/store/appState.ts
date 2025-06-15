@@ -1,18 +1,18 @@
 import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
 import { Rect as TransformRect } from '../components/overlays/TransformRectHandles';
-import { blur } from '../libs/imageFx';
 import { MCanvas } from '../libs/MCanvas';
 import { Selection } from '../libs/Selection';
+import { CanvasContext } from '../libs/touch';
 import {
   startTouchBrush,
 } from "../libs/touch/brush";
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
 import { startTouchFill } from '../libs/touch/fill';
 import { BlendMode } from "../model/blendMode";
+import { applyEffect, Effect } from '../model/effect';
 import { Op } from '../model/op';
 import { newLayerId, State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
-import { CanvasContext } from '../libs/touch';
 
 export type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
 export type SelectionOperation = 'new' | 'add' | 'subtract' | 'intersect';
@@ -322,7 +322,7 @@ export function wrapTransferWithClip(
   };
 }
 
-export function applyEffect() {
+export function appApplyEffect(effect: Effect) {
   const store = useAppState.getState();
   const layerOrg =
     store.stateContainer.state.layers[store.uiState.layerIndex];
@@ -331,11 +331,9 @@ export function applyEffect() {
     layerOrg.canvas.height
   );
 
-  const apply = (src: MCanvas, dst: MCanvas) => blur(src, dst, 5);
-
   const selection = store.stateContainer.state.selection;
   if (selection) {
-    apply(layerOrg.canvas, canvas);
+    applyEffect(layerOrg.canvas, canvas, effect);
     const selectionInverted = selection.clone();
     selectionInverted.invert();
     const imageDataOrg = layerOrg.canvas.getContextRead().getImageData(0, 0, canvas.width, canvas.height);
@@ -344,13 +342,14 @@ export function applyEffect() {
     selectionInverted.transferImageData(imageDataOrg, imageData);
     ctx.putImageData(imageData, 0, 0);
   } else {
-    apply(layerOrg.canvas, canvas);
+    applyEffect(layerOrg.canvas, canvas, effect);
   }
 
   const layer = {
     ...layerOrg,
     canvas,
   };
+  // TODO: Do not use patch op.
   const op: Op = {
     type: "patch",
     patches: [
