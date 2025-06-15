@@ -677,7 +677,7 @@ function BrushSelector({
 function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
   const effects = [
     { type: "blur", label: "Blur" },
-    { type: "naiveBlur", label: "Blur (Naive)" },
+    { type: "boxBlur", label: "Box blur" },
     { type: "pixelate", label: "Pixelate" },
   ] as const;
 
@@ -705,9 +705,9 @@ function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
           onClick={() => {
             if (effect.type === "blur") {
               appApplyEffect({ type: "blur", radius: value });
-            } else if (effect.type === "naiveBlur") {
+            } else if (effect.type === "boxBlur") {
               appApplyEffect({
-                type: "naiveBlur",
+                type: "boxBlur",
                 radius: value,
               });
             } else if (effect.type === "pixelate") {

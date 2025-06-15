@@ -326,6 +326,8 @@ export function appApplyEffect(effect: Effect) {
   const store = useAppState.getState();
   const layerOrg =
     store.stateContainer.state.layers[store.uiState.layerIndex];
+  if (!layerOrg)
+    return;
   const canvas = new MCanvas(
     layerOrg.canvas.width,
     layerOrg.canvas.height

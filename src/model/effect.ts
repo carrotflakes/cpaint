@@ -7,7 +7,7 @@ export type Effect =
     radius: number;
   }
   | {
-    type: "naiveBlur";
+    type: "boxBlur";
     radius: number;
   }
   | {
@@ -24,8 +24,8 @@ export function applyEffect(
     case "blur":
       imageFx.blur(canvasSrc, canvasDst, effect.radius);
       break;
-    case "naiveBlur":
-      imageFx.naiveBlur(canvasSrc, canvasDst, effect.radius);
+    case "boxBlur":
+      imageFx.boxBlur(canvasSrc, canvasDst, effect.radius);
       break;
     case "pixelate":
       imageFx.pixelate(canvasSrc, canvasDst, effect.pixelSize);
