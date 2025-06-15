@@ -678,6 +678,7 @@ function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
   const effects = [
     { type: "blur", label: "Blur" },
     { type: "naiveBlur", label: "Blur (Naive)" },
+    { type: "pixelate", label: "Pixelate" },
   ] as const;
 
   return (
@@ -693,6 +694,11 @@ function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
               appApplyEffect({
                 type: "naiveBlur",
                 radius: 5,
+              });
+            } else if (effect.type === "pixelate") {
+              appApplyEffect({
+                type: "pixelate",
+                pixelSize: 4,
               });
             }
             onEffectSelect();
