@@ -681,24 +681,39 @@ function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
     { type: "pixelate", label: "Pixelate" },
   ] as const;
 
+  const [value, setValue] = useState(5);
+
   return (
     <div className="flex flex-col gap-2">
+      <input
+        type="range"
+        min={1}
+        max={20}
+        value={value}
+        onChange={(e) => {
+          const newValue = parseInt(e.target.value, 10);
+          if (!isNaN(newValue)) {
+            setValue(Math.max(1, newValue));
+          }
+        }}
+        placeholder="Value"
+      />
       {effects.map((effect) => (
         <button
           key={effect.type}
           className="p-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded"
           onClick={() => {
             if (effect.type === "blur") {
-              appApplyEffect({ type: "blur", radius: 5 });
+              appApplyEffect({ type: "blur", radius: value });
             } else if (effect.type === "naiveBlur") {
               appApplyEffect({
                 type: "naiveBlur",
-                radius: 5,
+                radius: value,
               });
             } else if (effect.type === "pixelate") {
               appApplyEffect({
                 type: "pixelate",
-                pixelSize: 4,
+                pixelSize: value,
               });
             }
             onEffectSelect();
