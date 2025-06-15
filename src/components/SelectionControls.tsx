@@ -1,4 +1,6 @@
 import { ReactNode } from "react";
+import { ReactComponent as IconLasso } from "../assets/icons/lasso.svg";
+import { ReactComponent as IconMagicWand } from "../assets/icons/magic-wand.svg";
 import { Selection } from "../libs/Selection";
 import {
   patchSelection,
@@ -6,8 +8,6 @@ import {
   SelectionTool,
   useAppState,
 } from "../store/appState";
-import { ReactComponent as IconLasso } from "../assets/icons/lasso.svg";
-import { ReactComponent as IconMagicWand } from "../assets/icons/magic-wand.svg";
 
 const SELECTION_TOOLS: {
   id: SelectionTool;
@@ -134,12 +134,26 @@ export function SelectionControls() {
           >
             Invert
           </button>
+        </div>
+      </div>
+
+      {/* Edit Selection */}
+      <div>
+        <div className="text-xs font-medium mb-1">Edit</div>
+        <div className="flex gap-1">
           <button
             className="px-2 py-1 text-xs rounded border bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            onClick={() => selectTest()}
-            title="Test Selection"
+            onClick={() => fillSelection()}
+            title="Fill Selection"
           >
-            Test
+            Fill
+          </button>
+          <button
+            className="px-2 py-1 text-xs rounded border bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            onClick={() => deleteSelection()}
+            title="Delete Selection"
+          >
+            Delete
           </button>
         </div>
       </div>
@@ -186,37 +200,54 @@ function selectInvert() {
   patchSelection(selection);
 }
 
-function selectTest() {
+function fillSelection() {
   const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
-  const selection = new Selection(firstCanvas.width, firstCanvas.height, false);
-  selection.setPixel(1, 1, true);
-  selection.setPixel(2, 1, true);
-  selection.setPixel(3, 1, true);
-  selection.setPixel(4, 1, true);
-  selection.setPixel(5, 1, true);
-  selection.setPixel(5, 2, true);
-  selection.setPixel(5, 3, true);
-  selection.setPixel(5, 4, true);
-  selection.setPixel(5, 5, true);
-  selection.setPixel(4, 5, true);
-  selection.setPixel(3, 5, true);
-  selection.setPixel(3, 4, true);
-  selection.setPixel(3, 3, true);
-  selection.setPixel(1, 2, true);
-  selection.setPixel(1, 3, true);
-  selection.setPixel(1, 4, true);
-  selection.setPixel(1, 5, true);
-  selection.setPixel(1, 6, true);
-  selection.setPixel(1, 7, true);
-  selection.setPixel(1, 8, true);
-  selection.setPixel(1, 9, true);
-  selection.setPixel(2, 7, true);
-  selection.setPixel(2, 9, true);
-  selection.setPixel(3, 7, true);
-  selection.setPixel(3, 8, true);
-  selection.setPixel(3, 9, true);
-  selection.setPixel(6, 6, true);
-  selection.setPixel(5, 7, true);
-  patchSelection(selection);
+  const selection = store.stateContainer.state.selection;
+
+  const currentLayer =
+    store.stateContainer.state.layers[store.uiState.layerIndex];
+  if (!currentLayer) return;
+
+  const op = {
+    type: "selectionFill",
+    fillColor: store.uiState.color,
+    opacity: store.uiState.opacity,
+    layerIndex: store.uiState.layerIndex,
+  } as const;
+
+  const transfer = (ctx: OffscreenCanvasRenderingContext2D) => {
+    ctx.save();
+    selection?.setCanvasClip(ctx);
+    ctx.fillStyle = store.uiState.color;
+    ctx.globalAlpha = store.uiState.opacity;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.restore();
+  };
+
+  store.apply(op, transfer);
+}
+
+function deleteSelection() {
+  const store = useAppState.getState();
+  const selection = store.stateContainer.state.selection;
+
+  if (!selection) return;
+
+  const currentLayer =
+    store.stateContainer.state.layers[store.uiState.layerIndex];
+  if (!currentLayer) return;
+
+  const op = {
+    type: "selectionDelete",
+    layerIndex: store.uiState.layerIndex,
+  } as const;
+
+  const transfer = (ctx: OffscreenCanvasRenderingContext2D) => {
+    ctx.save();
+    selection?.setCanvasClip(ctx);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.restore();
+  };
+
+  store.apply(op, transfer);
 }

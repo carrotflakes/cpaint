@@ -90,7 +90,7 @@ export function StateContainerDo(
   layerMod: LayerMod | null,
 ): StateContainer {
   const opts = OpTsNew(op);
-  if ((op.type === "stroke" || op.type === "fill" || op.type === "bucketFill" || op.type === "layerTransform") && layerMod) {
+  if ((op.type === "stroke" || op.type === "fill" || op.type === "bucketFill" || op.type === "layerTransform" || op.type === "selectionFill" || op.type === "selectionDelete") && layerMod) {
     const layer = sc.state.layers.find(l => l.id === layerMod.layerId);
     if (!layer) {
       throw new Error(`Layer ${layerMod.layerId} not found`);

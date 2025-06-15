@@ -2,11 +2,11 @@ import { produce } from "immer";
 import { Rect as TransformRect } from "../components/overlays/TransformRectHandles";
 import { applyPatches } from "../libs/applyPatches";
 import { canvasToImageDiff } from "../libs/imageDiff";
+import { MCanvas } from "../libs/MCanvas";
 import { Patch } from "../libs/patch";
 import { startTouchBrush } from "../libs/touch/brush";
 import { startTouchFill } from "../libs/touch/fill";
 import type { State, StateDiff } from "./state";
-import { MCanvas } from "../libs/MCanvas";
 
 export type Op = {
   type: "stroke";
@@ -39,6 +39,14 @@ export type Op = {
   type: "layerTransform";
   layerIndex: number;
   rect: TransformRect;
+} | {
+  type: "selectionFill";
+  fillColor: string;
+  opacity: number;
+  layerIndex: number;
+} | {
+  type: "selectionDelete";
+  layerIndex: number;
 } | {
   type: "patch";
   patches: Patch[];
@@ -110,6 +118,9 @@ export function applyOp(
     return { state: newState, diff };
   }
   if (op.type === "bucketFill") {
+    // TODO
+  }
+  if (op.type === "selectionFill") {
     // TODO
   }
   if (op.type === "layerTransform") {
