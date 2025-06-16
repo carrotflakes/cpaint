@@ -3,8 +3,10 @@ import { JSX, useEffect, useRef, useState } from "react";
 import { computePos } from "../components/CanvasArea";
 import { CursorIndicator } from "../components/overlays/CursorIndicator";
 import { EyeDropper } from "../components/overlays/EyeDropper";
+import { EyeDropperLens } from "../components/overlays/EyeDropperLens";
 import { LassoPath } from "../components/overlays/LassoPath";
 import { SelectionRect } from "../components/overlays/SelectionRect";
+import { isSafari } from "../libs/browser";
 import { dist, Pos } from "../libs/geometry";
 import { applyPressureCurve } from "../libs/pressureCurve";
 import { Selection } from "../libs/Selection";
@@ -189,8 +191,11 @@ function startEyeDropper(
         draft.uiState.color = color;
       });
     } else {
+      const EyeDropperComponent = isSafari() ? EyeDropper : EyeDropperLens;
       setRet({
-        overlay: <EyeDropper color={color} pos={pos} />,
+        overlay: (
+          <EyeDropperComponent color={color} pos={pos} canvas={canvas} />
+        ),
       });
     }
   };
