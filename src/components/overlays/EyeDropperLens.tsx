@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useAppState } from "../../store/appState";
+import { createCheckCanvas } from "../../libs/check";
 
 const offsetY = -80;
 const lensSize = 100;
@@ -23,8 +24,8 @@ export function EyeDropperLens({
   const screenPos = useMemo(() => {
     const cx = canvasSize.width / 2;
     const cy = canvasSize.height / 2;
-    const px = pos[0] - cx;
-    const py = pos[1] - cy;
+    const px = (pos[0] - cx) * (view.flipX ? -1 : 1);
+    const py = (pos[1] - cy) * (view.flipY ? -1 : 1);
     const sin = Math.sin(view.angle);
     const cos = Math.cos(view.angle);
     const rx = px * cos - py * sin;
@@ -37,6 +38,11 @@ export function EyeDropperLens({
   const dpr = window.devicePixelRatio ?? 1;
   const canvasRef = useRef<HTMLCanvasElement>(null!);
 
+  const checkCanvas = useMemo(
+    () => createCheckCanvas(((lensSize * dpr) / kernelSize) | 0),
+    []
+  );
+
   useEffect(() => {
     const { width, height } = canvasRef.current;
     const ctx = canvasRef.current.getContext("2d")!;
@@ -47,7 +53,7 @@ export function EyeDropperLens({
     ctx.arc(width / 2, height / 2, width / 2, 0, Math.PI * 2);
     ctx.clip();
 
-    ctx.fillStyle = "#f3f4f6";
+    ctx.fillStyle = ctx.createPattern(checkCanvas, "repeat")!;
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(
       canvas,
@@ -79,6 +85,12 @@ export function EyeDropperLens({
           className="w-full h-full"
           width={(lensSize * dpr) | 0}
           height={(lensSize * dpr) | 0}
+          style={{
+            transform:
+              `rotate(${view.angle}rad) ` +
+              (view.flipX ? "scaleX(-1) " : "") +
+              (view.flipY ? "scaleY(-1) " : ""),
+          }}
         />
       </foreignObject>
       <rect
@@ -86,6 +98,7 @@ export function EyeDropperLens({
         y={-lensSize / kernelSize / 2}
         width={lensSize / kernelSize}
         height={lensSize / kernelSize}
+        transform={`rotate(${(view.angle / (2 * Math.PI)) * 360})`}
         stroke="red"
         strokeWidth={0.5}
         fill="none"
