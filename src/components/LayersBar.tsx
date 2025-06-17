@@ -1,5 +1,5 @@
 import * as Popover from "@radix-ui/react-popover";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { ReactComponent as IconDotsV } from "../assets/icons/dots-six-vertical.svg";
 import { ReactComponent as IconEyeSlash } from "../assets/icons/eye-slash.svg";
 import { ReactComponent as IconEye } from "../assets/icons/eye.svg";
@@ -9,6 +9,7 @@ import { MCanvas } from "../libs/MCanvas";
 import { BlendMode } from "../model/blendMode";
 import { newLayerId, State } from "../model/state";
 import { AppState, useAppState } from "../store/appState";
+import { SliderH } from "./slider";
 
 export function LayersBar() {
   const store = useAppState();
@@ -425,16 +426,10 @@ function ContextMenuPopover({
         </select>
       </div>
       <div className="p-2 hover:bg-gray-100">
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
+        <SliderH
+          className="h-5"
           value={store.stateContainer.state.layers[layerIndex].opacity}
-          onChange={(e) =>
-            updateOpacity(layerIndex, parseFloat(e.target.value))
-          }
-          className="w-full"
+          onChange={(value) => updateOpacity(layerIndex, value)}
         />
       </div>
 

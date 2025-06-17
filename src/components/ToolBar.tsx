@@ -21,6 +21,7 @@ import { BrushPreview } from "./BrushPreview";
 import { ColorPalette } from "./ColorPalette";
 import { SelectionControls } from "./SelectionControls";
 import { ViewControls } from "./ViewControls";
+import { SliderH } from "./slider";
 
 const penWidthExp = 2;
 const penWidthMax = 1000;
@@ -685,18 +686,12 @@ function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <input
-        type="range"
-        min={1}
-        max={20}
-        value={value}
-        onChange={(e) => {
-          const newValue = parseInt(e.target.value, 10);
-          if (!isNaN(newValue)) {
-            setValue(Math.max(1, newValue));
-          }
+      <SliderH
+        className="w-32 h-5"
+        value={value / 20}
+        onChange={(newValue) => {
+          setValue(Math.max(1, Math.round(newValue * 20)));
         }}
-        placeholder="Value"
       />
       {effects.map((effect) => (
         <button
