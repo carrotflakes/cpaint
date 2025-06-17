@@ -22,9 +22,7 @@ export function PenPressureDialog() {
   if (!curve) return null;
 
   return (
-    <ModalDialog
-      onClickOutside={() => usePenPressureDialog.setState({ curve: null })}
-    >
+    <ModalDialog>
       <div className="flex flex-col gap-4">
         <div className="text-lg">Pen Pressure</div>
         <hr className="opacity-20" />
