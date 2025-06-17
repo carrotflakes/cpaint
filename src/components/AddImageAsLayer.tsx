@@ -123,6 +123,7 @@ function renderImage(
   ctx.rotate(rect.angle);
   ctx.scale((rect.hw * 2) / image.width, (rect.hh * 2) / image.height);
   ctx.translate(-image.width / 2, -image.height / 2);
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(image.getCanvas(), 0, 0);
   ctx.restore();
 }

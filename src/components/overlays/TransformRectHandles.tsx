@@ -427,6 +427,7 @@ export function makeApply(
     ctx.rotate(rect.angle);
     ctx.scale((rect.hw * 2) / canvas.width, (rect.hh * 2) / canvas.height);
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    ctx.imageSmoothingQuality = "high";
     ctx.drawImage(canvas.getCanvas(), 0, 0, canvas.width, canvas.height);
     ctx.restore();
   };

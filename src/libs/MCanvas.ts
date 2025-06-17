@@ -125,6 +125,7 @@ function createThumbnail(canvas: MCanvas, width = 64, height = 64) {
     const thumbnailCanvas = new OffscreenCanvas(Math.ceil(bbox.width * scale), Math.ceil(bbox.height * scale));
     const thumbnailCtx = thumbnailCanvas.getContext('2d', { willReadFrequently: true })!;
 
+    thumbnailCtx.imageSmoothingQuality = 'high';
     thumbnailCtx.drawImage(
       canvas.getCanvas(),
       bbox.x,
