@@ -110,7 +110,7 @@ export function LayersBar() {
             .map((layer, i) => (
               <div
                 key={layer.id}
-                className={`relative p-1 flex items-center gap-2 cursor-grab ${
+                className={`relative p-1 flex items-center gap-2 ${
                   dragOverIndex === i && draggedIndex !== null
                     ? "bg-blue-100 dark:bg-blue-900"
                     : i === store.uiState.layerIndex
@@ -163,6 +163,7 @@ export function LayersBar() {
                 data-layer-index={i}
               >
                 <div
+                  className="cursor-grab"
                   draggable
                   onDragStart={() => {
                     setDraggedIndex(i);
