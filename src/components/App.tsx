@@ -3,6 +3,7 @@ import { useBeforeUnload } from "../hooks/useBeforeUnload";
 import { useDisableScroll } from "../hooks/useDisableScroll";
 import { usePointerClick } from "../hooks/usePointerClick";
 import { useAppState } from "../store/appState";
+import { useGlobalSettings } from "../store/globalSetting";
 import AddImageAsLayer from "./AddImageAsLayer";
 import CanvasResize from "./CanvasResize";
 import { Files } from "./Files";
@@ -10,6 +11,7 @@ import { Header } from "./Header";
 import { ImageDropTarget } from "./ImageDropTarget";
 import { LayersBar } from "./LayersBar";
 import MainCanvasArea from "./MainCanvasArea";
+import { OpHistory } from "./OpHistory";
 import { PenPressureDialog } from "./PenPressureDialog";
 import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
@@ -25,6 +27,7 @@ function App() {
 
   const imageMeta = useAppState((s) => s.imageMeta);
   const mode = useAppState((s) => s.mode);
+  const showOpHistory = useGlobalSettings((s) => s.showOpHistory);
 
   return (
     <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden text-gray-800 dark:text-gray-100 relative">
@@ -55,6 +58,7 @@ function App() {
             </div>
             <div className="absolute top-0 right-0 bottom-0 pointer-events-none [&>*]:pointer-events-auto">
               <LayersBar />
+              {showOpHistory && <OpHistory />}
             </div>
           </div>
         ))}

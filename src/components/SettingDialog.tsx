@@ -89,6 +89,21 @@ export function SettingDialog() {
         <hr className="opacity-20" />
 
         <div className="flex gap-2">
+          <input
+            type="checkbox"
+            name="showOpHistory"
+            checked={globalSettings.showOpHistory}
+            onChange={(e) =>
+              useGlobalSettings.setState({
+                showOpHistory: e.target.checked,
+              })
+            }
+            className="w-6 h-6"
+          />
+          <label htmlFor="showOpHistory">Show operation history view</label>
+        </div>
+
+        <div className="flex gap-2">
           <button
             className="px-2 py-1 rounded font-semibold bg-red-700 text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 transition-colors cursor-pointer"
             onClick={() => {
