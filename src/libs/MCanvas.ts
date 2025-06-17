@@ -6,6 +6,7 @@ export class MCanvas {
   private canvas: OffscreenCanvas;
   private _bbox: { x: number; y: number; width: number; height: number } | null = null;
   private _bboxDirty = true;
+  private _thumbnail: ImageBitmap | null = null;
 
   constructor(width: number, height: number);
   constructor(canvas: OffscreenCanvas);
@@ -38,7 +39,7 @@ export class MCanvas {
     if (!ctx) {
       throw new Error('Failed to get 2D context from OffscreenCanvas');
     }
-    this.markBboxDirty();
+    this.markDirty();
     return ctx;
   }
 
@@ -55,8 +56,9 @@ export class MCanvas {
     return this._bbox ? { ...this._bbox } : null;
   }
 
-  markBboxDirty(): void {
+  markDirty(): void {
     this._bboxDirty = true;
+    this._thumbnail = null;
   }
 
   private calculateBbox(): { x: number; y: number; width: number; height: number } | null {
@@ -97,10 +99,47 @@ export class MCanvas {
     return this.canvas;
   }
 
-  clear(): void {
+  clear() {
     const ctx = this.getContextRead();
     ctx.clearRect(0, 0, this.width, this.height);
-    this._bbox = null;
     this._bboxDirty = false;
+    this._bbox = null;
+    this._thumbnail = null;
+  }
+
+  getThumbnail(): ImageBitmap {
+    if (!this._thumbnail)
+      this._thumbnail = createThumbnail(this);
+    return this._thumbnail;
+  }
+}
+
+function createThumbnail(canvas: MCanvas, width = 64, height = 64) {
+  const bbox = canvas.getBbox();
+  if (bbox) {
+    const scale = Math.min(
+      width / bbox.width,
+      height / bbox.height
+    );
+
+    const thumbnailCanvas = new OffscreenCanvas(Math.ceil(bbox.width * scale), Math.ceil(bbox.height * scale));
+    const thumbnailCtx = thumbnailCanvas.getContext('2d', { willReadFrequently: true })!;
+
+    thumbnailCtx.drawImage(
+      canvas.getCanvas(),
+      bbox.x,
+      bbox.y,
+      bbox.width,
+      bbox.height,
+      0,
+      0,
+      bbox.width * scale,
+      bbox.height * scale,
+    );
+    return thumbnailCanvas.transferToImageBitmap();
+  } else {
+    const thumbnailCanvas = new OffscreenCanvas(1, 1);
+    thumbnailCanvas.getContext('2d', { willReadFrequently: true })!;
+    return thumbnailCanvas.transferToImageBitmap();
   }
 }

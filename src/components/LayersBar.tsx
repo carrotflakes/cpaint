@@ -188,13 +188,14 @@ export function LayersBar() {
                   )}
                 </button>
                 <div
-                  className="grow cursor-pointer"
+                  className="grow flex items-center gap-2 cursor-pointer"
                   onClick={() => {
                     store.update((draft) => {
                       draft.uiState.layerIndex = i;
                     });
                   }}
                 >
+                  <CanvasPreview canvas={layer.canvas} />
                   {layer.id}
                 </div>
                 <Popover.Root
@@ -463,6 +464,26 @@ function ContextMenuPopover({
       >
         Delete Layer
       </div>
+    </div>
+  );
+}
+
+function CanvasPreview({ canvas }: { canvas: MCanvas }) {
+  const thumbnail = canvas.getThumbnail();
+
+  return (
+    <div className="w-8 h-8 grid place-items-center overflow-hidden">
+      <canvas
+        className="max-w-8 max-h-8"
+        ref={(ref) => {
+          if (!ref) return;
+          const ctx = ref.getContext("2d")!;
+          ctx.clearRect(0, 0, ref.width, ref.height);
+          ctx.drawImage(thumbnail, 0, 0);
+        }}
+        width={thumbnail.width}
+        height={thumbnail.height}
+      />
     </div>
   );
 }
