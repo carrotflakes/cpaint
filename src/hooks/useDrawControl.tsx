@@ -164,7 +164,7 @@ function startDrawing(
   };
 
   listenPointer(
-    e.pointerId,
+    e,
     lockRef,
     drawOrPanningRef,
     setRet,
@@ -214,7 +214,7 @@ function startEyeDropper(
   };
 
   listenPointer(
-    e.pointerId,
+    e,
     lockRef,
     drawOrPanningRef,
     setRet,
@@ -284,7 +284,7 @@ function startSelection(
     };
 
     listenPointer(
-      e.pointerId,
+      e,
       lockRef,
       drawOrPanningRef,
       setRet,
@@ -319,7 +319,7 @@ function startSelection(
   };
 
   listenPointer(
-    e.pointerId,
+    e,
     lockRef,
     drawOrPanningRef,
     setRet,
@@ -329,13 +329,15 @@ function startSelection(
 }
 
 function listenPointer(
-  pointerId: number,
+  e: PointerEvent,
   lockRef: React.RefObject<boolean>,
   drawOrPanningRef: { current: "draw" | "panning" | null },
   setRet: (ret: { layerMod?: LayerMod; overlay?: JSX.Element }) => void,
   onPointerMove: (e: PointerEvent) => void,
   onPointerUp: (e: PointerEvent) => void
 ) {
+  const pointerId = e.pointerId;
+  const pos: Pos = [e.clientX, e.clientY];
   lockRef.current = true;
 
   const cleanup = () => {
@@ -354,7 +356,12 @@ function listenPointer(
       cleanup();
       return;
     }
-    if (drawOrPanningRef) drawOrPanningRef.current = "draw";
+    if (
+      drawOrPanningRef?.current === null &&
+      dist(pos, [e.clientX, e.clientY]) > 3
+    ) {
+      drawOrPanningRef.current = "draw";
+    }
 
     onPointerMove(e);
   };
