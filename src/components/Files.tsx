@@ -6,8 +6,11 @@ import { loadImageFromFile } from "../libs/loadImageFile";
 import { MCanvas } from "../libs/MCanvas";
 import { Storage } from "../libs/Storage";
 import { BlendMode } from "../model/blendMode";
-import { StateContainerFromState } from "../model/state";
-import { useAppState } from "../store/appState";
+import {
+  StateFromImage,
+  StateNew
+} from "../model/state";
+import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
 
@@ -38,7 +41,9 @@ export function Files() {
   const newFile = useCallback(
     (size: [number, number], whiteBackground: boolean = true) => {
       executeWithGuard(() => {
-        useAppState.getState().new(size, whiteBackground);
+        useAppState
+          .getState()
+          .open(ImageMetaNew(), StateNew(size[0], size[1], whiteBackground));
       }, "Creating a new file will discard your current unsaved changes.");
     },
     [executeWithGuard]
@@ -100,11 +105,16 @@ export function Files() {
                 if (fileExtension === "psd") {
                   const { loadPsdFromFile } = await import("../libs/psdImport");
                   const psdData = await loadPsdFromFile(file);
-                  useAppState.getState().openPsdAsNewFile(psdData);
+                  useAppState.getState().open(ImageMetaNew(file.name), {
+                    layers: psdData.layers,
+                    selection: null,
+                  });
                 } else {
                   try {
                     const img = await loadImageFromFile(file);
-                    useAppState.getState().openAsNewFile(img);
+                    useAppState
+                      .getState()
+                      .open(ImageMetaNew(file.name), StateFromImage(img));
                   } catch (e) {
                     pushToast("" + e, { type: "error" });
                   }
@@ -361,14 +371,7 @@ async function loadImage(storage: Storage, id: number) {
     layers,
     selection: null,
   };
-  useAppState.setState(() => {
-    const stateContainer = StateContainerFromState(state);
-    return {
-      imageMeta,
-      stateContainer,
-      savedState: stateContainer.state,
-    };
-  });
+  useAppState.getState().open(imageMeta, state);
 }
 
 function blobToImage(blob: Blob) {

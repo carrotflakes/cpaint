@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import { loadImageFromFile } from "../libs/loadImageFile";
-import { useAppState } from "../store/appState";
+import { StateFromImage } from "../model/state";
+import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
-import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 
 export function ImageDropTarget() {
   const [importImageFile, setImportImageFile] = useState<File | null>(null);
@@ -112,10 +113,19 @@ function ImportImage({ onClose, file }: { onClose: () => void; file: File }) {
                 if (isPsd) {
                   const { loadPsdFromFile } = await import("../libs/psdImport");
                   const psdData = await loadPsdFromFile(file);
-                  store.openPsdAsNewFile(psdData);
+                  useAppState.getState().open(ImageMetaNew(file.name), {
+                    layers: psdData.layers,
+                    selection: null,
+                  });
                 } else {
-                  const img = await loadImageFromFile(file);
-                  store.openAsNewFile(img);
+                  try {
+                    const img = await loadImageFromFile(file);
+                    useAppState
+                      .getState()
+                      .open(ImageMetaNew(file.name), StateFromImage(img));
+                  } catch (e) {
+                    pushToast("" + e, { type: "error" });
+                  }
                 }
               });
               onClose();

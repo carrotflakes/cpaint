@@ -9,10 +9,9 @@ import {
 } from "../libs/touch/brush";
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
 import { startTouchFill } from '../libs/touch/fill';
-import { BlendMode } from "../model/blendMode";
 import { applyEffect, Effect } from '../model/effect';
 import { Op } from '../model/op';
-import { newLayerId, State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerNew, StateContainerRedo, StateContainerUndo } from '../model/state';
+import { State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerRedo, StateContainerUndo, StateNew } from '../model/state';
 
 export type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
 export type SelectionOperation = 'new' | 'add' | 'subtract' | 'intersect';
@@ -67,12 +66,10 @@ export type AppState = {
 
   canvasSize: () => { width: number; height: number }
   apply: (op: Op, transfer: ((ctx: OffscreenCanvasRenderingContext2D) => void) | null) => void
-  new: (size: [number, number], addWhiteBackground?: boolean) => void
+  open: (imageMeta: { id: number; name: string; createdAt: number }, state: State) => void
   undo: () => void
   redo: () => void
   update: (update: (draft: WritableDraft<AppState>) => void) => void
-  openAsNewFile: (image: HTMLImageElement) => void
-  openPsdAsNewFile: (psdData: { width: number; height: number; layers: State['layers'] }) => void
   importAsLayer: (image: HTMLImageElement) => void
   addColorToHistory: (color: string) => void
   hasUnsavedChanges: () => boolean
@@ -107,7 +104,7 @@ export const useAppState = create<AppState>()((set, get) => {
     mode: {
       type: "draw",
     },
-    stateContainer: StateContainerNew(400, 400, false),
+    stateContainer: StateContainerFromState(StateNew(400, 400, false)),
     savedState: null,
 
     canvasSize() {
@@ -121,62 +118,23 @@ export const useAppState = create<AppState>()((set, get) => {
         } : null),
       }))
     },
-    new(size: [number, number], addWhiteBackground: boolean = false) {
-      const stateContainer = StateContainerNew(size[0], size[1], addWhiteBackground);
-      set((s) => ({
-        imageMeta: {
-          id: Date.now(),
-          name: new Date().toISOString().split(".")[0].replace(/:/g, "-"),
-          createdAt: Date.now(),
-        },
+    open(imageMeta, state) {
+      const stateContainer = StateContainerFromState(state);
+      set(() => ({
+        imageMeta,
+        stateContainer,
+        savedState: stateContainer.state,
         uiState: {
-          ...s.uiState,
+          ...get().uiState,
           layerIndex: stateContainer.state.layers.length - 1,
-        },
-        stateContainer,
-        savedState: stateContainer.state,
-      }))
-    },
-    openAsNewFile(image: HTMLImageElement) {
-      const { width, height } = image;
-      const canvas = new MCanvas(width, height);
-      const ctx = canvas.getContextWrite();
-      ctx.drawImage(image, 0, 0);
-      const stateContainer = StateContainerFromState({
-        layers: [
-          {
-            id: newLayerId(),
-            canvas,
-            visible: true,
-            opacity: 1,
-            blendMode: "source-over" as BlendMode,
+          canvasView: {
+            angle: 0,
+            scale: 1,
+            pan: [0, 0],
+            flipX: false,
+            flipY: false,
           },
-        ],
-        selection: null,
-      });
-      set(() => ({
-        imageMeta: {
-          id: Date.now(),
-          name: "Imported Image",
-          createdAt: Date.now(),
         },
-        stateContainer,
-        savedState: stateContainer.state,
-      }));
-    },
-    openPsdAsNewFile(psdData: { width: number; height: number; layers: State['layers'] }) {
-      const stateContainer = StateContainerFromState({
-        layers: psdData.layers,
-        selection: null,
-      });
-      set(() => ({
-        imageMeta: {
-          id: Date.now(),
-          name: "Imported Image",
-          createdAt: Date.now(),
-        },
-        stateContainer,
-        savedState: stateContainer.state,
       }));
     },
     importAsLayer(image: HTMLImageElement) {
@@ -233,6 +191,14 @@ export const useAppState = create<AppState>()((set, get) => {
     },
   })
 });
+
+export function ImageMetaNew(name?: string) {
+  return {
+    id: Date.now(),
+    name: name ?? new Date().toISOString().split(".")[0].replace(/:/g, "-"),
+    createdAt: Date.now(),
+  };
+}
 
 export function createOp(store: AppState): Op | null {
   switch (store.uiState.tool) {

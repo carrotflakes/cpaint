@@ -35,11 +35,11 @@ export type StateDiff = {
   patches: Patch[];
 };
 
-export function StateContainerNew(
+export function StateNew(
   width: number,
   height: number,
   addWhiteBackground: boolean,
-): StateContainer {
+): State {
   const layers = [
     {
       id: newLayerId(),
@@ -65,12 +65,27 @@ export function StateContainerNew(
   }
 
   return {
-    state: {
-      layers,
-      selection: null,
-    },
-    backward: [],
-    forward: [],
+    layers,
+    selection: null,
+  };
+}
+
+export function StateFromImage(image: HTMLImageElement) {
+  const { width, height } = image;
+  const canvas = new MCanvas(width, height);
+  const ctx = canvas.getContextWrite();
+  ctx.drawImage(image, 0, 0);
+  return {
+    layers: [
+      {
+        id: newLayerId(),
+        canvas,
+        visible: true,
+        opacity: 1,
+        blendMode: "source-over" as BlendMode,
+      },
+    ],
+    selection: null,
   };
 }
 
