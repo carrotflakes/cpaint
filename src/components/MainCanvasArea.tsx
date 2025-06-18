@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useDrawControl } from "../hooks/useDrawControl";
 import { useViewControl } from "../hooks/useViewControl";
+import { useGestureControl } from "../hooks/useGestureControl";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import { save } from "../store/save";
@@ -21,6 +22,7 @@ export default function MainCanvasArea() {
   );
   useViewControl(containerRef, drawOrPanningRef);
   useKeyboardShortcuts();
+  useGestureControl(containerRef);
 
   useEffect(() => {
     const canvas = canvasRef.current!;
