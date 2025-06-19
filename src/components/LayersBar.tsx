@@ -5,7 +5,6 @@ import { ReactComponent as IconEyeSlash } from "../assets/icons/eye-slash.svg";
 import { ReactComponent as IconEye } from "../assets/icons/eye.svg";
 import { ReactComponent as IconLayers } from "../assets/icons/layers.svg";
 import { ReactComponent as IconLock } from "../assets/icons/lock.svg";
-import { ReactComponent as IconLockOpen } from "../assets/icons/lock-open.svg";
 import { ReactComponent as IconMenu } from "../assets/icons/menu.svg";
 import { MCanvas } from "../libs/MCanvas";
 import { BlendMode } from "../model/blendMode";
@@ -64,26 +63,6 @@ export function LayersBar() {
               path: `/layers/${index}/visible`,
               value:
                 !layer.visible satisfies State["layers"][number]["visible"],
-            },
-          ],
-        },
-        null
-      );
-    },
-    [store.apply, layers]
-  );
-
-  const toggleLock = useCallback(
-    (index: number) => {
-      const layer = layers[index];
-      store.apply(
-        {
-          type: "patch",
-          patches: [
-            {
-              op: "replace",
-              path: `/layers/${index}/locked`,
-              value: !layer.locked satisfies State["layers"][number]["locked"],
             },
           ],
         },
@@ -207,18 +186,6 @@ export function LayersBar() {
                     <IconEyeSlash width={24} height={24} />
                   )}
                 </button>
-                <button
-                  className="w-8 h-8 cursor-pointer"
-                  onClick={() => toggleLock(i)}
-                  tabIndex={-1}
-                  title={layer.locked ? "Unlock layer" : "Lock layer"}
-                >
-                  {layer.locked ? (
-                    <IconLock width={24} height={24} />
-                  ) : (
-                    <IconLockOpen width={24} height={24} />
-                  )}
-                </button>
                 <div
                   className="grow flex items-center gap-2 cursor-pointer"
                   onClick={() => {
@@ -227,7 +194,7 @@ export function LayersBar() {
                     });
                   }}
                 >
-                  <CanvasPreview canvas={layer.canvas} />
+                  <CanvasPreview canvas={layer.canvas} locked={layer.locked} />
                   {layer.id}
                 </div>
                 <Popover.Root
@@ -530,7 +497,13 @@ function ContextMenuPopover({
   );
 }
 
-function CanvasPreview({ canvas }: { canvas: MCanvas }) {
+function CanvasPreview({
+  canvas,
+  locked,
+}: {
+  canvas: MCanvas;
+  locked: boolean;
+}) {
   const thumbnail = canvas.getThumbnail();
 
   return (
@@ -541,11 +514,15 @@ function CanvasPreview({ canvas }: { canvas: MCanvas }) {
           if (!ref) return;
           const ctx = ref.getContext("2d")!;
           ctx.clearRect(0, 0, ref.width, ref.height);
+          if (locked) ctx.globalAlpha = 0.75;
           ctx.drawImage(thumbnail, 0, 0);
         }}
         width={thumbnail.width}
         height={thumbnail.height}
       />
+      {locked && (
+        <IconLock width={16} height={16} className="absolute m-auto" />
+      )}
     </div>
   );
 }
