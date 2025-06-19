@@ -1,6 +1,7 @@
 import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
 import { Rect as TransformRect } from '../components/overlays/TransformRectHandles';
+import { pushToast } from '../components/Toasts';
 import { MCanvas } from '../libs/MCanvas';
 import { Selection } from '../libs/Selection';
 import { CanvasContext } from '../libs/touch';
@@ -111,6 +112,18 @@ export const useAppState = create<AppState>()((set, get) => {
       return this.stateContainer.state.layers[0].canvas;
     },
     apply(op, transfer) {
+      // Check if the operation affects a locked layer
+      if ('layerIndex' in op && typeof op.layerIndex === 'number') {
+        const layer = get().stateContainer.state.layers[op.layerIndex];
+        if (layer?.locked) {
+          // Don't apply operations to locked layers
+          pushToast("Cannot apply operation to a locked layer!", {
+            type: "error",
+          });
+          return;
+        }
+      }
+
       set(state => ({
         stateContainer: StateContainerDo(state.stateContainer, op, transfer && op.type !== "patch" ? {
           layerId: state.stateContainer.state.layers[op.layerIndex].id,
@@ -200,7 +213,17 @@ export function ImageMetaNew(name?: string) {
   };
 }
 
+export function isLayerLocked(store: AppState, layerIndex: number = store.uiState.layerIndex): boolean {
+  const layer = store.stateContainer.state.layers[layerIndex];
+  return layer?.locked ?? false;
+}
+
 export function createOp(store: AppState): Op | null {
+  // Check if the current layer is locked
+  if (isLayerLocked(store)) {
+    return null;
+  }
+
   switch (store.uiState.tool) {
     case "fill":
       return {
@@ -241,6 +264,11 @@ export function createOp(store: AppState): Op | null {
 }
 
 export function createTouch(store: AppState) {
+  // Check if the current layer is locked
+  if (isLayerLocked(store)) {
+    return null;
+  }
+
   const canvas = store.stateContainer.state.layers[store.uiState.layerIndex].canvas;
   const canvasSize: [number, number] = [canvas.width, canvas.height];
 
@@ -294,6 +322,11 @@ export function appApplyEffect(effect: Effect) {
     store.stateContainer.state.layers[store.uiState.layerIndex];
   if (!layerOrg)
     return;
+
+  // Check if the layer is locked
+  if (layerOrg.locked) {
+    return;
+  }
   const canvas = new MCanvas(
     layerOrg.canvas.width,
     layerOrg.canvas.height

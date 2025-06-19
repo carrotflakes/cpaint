@@ -14,6 +14,7 @@ export type State = Readonly<{
     visible: boolean;
     opacity: number;
     blendMode: BlendMode;
+    locked: boolean;
   }[];
   selection: Selection | null;
 }>
@@ -35,6 +36,13 @@ export type StateDiff = {
   patches: Patch[];
 };
 
+export const DEFAULT_LAYER_PROPS = {
+  visible: true,
+  opacity: 1,
+  blendMode: "source-over" as BlendMode,
+  locked: false,
+}
+
 export function StateNew(
   width: number,
   height: number,
@@ -42,11 +50,9 @@ export function StateNew(
 ): State {
   const layers = [
     {
+      ...DEFAULT_LAYER_PROPS,
       id: newLayerId(),
       canvas: new MCanvas(width, height),
-      visible: true,
-      opacity: 1,
-      blendMode: "source-over" as BlendMode,
     },
   ];
 
@@ -56,11 +62,9 @@ export function StateNew(
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, width, height);
     layers.unshift({
+      ...DEFAULT_LAYER_PROPS,
       id: "bg",
       canvas,
-      visible: true,
-      opacity: 1,
-      blendMode: "source-over" as BlendMode,
     });
   }
 
@@ -78,11 +82,9 @@ export function StateFromImage(image: HTMLImageElement) {
   return {
     layers: [
       {
+        ...DEFAULT_LAYER_PROPS,
         id: newLayerId(),
         canvas,
-        visible: true,
-        opacity: 1,
-        blendMode: "source-over" as BlendMode,
       },
     ],
     selection: null,

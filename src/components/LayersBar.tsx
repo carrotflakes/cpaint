@@ -4,10 +4,12 @@ import { ReactComponent as IconDotsV } from "../assets/icons/dots-six-vertical.s
 import { ReactComponent as IconEyeSlash } from "../assets/icons/eye-slash.svg";
 import { ReactComponent as IconEye } from "../assets/icons/eye.svg";
 import { ReactComponent as IconLayers } from "../assets/icons/layers.svg";
+import { ReactComponent as IconLock } from "../assets/icons/lock.svg";
+import { ReactComponent as IconLockOpen } from "../assets/icons/lock-open.svg";
 import { ReactComponent as IconMenu } from "../assets/icons/menu.svg";
 import { MCanvas } from "../libs/MCanvas";
 import { BlendMode } from "../model/blendMode";
-import { newLayerId, State } from "../model/state";
+import { DEFAULT_LAYER_PROPS, newLayerId, State } from "../model/state";
 import { AppState, useAppState } from "../store/appState";
 import { SliderH } from "./slider";
 
@@ -39,11 +41,9 @@ export function LayersBar() {
             op: "add",
             path: `/layers/${layers.length}`,
             value: {
+              ...DEFAULT_LAYER_PROPS,
               id: newLayerId(),
               canvas,
-              visible: true,
-              opacity: 1,
-              blendMode: "source-over",
             } satisfies State["layers"][number],
           },
         ],
@@ -64,6 +64,26 @@ export function LayersBar() {
               path: `/layers/${index}/visible`,
               value:
                 !layer.visible satisfies State["layers"][number]["visible"],
+            },
+          ],
+        },
+        null
+      );
+    },
+    [store.apply, layers]
+  );
+
+  const toggleLock = useCallback(
+    (index: number) => {
+      const layer = layers[index];
+      store.apply(
+        {
+          type: "patch",
+          patches: [
+            {
+              op: "replace",
+              path: `/layers/${index}/locked`,
+              value: !layer.locked satisfies State["layers"][number]["locked"],
             },
           ],
         },
@@ -187,6 +207,18 @@ export function LayersBar() {
                     <IconEyeSlash width={24} height={24} />
                   )}
                 </button>
+                <button
+                  className="w-8 h-8 cursor-pointer"
+                  onClick={() => toggleLock(i)}
+                  tabIndex={-1}
+                  title={layer.locked ? "Unlock layer" : "Lock layer"}
+                >
+                  {layer.locked ? (
+                    <IconLock width={24} height={24} />
+                  ) : (
+                    <IconLockOpen width={24} height={24} />
+                  )}
+                </button>
                 <div
                   className="grow flex items-center gap-2 cursor-pointer"
                   onClick={() => {
@@ -298,6 +330,7 @@ function ContextMenuPopover({
                 visible: true,
                 opacity: layer.opacity,
                 blendMode: layer.blendMode,
+                locked: layer.locked,
               } satisfies State["layers"][number],
             },
           ],
@@ -364,6 +397,7 @@ function ContextMenuPopover({
         visible: belowLayer.visible,
         opacity: belowLayer.opacity,
         blendMode: belowLayer.blendMode,
+        locked: belowLayer.locked,
       } satisfies State["layers"][number];
 
       store.apply(
@@ -432,6 +466,34 @@ function ContextMenuPopover({
           value={store.stateContainer.state.layers[layerIndex].opacity}
           onChange={(value) => updateOpacity(layerIndex, value)}
         />
+      </div>
+
+      <hr className="opacity-20" />
+
+      <div
+        className="p-2 cursor-pointer hover:bg-gray-100"
+        onClick={() => {
+          const layer = store.stateContainer.state.layers[layerIndex];
+          store.apply(
+            {
+              type: "patch",
+              patches: [
+                {
+                  op: "replace",
+                  path: `/layers/${layerIndex}/locked`,
+                  value:
+                    !layer.locked satisfies State["layers"][number]["locked"],
+                },
+              ],
+            },
+            null
+          );
+          closePopover();
+        }}
+      >
+        {store.stateContainer.state.layers[layerIndex].locked
+          ? "Unlock Layer"
+          : "Lock Layer"}
       </div>
 
       <hr className="opacity-20" />

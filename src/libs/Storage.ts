@@ -16,6 +16,7 @@ const ImageDataSchema = z.object({
       visible: z.boolean(),
       opacity: z.number().min(0).max(1),
       blendMode: z.enum(ALL_BLEND_MODES),
+      locked: z.boolean().optional(),
     })
   ),
 });

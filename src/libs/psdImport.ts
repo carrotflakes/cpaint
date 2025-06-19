@@ -31,6 +31,7 @@ export interface PsdImportResult {
     visible: boolean;
     opacity: number;
     blendMode: BlendMode;
+    locked: boolean;
     name?: string;
   }[];
 }
@@ -83,6 +84,7 @@ export async function loadPsdFromFile(file: File): Promise<PsdImportResult> {
       visible: !psdLayer.hidden,
       opacity: psdLayer.opacity ?? 1,
       blendMode,
+      locked: false,
       name: psdLayer.name,
     });
   }
@@ -100,6 +102,7 @@ export async function loadPsdFromFile(file: File): Promise<PsdImportResult> {
       visible: true,
       opacity: 1,
       blendMode: "source-over",
+      locked: false,
       name: "Background",
     });
   }

@@ -6,10 +6,7 @@ import { loadImageFromFile } from "../libs/loadImageFile";
 import { MCanvas } from "../libs/MCanvas";
 import { Storage } from "../libs/Storage";
 import { BlendMode } from "../model/blendMode";
-import {
-  StateFromImage,
-  StateNew
-} from "../model/state";
+import { StateFromImage, StateNew } from "../model/state";
 import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
@@ -350,6 +347,7 @@ async function loadImage(storage: Storage, id: number) {
     visible: boolean;
     opacity: number;
     blendMode: BlendMode;
+    locked: boolean;
   }[] = [];
   for (const layerData of imageData.layers) {
     const image = await blobToImage(layerData.canvas);
@@ -364,6 +362,7 @@ async function loadImage(storage: Storage, id: number) {
       visible: layerData.visible,
       opacity: layerData.opacity,
       blendMode: layerData.blendMode,
+      locked: layerData.locked ?? false,
     });
   }
 
