@@ -12,6 +12,7 @@ import { useAppState } from "../store/appState";
 import { save } from "../store/save";
 import { ModalDialog } from "./ModalDialog";
 import { useSettingDialog } from "./SettingDialog";
+import { TimelapseDialog } from "./TimelapseDialog";
 import { pushToast } from "./Toasts";
 
 export function Header() {
@@ -19,6 +20,7 @@ export function Header() {
   const hasUnsavedChanges = useAppState((store) => store.hasUnsavedChanges());
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [resizeDialogOpen, setResizeDialogOpen] = useState(false);
+  const [timelapseDialogOpen, setTimelapseDialogOpen] = useState(false);
   const { executeWithGuard } = useUnsavedChangesGuard();
 
   return (
@@ -72,6 +74,10 @@ export function Header() {
                   setPopoverOpen(false);
                   setResizeDialogOpen(true);
                 }}
+                onTimelapseClick={() => {
+                  setPopoverOpen(false);
+                  setTimelapseDialogOpen(true);
+                }}
               />
             </Popover.Content>
           </Popover.Portal>
@@ -121,6 +127,10 @@ export function Header() {
       {resizeDialogOpen && (
         <ResizeCanvasDialog onClose={() => setResizeDialogOpen(false)} />
       )}
+
+      {timelapseDialogOpen && (
+        <TimelapseDialog onClose={() => setTimelapseDialogOpen(false)} />
+      )}
     </div>
   );
 }
@@ -129,10 +139,12 @@ function FileInfo({
   imageMeta,
   setPopoverOpen,
   onResizeClick,
+  onTimelapseClick,
 }: {
   imageMeta: { name: string };
   setPopoverOpen: (v: boolean) => void;
   onResizeClick: () => void;
+  onTimelapseClick: () => void;
 }) {
   const store = useAppState();
   const firstCanvas = store.stateContainer.state.layers[0].canvas;
@@ -168,24 +180,33 @@ function FileInfo({
       >
         Resize
       </button>
-      <button
-        className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"
-        onClick={() => {
-          exportToPNG();
-          setPopoverOpen(false);
-        }}
-      >
-        Export PNG
-      </button>
-      <button
-        className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"
-        onClick={() => {
-          exportToPSD();
-          setPopoverOpen(false);
-        }}
-      >
-        Export PSD
-      </button>
+      <h2 className="text-sm font-semibold">Export</h2>
+      <div className="flex gap-2 flex-wrap">
+        <button
+          className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"
+          onClick={() => {
+            exportToPNG();
+            setPopoverOpen(false);
+          }}
+        >
+          PNG
+        </button>
+        <button
+          className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"
+          onClick={() => {
+            exportToPSD();
+            setPopoverOpen(false);
+          }}
+        >
+          PSD
+        </button>
+        <button
+          className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"
+          onClick={onTimelapseClick}
+        >
+          Timelapse
+        </button>
+      </div>
     </div>
   );
 }

@@ -112,6 +112,16 @@ export class MCanvas {
       this._thumbnail = createThumbnail(this);
     return this._thumbnail;
   }
+
+  clone(): MCanvas {
+    const clonedCanvas = new MCanvas(this.canvas.width, this.canvas.height);
+    const ctx = clonedCanvas.getContextWrite();
+    ctx.drawImage(this.canvas, 0, 0);
+    clonedCanvas._bbox = this._bbox;
+    clonedCanvas._bboxDirty = this._bboxDirty;
+    clonedCanvas._thumbnail = this._thumbnail;
+    return clonedCanvas;
+  }
 }
 
 function createThumbnail(canvas: MCanvas, width = 64, height = 64) {

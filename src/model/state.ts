@@ -228,7 +228,7 @@ export function StateContainerHasRedo(sc: StateContainer): boolean {
 
 // This function applies the diff to the state and returns the new state and the reverse diff
 // ⚠ We cannot reuse the state because it is modified!
-function applyStateDiff(
+export function applyStateDiff(
   state: State,
   diff: StateDiff,
 ): {
