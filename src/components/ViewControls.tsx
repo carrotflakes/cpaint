@@ -58,6 +58,43 @@ export function ViewControls() {
           >
             Flip Y
           </button>
+
+          <div className="flex items-center gap-1">
+            <button
+              className="px-2 py-1 text-xs rounded border bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              onClick={() =>
+                store.update((draft) => {
+                  draft.uiState.canvasView.angle =
+                    (draft.uiState.canvasView.angle - (Math.PI * 2) / 16) %
+                    (Math.PI * 2);
+                })
+              }
+              title="Rotate counterclockwise"
+            >
+              ↺
+            </button>
+
+            <div className="text-xs text-gray-600 dark:text-gray-400 min-w-8 text-center">
+              {((store.uiState.canvasView.angle * 360) / (Math.PI * 2)).toFixed(
+                0
+              )}
+              °
+            </div>
+
+            <button
+              className="px-2 py-1 text-xs rounded border bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              onClick={() =>
+                store.update((draft) => {
+                  draft.uiState.canvasView.angle =
+                    (draft.uiState.canvasView.angle + (Math.PI * 2) / 16) %
+                    (Math.PI * 2);
+                })
+              }
+              title="Rotate clockwise"
+            >
+              ↻
+            </button>
+          </div>
         </div>
       </div>
     </div>
