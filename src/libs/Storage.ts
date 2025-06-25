@@ -19,6 +19,11 @@ const ImageDataSchema = z.object({
       locked: z.boolean().optional(),
     })
   ),
+  selection: z.object({
+    width: z.number(),
+    height: z.number(),
+    data: z.instanceof(Blob),
+  }).nullable().optional(),
 });
 
 type ImageData = z.infer<typeof ImageDataSchema>;

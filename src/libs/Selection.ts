@@ -1,5 +1,11 @@
 export type Operation = "new" | 'add' | 'subtract' | 'intersect' | 'xor';
 
+export type Storable = {
+  width: number;
+  height: number;
+  data: Blob;
+};
+
 /**
  * Canvas selection model for pixel-level binary selection data
  * Supports efficient selection operations and memory-optimized storage
@@ -598,6 +604,27 @@ export class Selection {
       }
     }
     ctx.clip();
+  }
+
+  toStorable(): Storable {
+    const blob = new Blob([this.data], { type: 'application/octet-stream' });
+    return {
+      width: this.width,
+      height: this.height,
+      data: blob
+    };
+  }
+
+  static async fromStorable(storable: Storable): Promise<Selection> {
+    return new Promise<Selection>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const data = new Uint8Array(reader.result as ArrayBuffer);
+        resolve(Selection.fromData(storable.width, storable.height, data));
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(storable.data);
+    });
   }
 }
 

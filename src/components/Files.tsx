@@ -4,6 +4,7 @@ import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import { CHECK_PATTERN } from "../libs/check";
 import { loadImageFromFile } from "../libs/loadImageFile";
 import { MCanvas } from "../libs/MCanvas";
+import { Selection } from "../libs/Selection";
 import { Storage } from "../libs/Storage";
 import { BlendMode } from "../model/blendMode";
 import { StateFromImage, StateNew } from "../model/state";
@@ -365,10 +366,13 @@ async function loadImage(storage: Storage, id: number) {
       locked: layerData.locked ?? false,
     });
   }
+  const selection = imageData.selection
+    ? await Selection.fromStorable(imageData.selection)
+    : null;
 
   const state = {
     layers,
-    selection: null,
+    selection,
   };
   useAppState.getState().open(imageMeta, state);
 }

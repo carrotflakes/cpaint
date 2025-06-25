@@ -22,8 +22,10 @@ export async function save() {
         blendMode: layer.blendMode,
       });
     }
+    const selection = state.stateContainer.state.selection?.toStorable();
     const imageData = {
       layers,
+      selection,
     };
     await storage.putImage(meta, imageData, thumbnail);
 
