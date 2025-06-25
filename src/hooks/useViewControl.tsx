@@ -27,6 +27,7 @@ export function useViewControl(
           active: boolean;
           pointers: { id: number; pos: [number, number] }[];
           angleUnnormalized: number;
+          panUnnormalized: Pos;
         }
       | {
           type: "translate";
@@ -51,6 +52,7 @@ export function useViewControl(
             active: false,
             pointers: [{ id: e.pointerId, pos: [e.clientX, e.clientY] }],
             angleUnnormalized: store.uiState.canvasView.angle,
+            panUnnormalized: store.uiState.canvasView.pan,
           };
         }
         return;
@@ -105,26 +107,38 @@ export function useViewControl(
           const angleUnnormalized =
             (state.angleUnnormalized + (a2 - a1)) % (2 * Math.PI);
           state.angleUnnormalized = angleUnnormalized;
-          useAppState.getState().update((draft) => {
-            const prevPan_ = [
-              draft.uiState.canvasView.pan[0] + panOffset[0],
-              draft.uiState.canvasView.pan[1] + panOffset[1],
-            ] as Pos;
-            const pan_ = calculateTransformedPoint(
-              ps[1 - pi].pos,
-              prevPos,
-              ps[pi].pos,
-              prevPan_
-            );
-            const pan = [pan_[0] - panOffset[0], pan_[1] - panOffset[1]] as Pos;
+          const angle =
+            angleSnapDivisor > 0
+              ? normalizeAngle(angleUnnormalized, angleSnapDivisor)
+              : angleUnnormalized;
 
+          const prevPan_ = [
+            state.panUnnormalized[0] + panOffset[0],
+            state.panUnnormalized[1] + panOffset[1],
+          ] as Pos;
+          const pan_ = calculateTransformedPoint(
+            ps[1 - pi].pos,
+            prevPos,
+            ps[pi].pos,
+            prevPan_
+          );
+          state.panUnnormalized = [
+            pan_[0] - panOffset[0],
+            pan_[1] - panOffset[1],
+          ] as Pos;
+          let pan = state.panUnnormalized;
+          if (angle !== angleUnnormalized) {
+            const dangle = angle - angleUnnormalized;
+            const cos = Math.cos(dangle);
+            const sin = Math.sin(dangle);
+            pan = [pan[0] * cos - pan[1] * sin, pan[0] * sin + pan[1] * cos];
+          }
+
+          useAppState.getState().update((draft) => {
             draft.uiState.canvasView = {
               ...draft.uiState.canvasView,
               pan,
-              angle:
-                angleSnapDivisor > 0
-                  ? normalizeAngle(angleUnnormalized, angleSnapDivisor)
-                  : angleUnnormalized,
+              angle,
               scale: (draft.uiState.canvasView.scale * d2) / d1,
             };
           });
