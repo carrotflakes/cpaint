@@ -702,16 +702,16 @@ function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
         <button
           key={effect.type}
           className="p-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded"
-          onClick={() => {
+          onClick={async () => {
             if (effect.type === "blur") {
-              appApplyEffect({ type: "blur", radius: value });
+              await appApplyEffect({ type: "blur", radius: value });
             } else if (effect.type === "boxBlur") {
-              appApplyEffect({
+              await appApplyEffect({
                 type: "boxBlur",
                 radius: value,
               });
             } else if (effect.type === "pixelate") {
-              appApplyEffect({
+              await appApplyEffect({
                 type: "pixelate",
                 pixelSize: value,
               });
@@ -748,8 +748,8 @@ function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
 
       {showBrightnessContrast && (
         <BrightnessContrastDialog
-          onApply={(brightness, contrast) => {
-            appApplyEffect({
+          onApply={async (brightness, contrast) => {
+            await appApplyEffect({
               type: "brightnessContrast",
               brightness,
               contrast,
@@ -762,8 +762,8 @@ function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
 
       {showHueSaturation && (
         <HueSaturationDialog
-          onApply={(hue, saturation, lightness) => {
-            appApplyEffect({
+          onApply={async (hue, saturation, lightness) => {
+            await appApplyEffect({
               type: "hueSaturation",
               hue,
               saturation,
@@ -777,8 +777,8 @@ function EffectsMenu({ onEffectSelect }: { onEffectSelect: () => void }) {
 
       {showColorBalance && (
         <ColorBalanceDialog
-          onApply={(cyan, magenta, yellow) => {
-            appApplyEffect({ type: "colorBalance", cyan, magenta, yellow });
+          onApply={async (cyan, magenta, yellow) => {
+            await appApplyEffect({ type: "colorBalance", cyan, magenta, yellow });
             onEffectSelect();
           }}
           onClose={() => setShowColorBalance(false)}

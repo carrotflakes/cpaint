@@ -3,6 +3,7 @@ import { storage } from "../libs/Storage";
 import { useGlobalSettings } from "../store/globalSetting";
 import { ModalDialog } from "./ModalDialog";
 import { usePenPressureDialog } from "./PenPressureDialog";
+import { usePerformanceSettingsDialog } from "./PerformanceSettings";
 import { pushToast } from "./Toasts";
 
 export const useSettingDialog = create<{
@@ -83,6 +84,12 @@ export function SettingDialog() {
             onClick={() => usePenPressureDialog.getState().show()}
           >
             Pen Pressure
+          </button>
+          <button
+            className="px-3 py-2 rounded font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
+            onClick={() => usePerformanceSettingsDialog.getState().setShow(true)}
+          >
+            Performance
           </button>
         </div>
 

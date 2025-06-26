@@ -13,6 +13,7 @@ import { LayersBar } from "./LayersBar";
 import MainCanvasArea from "./MainCanvasArea";
 import { OpHistory } from "./OpHistory";
 import { PenPressureDialog } from "./PenPressureDialog";
+import { PerformanceSettingsDialog } from "./PerformanceSettings";
 import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./ToolBar";
@@ -75,6 +76,7 @@ function App() {
       <Toasts />
       <SettingDialog />
       <PenPressureDialog />
+      <PerformanceSettingsDialog />
       <ImageDropTarget />
       <UnsavedChangesDialog />
     </div>

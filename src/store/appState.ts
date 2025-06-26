@@ -2,6 +2,7 @@ import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
 import { Rect as TransformRect } from '../components/overlays/TransformRectHandles';
 import { pushToast } from '../components/Toasts';
+import { applyEffect, Effect } from '../features/effects';
 import { MCanvas } from '../libs/MCanvas';
 import { Selection } from '../libs/Selection';
 import { CanvasContext } from '../libs/touch';
@@ -10,7 +11,6 @@ import {
 } from "../libs/touch/brush";
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
 import { startTouchFill } from '../libs/touch/fill';
-import { applyEffect, Effect } from '../model/effect';
 import { Op } from '../model/op';
 import { State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerRedo, StateContainerUndo, StateNew } from '../model/state';
 
@@ -316,7 +316,7 @@ export function wrapTransferWithClip(
   };
 }
 
-export function appApplyEffect(effect: Effect) {
+export async function appApplyEffect(effect: Effect) {
   const store = useAppState.getState();
   const layerOrg =
     store.stateContainer.state.layers[store.uiState.layerIndex];
@@ -334,7 +334,7 @@ export function appApplyEffect(effect: Effect) {
 
   const selection = store.stateContainer.state.selection;
   if (selection) {
-    applyEffect(layerOrg.canvas, canvas, effect);
+    await applyEffect(layerOrg.canvas, canvas, effect);
     const selectionInverted = selection.clone();
     selectionInverted.invert();
     const imageDataOrg = layerOrg.canvas.getContextRead().getImageData(0, 0, canvas.width, canvas.height);
@@ -343,7 +343,7 @@ export function appApplyEffect(effect: Effect) {
     selectionInverted.transferImageData(imageDataOrg, imageData);
     ctx.putImageData(imageData, 0, 0);
   } else {
-    applyEffect(layerOrg.canvas, canvas, effect);
+    await applyEffect(layerOrg.canvas, canvas, effect);
   }
 
   const layer = {
