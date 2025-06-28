@@ -356,24 +356,3 @@ export async function appApplyEffect(effect: Effect) {
     ctx.drawImage(canvas.getCanvas(), 0, 0);
   });
 }
-
-export function patchSelection(selection: Selection | null) {
-  // If the selection is empty, set it to null
-  if (selection?.getBounds() === null) selection = null;
-
-  const store = useAppState.getState();
-  store.apply(
-    {
-      type: "patch",
-      name: "Update Selection",
-      patches: [
-        {
-          op: "replace",
-          path: "/selection",
-          value: selection satisfies State["selection"],
-        },
-      ],
-    },
-    null
-  );
-}

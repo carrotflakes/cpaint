@@ -1,13 +1,12 @@
-import { ReactNode } from "react";
 import { ReactComponent as IconLasso } from "@/assets/icons/lasso.svg";
 import { ReactComponent as IconMagicWand } from "@/assets/icons/magic-wand.svg";
-import { Selection } from "@/libs/Selection";
 import {
-  patchSelection,
   SelectionOperation,
   SelectionTool,
   useAppState,
 } from "@/store/appState";
+import { selectAll, selectClear, selectInvert } from "@/store/selection";
+import { ReactNode } from "react";
 
 const SELECTION_TOOLS: {
   id: SelectionTool;
@@ -177,27 +176,6 @@ export function SelectionControls() {
       )}
     </div>
   );
-}
-
-function selectAll() {
-  const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
-  const selection = new Selection(firstCanvas.width, firstCanvas.height, true);
-  patchSelection(selection);
-}
-
-function selectClear() {
-  patchSelection(null);
-}
-
-function selectInvert() {
-  const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
-  const selection =
-    store.stateContainer.state.selection?.clone() ??
-    new Selection(firstCanvas.width, firstCanvas.height, false);
-  selection.invert();
-  patchSelection(selection);
 }
 
 function fillSelection() {

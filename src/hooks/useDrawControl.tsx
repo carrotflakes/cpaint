@@ -1,3 +1,4 @@
+import { selectLasso, selectMagicWand, selectRect } from "@/store/selection";
 import * as color from "color-convert";
 import { JSX, useEffect, useRef, useState } from "react";
 import { computePos } from "../components/CanvasArea";
@@ -9,13 +10,11 @@ import { SelectionRect } from "../components/overlays/SelectionRect";
 import { isSafari } from "../libs/browser";
 import { dist, Pos } from "../libs/geometry";
 import { applyPressureCurve } from "../libs/pressureCurve";
-import { Selection } from "../libs/Selection";
 import { Op } from "../model/op";
 import { LayerMod } from "../model/state";
 import {
   createOp,
   createTouch,
-  patchSelection,
   useAppState,
   wrapTransferWithClip,
 } from "../store/appState";
@@ -400,57 +399,4 @@ function pixelColor(ctx: CanvasRenderingContext2D, x: number, y: number) {
 function getPressure(e: PointerEvent) {
   // NOTE: e.pressure will be 0 for touch events on iPad chrome.
   return e.pointerType === "touch" && e.pressure === 0 ? 0.5 : e.pressure;
-}
-
-function selectRect(startPos: [number, number], endPos: [number, number]) {
-  const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
-  const selection =
-    store.stateContainer.state.selection?.clone() ??
-    new Selection(firstCanvas.width, firstCanvas.height, false);
-  if (store.uiState.selectionTool === "ellipse") {
-    selection.addEllipse(
-      (startPos[0] + endPos[0]) / 2,
-      (startPos[1] + endPos[1]) / 2,
-      Math.abs(endPos[0] - startPos[0]) / 2,
-      Math.abs(endPos[1] - startPos[1]) / 2,
-      store.uiState.selectionOperation
-    );
-  } else {
-    selection.addRect(
-      Math.round(Math.min(startPos[0], endPos[0])),
-      Math.round(Math.min(startPos[1], endPos[1])),
-      Math.round(Math.abs(endPos[0] - startPos[0])),
-      Math.round(Math.abs(endPos[1] - startPos[1])),
-      store.uiState.selectionOperation
-    );
-  }
-  patchSelection(selection);
-}
-
-function selectLasso(path: Array<{ x: number; y: number }>) {
-  const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
-  const selection =
-    store.stateContainer.state.selection?.clone() ??
-    new Selection(firstCanvas.width, firstCanvas.height, false);
-
-  selection.addLasso(path, store.uiState.selectionOperation);
-  patchSelection(selection);
-}
-
-function selectMagicWand(x: number, y: number) {
-  const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
-  const selection =
-    store.stateContainer.state.selection?.clone() ??
-    new Selection(firstCanvas.width, firstCanvas.height, false);
-
-  selection.addMagicWand(
-    firstCanvas.getCanvas(),
-    x,
-    y,
-    store.uiState.selectionTolerance
-  );
-  patchSelection(selection);
 }
