@@ -1,6 +1,7 @@
 import { MCanvas } from "./MCanvas";
 
 export type ImageDiff = Readonly<{
+  // The rectangle that was changed, or null if the whole canvas was changed
   rect: {
     x: number;
     y: number;

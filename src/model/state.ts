@@ -1,3 +1,4 @@
+import { produce } from "immer";
 import { applyPatches } from "../libs/applyPatches";
 import { applyImageDiff, canvasToImageDiff, ImageDiff } from "../libs/imageDiff";
 import { MCanvas } from "../libs/MCanvas";
@@ -129,14 +130,9 @@ export function StateContainerDo(
       // No difference found
       return sc;
     }
-    const state = {
-      layers: [...sc.state.layers],
-      selection: sc.state.selection,
-    }
-    state.layers[op.layerIndex] = {
-      ...state.layers[op.layerIndex],
-      canvas,
-    }
+    const state = produce(sc.state, draft => {
+      draft.layers[op.layerIndex].canvas = canvas;
+    });
     return {
       state,
       backward: newBackward(sc.backward, { op: opts, diff: { type: "imageDiffs", layers: [{ id: layer.id, imageDiff: diff }] } }),
