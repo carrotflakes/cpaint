@@ -38,7 +38,7 @@ function Toast({ message }: { message: Message }) {
 
   return (
     <div
-      className={`min-w-64 flex items-center shadow p-2 rounded bg-white pointer-events-auto fade-in-out transition-opacity duration-1000 ${
+      className={`min-w-64 flex items-center shadow p-2 rounded bg-white dark:bg-gray-950 pointer-events-auto fade-in-out transition-opacity duration-1000 ${
         isFading ? "opacity-0" : "opacity-100"
       }`}
     >
@@ -47,7 +47,7 @@ function Toast({ message }: { message: Message }) {
         <span className="select-text">{message.text}</span>
       </div>
       <div
-        className="shrink-0 w-5 text-gray-800/25 hover:text-gray-800/100 cursor-pointer"
+        className="shrink-0 w-5 opacity-25 hover:opacity-100 cursor-pointer"
         onClick={() => useStore.getState().removeMessage(message.id)}
       >
         <IconClose width={24} height={24} />
