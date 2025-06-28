@@ -49,6 +49,7 @@ export type Op = {
   layerIndex: number;
 } | {
   type: "patch";
+  name: string;
   patches: Patch[];
 };
 
@@ -139,11 +140,12 @@ export function mergeOp(
   op1: Op,
   op2: Op,
 ): Op | null {
-  if (op1.type === "patch" && op2.type === "patch") {
+  if (op1.type === "patch" && op2.type === "patch" && op1.name === op2.name) {
     const patches = shrinkPatches([...op1.patches, ...op2.patches]);
     if (patches)
       return {
         type: "patch",
+        name: op1.name,
         patches,
       };
   }

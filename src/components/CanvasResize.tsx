@@ -102,6 +102,7 @@ function applyCanvasResize(canvasResize: {
 
   const op: Op = {
     type: "patch",
+    name: "Resize Canvas",
     patches: [
       {
         op: "replace",

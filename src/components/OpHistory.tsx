@@ -28,11 +28,8 @@ export function OpHistory() {
           data-scroll={true}
         >
           {ops.map((op, index) => (
-            <div
-              key={index}
-              className="relative p-1 flex items-center gap-2"
-            >
-              {op.op.type}
+            <div key={index} className="relative p-1 flex items-center gap-2">
+              {op.op.type === "patch" ? op.op.name : op.op.type}
             </div>
           ))}
         </div>

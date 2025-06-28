@@ -98,6 +98,7 @@ function applyAddImageAsLayer(addImageAsLayer: { image: MCanvas; rect: Rect }) {
 
   const op: Op = {
     type: "patch",
+    name: "Add Image as Layer",
     patches: [
       {
         op: "add",

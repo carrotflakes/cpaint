@@ -35,6 +35,7 @@ export function LayersBar() {
     store.apply(
       {
         type: "patch",
+        name: "Add Layer",
         patches: [
           {
             op: "add",
@@ -57,6 +58,7 @@ export function LayersBar() {
       store.apply(
         {
           type: "patch",
+          name: `Toggle Layer Visibility`,
           patches: [
             {
               op: "replace",
@@ -78,6 +80,7 @@ export function LayersBar() {
       store.apply(
         {
           type: "patch",
+          name: `Reorder Layer`,
           patches: [
             {
               op: "move",
@@ -262,6 +265,7 @@ function ContextMenuPopover({
       store.apply(
         {
           type: "patch",
+          name: "Update Layer Opacity",
           patches: [
             {
               op: "replace",
@@ -287,6 +291,7 @@ function ContextMenuPopover({
       store.apply(
         {
           type: "patch",
+          name: "Duplicate Layer",
           patches: [
             {
               op: "add",
@@ -319,6 +324,7 @@ function ContextMenuPopover({
       store.apply(
         {
           type: "patch",
+          name: "Delete Layer",
           patches: [
             {
               op: "remove",
@@ -370,6 +376,7 @@ function ContextMenuPopover({
       store.apply(
         {
           type: "patch",
+          name: "Merge Layer Down",
           patches: [
             {
               op: "remove",
@@ -406,6 +413,7 @@ function ContextMenuPopover({
             store.apply(
               {
                 type: "patch",
+                name: "Update Layer Blend Mode",
                 patches: [
                   {
                     op: "replace",
@@ -444,6 +452,7 @@ function ContextMenuPopover({
           store.apply(
             {
               type: "patch",
+              name: layer.locked ? "Unlock Layer" : "Lock Layer",
               patches: [
                 {
                   op: "replace",

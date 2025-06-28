@@ -353,6 +353,7 @@ export async function appApplyEffect(effect: Effect) {
   // TODO: Do not use patch op.
   const op: Op = {
     type: "patch",
+    name: "Apply Effect",
     patches: [
       {
         op: "replace",
@@ -372,6 +373,7 @@ export function patchSelection(selection: Selection | null) {
   store.apply(
     {
       type: "patch",
+      name: "Update Selection",
       patches: [
         {
           op: "replace",
