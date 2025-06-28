@@ -9,7 +9,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest",
-    "ts-lint": "tsc --noEmit --skipLibCheck"
+    "ts-lint": "tsc -p tsconfig.app.json --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.1.13",
