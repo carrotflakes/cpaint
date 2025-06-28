@@ -1,3 +1,4 @@
+import { Effect } from "@/features/effects";
 import { produce } from "immer";
 import { Rect as TransformRect } from "../components/overlays/TransformRectHandles";
 import { applyPatches } from "../libs/applyPatches";
@@ -46,6 +47,10 @@ export type Op = {
   layerIndex: number;
 } | {
   type: "selectionDelete";
+  layerIndex: number;
+} | {
+  type: "applyEffect";
+  effect: Effect;
   layerIndex: number;
 } | {
   type: "patch";

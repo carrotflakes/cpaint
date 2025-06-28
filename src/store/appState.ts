@@ -346,23 +346,15 @@ export async function appApplyEffect(effect: Effect) {
     await applyEffect(layerOrg.canvas, canvas, effect);
   }
 
-  const layer = {
-    ...layerOrg,
-    canvas,
-  };
-  // TODO: Do not use patch op.
   const op: Op = {
-    type: "patch",
-    name: "Apply Effect",
-    patches: [
-      {
-        op: "replace",
-        path: `/layers/${store.uiState.layerIndex}`,
-        value: layer satisfies State["layers"][number],
-      },
-    ],
+    type: "applyEffect",
+    layerIndex: store.uiState.layerIndex,
+    effect,
   };
-  store.apply(op, null);
+  store.apply(op, (ctx) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(canvas.getCanvas(), 0, 0);
+  });
 }
 
 export function patchSelection(selection: Selection | null) {

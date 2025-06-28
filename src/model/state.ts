@@ -108,7 +108,11 @@ export function StateContainerDo(
   layerMod: LayerMod | null,
 ): StateContainer {
   const opts = OpTsNew(op);
-  if ((op.type === "stroke" || op.type === "fill" || op.type === "bucketFill" || op.type === "layerTransform" || op.type === "selectionFill" || op.type === "selectionDelete") && layerMod) {
+
+  if (op.type === "applyEffect" && !layerMod)
+    throw new Error("LayerMod is required for applyEffect operation");
+
+  if ((op.type === "stroke" || op.type === "fill" || op.type === "bucketFill" || op.type === "layerTransform" || op.type === "selectionFill" || op.type === "selectionDelete" || op.type === "applyEffect") && layerMod) {
     const layer = sc.state.layers.find(l => l.id === layerMod.layerId);
     if (!layer) {
       throw new Error(`Layer ${layerMod.layerId} not found`);
