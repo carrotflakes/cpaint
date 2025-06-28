@@ -108,6 +108,9 @@ function formatOpDetails(op: Op) {
       details.push(`Color: ${op.fillColor}`);
       details.push(`Opacity: ${(op.opacity * 100).toFixed(0)}%`);
       break;
+    case "selectionDelete":
+      details.push(`Layer: ${op.layerIndex}`);
+      break;
     case "applyEffect":
       details.push(`Effect: ${op.effect.type}`);
       details.push(JSON.stringify({ ...op.effect, type: undefined }, null, 2));
