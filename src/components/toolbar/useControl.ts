@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { usePointer } from "../../hooks/usePointer";
+import { usePointer } from "@/hooks/usePointer";
 
 export function useControl({
   getValue,

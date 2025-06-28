@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { appApplyEffect } from "../../store/appState";
+import { appApplyEffect } from "@/store/appState";
 import { ModalDialog } from "../ModalDialog";
 import { SliderH } from "../slider";
 

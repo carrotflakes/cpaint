@@ -1,4 +1,4 @@
-import { BrushPreview } from "../BrushPreview";
+import { BrushPreview } from "./BrushPreview";
 
 export function BrushSelector({
   brushType,

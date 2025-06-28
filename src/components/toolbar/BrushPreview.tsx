@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { startTouchBrush } from "../libs/touch/brush";
+import { startTouchBrush } from "@/libs/touch/brush";
 
 export function BrushPreview({
   brushType,

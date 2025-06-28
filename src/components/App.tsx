@@ -16,7 +16,7 @@ import { PenPressureDialog } from "./PenPressureDialog";
 import { PerformanceSettingsDialog } from "./PerformanceSettings";
 import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
-import { ToolBar } from "./ToolBar";
+import { ToolBar } from "./toolbar/ToolBar";
 import Transform from "./Transform";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
 

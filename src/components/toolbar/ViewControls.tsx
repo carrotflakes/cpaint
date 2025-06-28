@@ -1,4 +1,4 @@
-import { useAppState } from "../store/appState";
+import { useAppState } from "@/store/appState";
 
 export function ViewControls() {
   const store = useAppState();

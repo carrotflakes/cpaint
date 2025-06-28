@@ -1,13 +1,13 @@
 import { ReactNode } from "react";
-import { ReactComponent as IconLasso } from "../assets/icons/lasso.svg";
-import { ReactComponent as IconMagicWand } from "../assets/icons/magic-wand.svg";
-import { Selection } from "../libs/Selection";
+import { ReactComponent as IconLasso } from "@/assets/icons/lasso.svg";
+import { ReactComponent as IconMagicWand } from "@/assets/icons/magic-wand.svg";
+import { Selection } from "@/libs/Selection";
 import {
   patchSelection,
   SelectionOperation,
   SelectionTool,
   useAppState,
-} from "../store/appState";
+} from "@/store/appState";
 
 const SELECTION_TOOLS: {
   id: SelectionTool;

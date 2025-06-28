@@ -1,6 +1,6 @@
 import * as Popover from "@radix-ui/react-popover";
-import { useAppState } from "../../store/appState";
-import { BrushPreview } from "../BrushPreview";
+import { useAppState } from "@/store/appState";
+import { BrushPreview } from "./BrushPreview";
 import { SliderV } from "./SliderV";
 import { useControl } from "./useControl";
 

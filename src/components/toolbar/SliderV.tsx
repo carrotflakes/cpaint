@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { usePointer } from "../../hooks/usePointer";
+import { usePointer } from "@/hooks/usePointer";
 
 export function SliderV({
   value,
