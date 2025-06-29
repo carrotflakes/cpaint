@@ -2,6 +2,7 @@ import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
 import { Rect as TransformRect } from '../components/overlays/TransformRectHandles';
 import { pushToast } from '../components/Toasts';
+import { usePerformanceSettings } from '../components/PerformanceSettings';
 import { applyEffect, Effect } from '../features/effects';
 import { MCanvas } from '../libs/MCanvas';
 import { Selection } from '../libs/Selection';
@@ -318,6 +319,7 @@ export function wrapTransferWithClip(
 
 export async function appApplyEffect(effect: Effect) {
   const store = useAppState.getState();
+  const performanceSettings = usePerformanceSettings.getState();
   const layerOrg =
     store.stateContainer.state.layers[store.uiState.layerIndex];
   if (!layerOrg)
@@ -334,7 +336,7 @@ export async function appApplyEffect(effect: Effect) {
 
   const selection = store.stateContainer.state.selection;
   if (selection) {
-    await applyEffect(layerOrg.canvas, canvas, effect);
+    await applyEffect(layerOrg.canvas, canvas, effect, performanceSettings.useWebGL);
     const selectionInverted = selection.clone();
     selectionInverted.invert();
     const imageDataOrg = layerOrg.canvas.getContextRead().getImageData(0, 0, canvas.width, canvas.height);
@@ -343,7 +345,7 @@ export async function appApplyEffect(effect: Effect) {
     selectionInverted.transferImageData(imageDataOrg, imageData);
     ctx.putImageData(imageData, 0, 0);
   } else {
-    await applyEffect(layerOrg.canvas, canvas, effect);
+    await applyEffect(layerOrg.canvas, canvas, effect, performanceSettings.useWebGL);
   }
 
   const op: Op = {

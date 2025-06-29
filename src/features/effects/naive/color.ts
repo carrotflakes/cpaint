@@ -128,27 +128,17 @@ export function colorBalance(
   yellow: number
 ) {
   // Normalize adjustments (-100 to 100)
-  const cyanRed = -cyan / 100;
-  const magentaGreen = -magenta / 100;
-  const yellowBlue = -yellow / 100;
+  const cyanRed = cyan / 100;
+  const magentaGreen = magenta / 100;
+  const yellowBlue = yellow / 100;
 
   applyPointOperation(canvasSrc, canvasDst, (pixel) => {
     const { r, g, b, a } = pixel;
 
-    // Apply color balance adjustments
-    let newR = r - cyanRed * (255 - r) / 255 * 255;
-    let newG = g - magentaGreen * (255 - g) / 255 * 255;
-    let newB = b - yellowBlue * (255 - b) / 255 * 255;
-
-    // Apply opposite adjustments
-    if (cyanRed < 0) newR = r + Math.abs(cyanRed) * r / 255 * 255;
-    if (magentaGreen < 0) newG = g + Math.abs(magentaGreen) * g / 255 * 255;
-    if (yellowBlue < 0) newB = b + Math.abs(yellowBlue) * b / 255 * 255;
-
     return {
-      r: newR,
-      g: newG,
-      b: newB,
+      r: cyanRed >= 0 ? r * (1 + cyanRed) : r + cyanRed * (255 - r),
+      g: magentaGreen >= 0 ? g * (1 + magentaGreen) : g + magentaGreen * (255 - g),
+      b: yellowBlue >= 0 ? b * (1 + yellowBlue) : b + yellowBlue * (255 - b),
       a
     };
   });

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { OptimizedEffectOptions } from '../features/effects/optimized';
 import { DEFAULT_PRESSURE_CURVE, PressureCurve } from '../libs/pressureCurve';
 
 export type GlobalSettings = {
@@ -9,7 +8,6 @@ export type GlobalSettings = {
   pressureCurve: PressureCurve
   angleSnapDivisor: number
   showOpHistory: boolean
-  effectPerformance: OptimizedEffectOptions
 }
 
 export const useGlobalSettings = create<GlobalSettings>()(
@@ -19,12 +17,6 @@ export const useGlobalSettings = create<GlobalSettings>()(
     pressureCurve: DEFAULT_PRESSURE_CURVE,
     angleSnapDivisor: 4,
     showOpHistory: false,
-    effectPerformance: {
-      preferWebGL: true,
-      useWorker: true,
-      chunkSize: 65536,
-      enableSIMD: true
-    }
   }), {
     name: 'cpaint',
   }));
