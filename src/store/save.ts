@@ -29,6 +29,7 @@ export async function save() {
     const imageData = {
       layers,
       selection,
+      colorHistory: state.uiState.colorHistory,
     };
     await storage.putImage(meta, imageData, thumbnail);
 
@@ -96,7 +97,7 @@ export async function loadImage(id: number) {
     layers,
     selection,
   };
-  useAppState.getState().open(imageMeta, state);
+  useAppState.getState().open(imageMeta, state, imageData.colorHistory || []);
 }
 
 function blobToImage(blob: Blob) {

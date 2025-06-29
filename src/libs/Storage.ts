@@ -24,6 +24,7 @@ const ImageDataSchema = z.object({
     height: z.number(),
     data: z.instanceof(Blob),
   }).nullable().optional(),
+  colorHistory: z.array(z.string()).optional(),
 });
 
 type ImageData = z.infer<typeof ImageDataSchema>;

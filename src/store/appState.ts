@@ -68,7 +68,7 @@ export type AppState = {
 
   canvasSize: () => { width: number; height: number }
   apply: (op: Op, transfer: ((ctx: OffscreenCanvasRenderingContext2D) => void) | null) => void
-  open: (imageMeta: { id: number; name: string; createdAt: number }, state: State) => void
+  open: (imageMeta: { id: number; name: string; createdAt: number }, state: State, colorHistory?: string[]) => void
   undo: () => void
   redo: () => void
   update: (update: (draft: WritableDraft<AppState>) => void) => void
@@ -132,7 +132,7 @@ export const useAppState = create<AppState>()((set, get) => {
         } : null),
       }))
     },
-    open(imageMeta, state) {
+    open(imageMeta, state, colorHistory = []) {
       const stateContainer = StateContainerFromState(state);
       set(() => ({
         imageMeta,
@@ -141,6 +141,7 @@ export const useAppState = create<AppState>()((set, get) => {
         uiState: {
           ...get().uiState,
           layerIndex: stateContainer.state.layers.length - 1,
+          colorHistory: colorHistory,
           canvasView: {
             angle: 0,
             scale: 1,
