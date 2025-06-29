@@ -129,7 +129,7 @@ export function Files() {
         {files?.map((file) => (
           <div
             key={file.id}
-            className="p-4 flex flex-col gap-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-900"
+            className="w-48 p-4 flex flex-col gap-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-900"
             onClick={() =>
               storage &&
               executeWithGuard(
@@ -138,7 +138,13 @@ export function Files() {
               )
             }
           >
-            <span translate="no">{file.name}</span>
+            <span
+              className="whitespace-nowrap text-ellipsis overflow-hidden"
+              title={file.name}
+              translate="no"
+            >
+              {file.name}
+            </span>
             <Thumbnail id={file.id} />
             <button
               className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
