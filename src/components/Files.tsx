@@ -1,12 +1,9 @@
+import { loadImage } from "@/store/save";
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import { CHECK_PATTERN } from "../libs/check";
 import { loadImageFromFile } from "../libs/loadImageFile";
-import { MCanvas } from "../libs/MCanvas";
-import { Selection } from "../libs/Selection";
-import { Storage } from "../libs/Storage";
-import { BlendMode } from "../model/blendMode";
 import { StateFromImage, StateNew } from "../model/state";
 import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
@@ -133,7 +130,7 @@ export function Files() {
             onClick={() =>
               storage &&
               executeWithGuard(
-                () => loadImage(storage, file.id),
+                () => loadImage(file.id),
                 `Loading "${file.name}" will discard your current unsaved changes.`
               )
             }
@@ -341,52 +338,4 @@ function Thumbnail(props: { id: number }) {
       )}
     </div>
   );
-}
-
-async function loadImage(storage: Storage, id: number) {
-  const imageMeta: any = await storage.getImageMeta(id);
-  const imageData = await storage.getImage(id);
-  if (!imageMeta || !imageData) return;
-
-  const layers: {
-    id: string;
-    canvas: MCanvas;
-    visible: boolean;
-    opacity: number;
-    blendMode: BlendMode;
-    locked: boolean;
-  }[] = [];
-  for (const layerData of imageData.layers) {
-    const image = await blobToImage(layerData.canvas);
-    const canvas = new MCanvas(image.width, image.height);
-    {
-      const ctx = canvas.getContextWrite();
-      ctx.drawImage(image, 0, 0);
-    }
-    layers.push({
-      id: layerData.id,
-      canvas,
-      visible: layerData.visible,
-      opacity: layerData.opacity,
-      blendMode: layerData.blendMode,
-      locked: layerData.locked ?? false,
-    });
-  }
-  const selection = imageData.selection
-    ? await Selection.fromStorable(imageData.selection)
-    : null;
-
-  const state = {
-    layers,
-    selection,
-  };
-  useAppState.getState().open(imageMeta, state);
-}
-
-function blobToImage(blob: Blob) {
-  return new Promise<HTMLImageElement>((resolve) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.src = URL.createObjectURL(blob);
-  });
 }

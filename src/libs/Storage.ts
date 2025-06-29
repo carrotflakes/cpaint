@@ -69,7 +69,7 @@ export class Storage {
     });
   }
 
-  getImageMeta(id: number) {
+  getImageMeta(id: number): Promise<ImageMeta> {
     if (!this.db) throw new Error("Database not initialized");
     const transaction = this.db.transaction(["imageMetas"], "readonly");
     const store = transaction.objectStore("imageMetas");
