@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { storage } from "../libs/Storage";
 import { useGlobalSettings } from "../store/globalSetting";
 import { ModalDialog } from "./ModalDialog";
+import { Toggle } from "./Toggle";
 import { usePenPressureDialog } from "./PenPressureDialog";
 import { usePerformanceSettingsDialog } from "./PerformanceSettings";
 import { pushToast } from "./Toasts";
@@ -28,34 +29,28 @@ export function SettingDialog() {
         <div className="text-lg">Settings</div>
         <hr className="opacity-20" />
 
-        <div className="flex gap-2">
-          <input
-            type="checkbox"
-            name="touchToDraw"
+        <div className="flex items-center justify-between">
+          <label>Touch to draw</label>
+          <Toggle
             checked={globalSettings.touchToDraw}
-            onChange={(e) =>
+            onChange={(checked) =>
               useGlobalSettings.setState({
-                touchToDraw: e.target.checked,
+                touchToDraw: checked,
               })
             }
-            className="w-6 h-6"
           />
-          <label htmlFor="touchToDraw">Touch to draw</label>
         </div>
 
-        <div className="flex gap-2">
-          <input
-            type="checkbox"
-            name="wheelZoom"
+        <div className="flex items-center justify-between">
+          <label>Wheel zoom</label>
+          <Toggle
             checked={globalSettings.wheelZoom}
-            onChange={(e) =>
+            onChange={(checked) =>
               useGlobalSettings.setState({
-                wheelZoom: e.target.checked,
+                wheelZoom: checked,
               })
             }
-            className="w-6 h-6"
           />
-          <label htmlFor="wheelZoom">Wheel zoom</label>
         </div>
 
         <div className="flex items-center gap-2">
@@ -87,7 +82,9 @@ export function SettingDialog() {
           </button>
           <button
             className="px-3 py-2 rounded font-semibold text-gray-800 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors cursor-pointer"
-            onClick={() => usePerformanceSettingsDialog.getState().setShow(true)}
+            onClick={() =>
+              usePerformanceSettingsDialog.getState().setShow(true)
+            }
           >
             Performance
           </button>
@@ -95,19 +92,16 @@ export function SettingDialog() {
 
         <hr className="opacity-20" />
 
-        <div className="flex gap-2">
-          <input
-            type="checkbox"
-            name="showOpHistory"
+        <div className="flex items-center justify-between">
+          <label>Show operation history view</label>
+          <Toggle
             checked={globalSettings.showOpHistory}
-            onChange={(e) =>
+            onChange={(checked) =>
               useGlobalSettings.setState({
-                showOpHistory: e.target.checked,
+                showOpHistory: checked,
               })
             }
-            className="w-6 h-6"
           />
-          <label htmlFor="showOpHistory">Show operation history view</label>
         </div>
 
         <div className="flex gap-2">

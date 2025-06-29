@@ -18,7 +18,7 @@ export function ModalDialog({
 
   const onClick = (e: React.MouseEvent<HTMLDialogElement, MouseEvent>) => {
     // Ignore events triggered by click()
-    if (!e.isTrusted) return;
+    if (!e.isTrusted || (e.clientX === 0 && e.clientY === 0)) return;
 
     const rect = ref.current!.getBoundingClientRect();
     const clickedInDialog =
