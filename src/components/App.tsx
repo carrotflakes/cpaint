@@ -6,6 +6,7 @@ import { useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
 import AddImageAsLayer from "./AddImageAsLayer";
 import CanvasResize from "./CanvasResize";
+import EffectPreview from "./EffectPreview";
 import { Files } from "./Files";
 import { Header } from "./Header";
 import { ImageDropTarget } from "./ImageDropTarget";
@@ -48,6 +49,10 @@ function App() {
         ) : mode.type === "addImageAsLayer" ? (
           <div className="grow bg-gray-200 dark:bg-gray-800">
             <AddImageAsLayer />
+          </div>
+        ) : mode.type === "effectPreview" ? (
+          <div className="grow bg-gray-200 dark:bg-gray-800">
+            <EffectPreview />
           </div>
         ) : (
           <div className="relative grow flex items-stretch min-h-0">

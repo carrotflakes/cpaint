@@ -62,6 +62,11 @@ export type AppState = {
     type: "addImageAsLayer"
     image: MCanvas
     rect: TransformRect
+  } | {
+    type: "effectPreview"
+    effect: Effect
+    originalCanvas: MCanvas
+    previewCanvas: MCanvas
   }
   stateContainer: StateContainer
   savedState: State | null
@@ -75,6 +80,9 @@ export type AppState = {
   importAsLayer: (image: HTMLImageElement) => void
   addColorToHistory: (color: string) => void
   hasUnsavedChanges: () => boolean
+  startEffectPreview: (effect: Effect) => void
+  updateEffectPreview: (effect: Effect) => void
+  applyEffectPreview: () => void
 };
 
 export const useAppState = create<AppState>()((set, get) => {
@@ -203,6 +211,69 @@ export const useAppState = create<AppState>()((set, get) => {
 
     update(update) {
       set((state) => produce(state, update), true)
+    },
+
+    async startEffectPreview(effect) {
+      const store = get();
+      const layer = store.stateContainer.state.layers[store.uiState.layerIndex];
+      if (!layer || layer.locked) return;
+
+      const originalCanvas = new MCanvas(layer.canvas.width, layer.canvas.height);
+      {
+        const ctx = originalCanvas.getContextWrite();
+        ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
+      }
+
+      const previewCanvas = new MCanvas(layer.canvas.width, layer.canvas.height);
+      await applyEffect(originalCanvas, previewCanvas, effect, usePerformanceSettings.getState().useWebGL);
+
+      set(() => ({
+        mode: {
+          type: "effectPreview",
+          effect,
+          originalCanvas,
+          previewCanvas,
+        }
+      }));
+    },
+
+    async updateEffectPreview(effect) {
+      const store = get();
+      if (store.mode.type !== "effectPreview") return;
+
+      const previewCanvas = new MCanvas(store.mode.originalCanvas.width, store.mode.originalCanvas.height);
+      await applyEffect(store.mode.originalCanvas, previewCanvas, effect, usePerformanceSettings.getState().useWebGL);
+
+      set((state) => ({
+        mode: {
+          ...state.mode,
+          type: "effectPreview" as const,
+          effect,
+          originalCanvas: state.mode.type === "effectPreview" ? state.mode.originalCanvas : new MCanvas(1, 1),
+          previewCanvas,
+        }
+      }));
+    },
+
+    applyEffectPreview() {
+      const store = get();
+      if (store.mode.type !== "effectPreview") return;
+
+      const op: Op = {
+        type: "applyEffect",
+        layerIndex: store.uiState.layerIndex,
+        effect: store.mode.effect,
+      };
+
+      const previewCanvas = store.mode.previewCanvas;
+      store.apply(op, (ctx) => {
+        ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        ctx.drawImage(previewCanvas.getCanvas(), 0, 0);
+      });
+
+      set(() => ({
+        mode: { type: "draw" }
+      }));
     },
   })
 });
