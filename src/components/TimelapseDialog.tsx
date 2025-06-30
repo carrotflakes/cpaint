@@ -14,11 +14,11 @@ interface TimelapseDialogProps {
 
 export function TimelapseDialog({ onClose }: TimelapseDialogProps) {
   const stateContainer = useAppState((state) => state.stateContainer);
-  const firstCanvas = stateContainer.state.layers[0].canvas;
+  const canvasSize = useAppState((state) => state.canvasSize());
   const [options, setOptions] = useState<TimelapseOptions>({
     fps: 10,
-    width: firstCanvas.width,
-    height: firstCanvas.height,
+    width: canvasSize.width,
+    height: canvasSize.height,
     format: "webm",
     quality: 0.9,
   });

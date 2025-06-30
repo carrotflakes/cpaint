@@ -165,13 +165,13 @@ export const useAppState = create<AppState>()((set, get) => {
       const canvas = new MCanvas(width, height);
       const ctx = canvas.getContextWrite();
       ctx.drawImage(image, 0, 0);
-      const firstCanvas = useAppState.getState().stateContainer.state.layers[0].canvas;
+      const canvasSize = useAppState.getState().canvasSize();
       set(() => ({
         mode: {
           type: "addImageAsLayer", image: canvas,
           rect: {
-            cx: firstCanvas.width / 2,
-            cy: firstCanvas.height / 2,
+            cx: canvasSize.width / 2,
+            cy: canvasSize.height / 2,
             hw: width / 2,
             hh: height / 2,
             angle: 0,

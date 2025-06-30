@@ -115,13 +115,9 @@ export function computePos(
 ): [number, number] {
   const bbox = containerEl.getBoundingClientRect();
 
-  const {
-    stateContainer: {
-      state: { layers },
-    },
-    uiState: { canvasView: cv },
-  } = useAppState.getState();
-  const firstCanvas = layers[0].canvas;
+  const state = useAppState.getState();
+  const cv = state.uiState.canvasView;
+  const canvasSize = state.canvasSize();
   const pos_ = [
     (e.clientX - (bbox.left + bbox.width / 2) - cv.pan[0]) / cv.scale,
     (e.clientY - (bbox.top + bbox.height / 2) - cv.pan[1]) / cv.scale,
@@ -132,5 +128,5 @@ export function computePos(
   let y = pos_[0] * sin + pos_[1] * cos;
   if (cv.flipX) x = -x;
   if (cv.flipY) y = -y;
-  return [x + firstCanvas.width / 2, y + firstCanvas.height / 2];
+  return [x + canvasSize.width / 2, y + canvasSize.height / 2];
 }

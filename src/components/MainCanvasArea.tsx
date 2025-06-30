@@ -31,10 +31,10 @@ export default function MainCanvasArea() {
     StateRender(store.stateContainer.state.layers, ctx, layerMod);
   }, [store.stateContainer.state, canvasRef, layerMod]);
 
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize = store.canvasSize();
   return (
     <CanvasArea
-      canvasSize={firstCanvas}
+      canvasSize={canvasSize}
       canvasView={store.uiState.canvasView}
       containerRef={containerRef}
       canvasRef={canvasRef}

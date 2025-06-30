@@ -6,6 +6,7 @@ export function SelectionOverlay() {
   const store = useAppState();
   const selection = store.stateContainer.state.selection;
   const view = store.uiState.canvasView;
+  const canvasSize = store.canvasSize();
   const [dashOffset, setDashOffset] = useState(0);
 
   const path = useMemo(() => {
@@ -37,8 +38,8 @@ export function SelectionOverlay() {
   }, [selection]);
 
   const transform = useMemo(
-    () => viewToSVGTransform(view, store.stateContainer.state.layers[0].canvas),
-    [view, store.stateContainer.state.layers[0].canvas]
+    () => viewToSVGTransform(view, canvasSize),
+    [view, canvasSize]
   );
 
   const dashSize = 8 / view.scale;

@@ -25,8 +25,8 @@ function patchSelection(selection: Selection | null) {
 
 export function selectAll() {
   const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
-  const selection = new Selection(firstCanvas.width, firstCanvas.height, true);
+  const canvasSize = store.canvasSize();
+  const selection = new Selection(canvasSize.width, canvasSize.height, true);
   patchSelection(selection);
 }
 
@@ -36,20 +36,20 @@ export function selectClear() {
 
 export function selectInvert() {
   const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize = store.canvasSize();
   const selection =
     store.stateContainer.state.selection?.clone() ??
-    new Selection(firstCanvas.width, firstCanvas.height, false);
+    new Selection(canvasSize.width, canvasSize.height, false);
   selection.invert();
   patchSelection(selection);
 }
 
 export function selectRect(startPos: [number, number], endPos: [number, number]) {
   const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize = store.canvasSize();
   const selection =
     store.stateContainer.state.selection?.clone() ??
-    new Selection(firstCanvas.width, firstCanvas.height, false);
+    new Selection(canvasSize.width, canvasSize.height, false);
   if (store.uiState.selectionTool === "ellipse") {
     selection.addEllipse(
       (startPos[0] + endPos[0]) / 2,
@@ -72,10 +72,10 @@ export function selectRect(startPos: [number, number], endPos: [number, number])
 
 export function selectLasso(path: { x: number; y: number }[]) {
   const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize = store.canvasSize();
   const selection =
     store.stateContainer.state.selection?.clone() ??
-    new Selection(firstCanvas.width, firstCanvas.height, false);
+    new Selection(canvasSize.width, canvasSize.height, false);
 
   selection.addLasso(path, store.uiState.selectionOperation);
   patchSelection(selection);
@@ -83,13 +83,13 @@ export function selectLasso(path: { x: number; y: number }[]) {
 
 export function selectMagicWand(x: number, y: number) {
   const store = useAppState.getState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize = store.canvasSize();
   const selection =
     store.stateContainer.state.selection?.clone() ??
-    new Selection(firstCanvas.width, firstCanvas.height, false);
+    new Selection(canvasSize.width, canvasSize.height, false);
 
   selection.addMagicWand(
-    firstCanvas.getCanvas(),
+    store.stateContainer.state.layers[store.uiState.layerIndex].canvas.getCanvas(),
     x,
     y,
     store.uiState.selectionTolerance

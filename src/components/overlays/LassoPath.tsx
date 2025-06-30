@@ -5,10 +5,11 @@ import { viewToSVGTransform } from "../CanvasArea";
 export function LassoPath({ path }: { path: { x: number; y: number }[] }) {
   const store = useAppState();
   const view = store.uiState.canvasView;
+  const canvasSize = store.canvasSize();
 
   const transform = useMemo(
-    () => viewToSVGTransform(view, store.stateContainer.state.layers[0].canvas),
-    [view, store.stateContainer.state.layers[0].canvas]
+    () => viewToSVGTransform(view, canvasSize),
+    [view, canvasSize]
   );
 
   const pathString = useMemo(() => {

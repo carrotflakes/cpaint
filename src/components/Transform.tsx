@@ -59,11 +59,11 @@ export default function Transform() {
     return "Oops, not in transform mode🤔";
   }
 
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize = store.canvasSize();
   return (
     <div className="relative w-full h-full">
       <CanvasArea
-        canvasSize={firstCanvas}
+        canvasSize={canvasSize}
         canvasView={store.uiState.canvasView}
         containerRef={containerRef}
         canvasRef={canvasRef}
@@ -77,7 +77,7 @@ export default function Transform() {
                   draft.mode.rect = rect;
               });
             }}
-            canvasSize={firstCanvas}
+            canvasSize={canvasSize}
           />
         )}
       </CanvasArea>

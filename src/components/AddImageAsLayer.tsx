@@ -38,11 +38,11 @@ export default function AddImageAsLayer() {
     return "Oops, not in addImageAsLayer mode";
   }
 
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize = store.canvasSize();
   return (
     <div className="relative w-full h-full">
       <CanvasArea
-        canvasSize={firstCanvas}
+        canvasSize={canvasSize}
         canvasView={store.uiState.canvasView}
         containerRef={containerRef}
         canvasRef={canvasRef}
@@ -56,7 +56,7 @@ export default function AddImageAsLayer() {
                   draft.mode.rect = rect;
               });
             }}
-            canvasSize={firstCanvas}
+            canvasSize={canvasSize}
           />
         )}
       </CanvasArea>
@@ -88,7 +88,7 @@ export default function AddImageAsLayer() {
 
 function applyAddImageAsLayer(addImageAsLayer: { image: MCanvas; rect: Rect }) {
   const store = useAppState.getState();
-  const { width, height } = store.stateContainer.state.layers[0].canvas;
+  const { width, height } = store.canvasSize();
 
   const canvas = new MCanvas(width, height);
   const ctx = canvas.getContextWrite();

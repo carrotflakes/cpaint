@@ -17,9 +17,7 @@ export function EyeDropperLens({
   canvas: HTMLCanvasElement;
 }) {
   const view = useAppState((state) => state.uiState.canvasView);
-  const canvasSize = useAppState(
-    (state) => state.stateContainer.state.layers[0].canvas
-  );
+  const canvasSize = useAppState((state) => state.canvasSize());
 
   const screenPos = useMemo(() => {
     const cx = canvasSize.width / 2;

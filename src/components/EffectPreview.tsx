@@ -43,11 +43,11 @@ export default function EffectPreview() {
     return "Oops, not in effect preview mode🤔";
   }
 
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize = store.canvasSize();
   return (
     <div className="relative w-full h-full">
       <CanvasArea
-        canvasSize={firstCanvas}
+        canvasSize={canvasSize}
         canvasView={store.uiState.canvasView}
         containerRef={containerRef}
         canvasRef={canvasRef}

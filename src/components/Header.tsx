@@ -147,7 +147,7 @@ function FileInfo({
   onTimelapseClick: () => void;
 }) {
   const store = useAppState();
-  const firstCanvas = store.stateContainer.state.layers[0].canvas;
+  const canvasSize = store.canvasSize();
 
   const [editName, setEditName] = useState(imageMeta?.name || "");
 
@@ -171,8 +171,8 @@ function FileInfo({
         }}
       />
       <div className="text-sm text-gray-500 dark:text-gray-400">
-        {firstCanvas.width.toLocaleString("en-US")} x{" "}
-        {firstCanvas.height.toLocaleString("en-US")} px
+        {canvasSize.width.toLocaleString("en-US")} x{" "}
+        {canvasSize.height.toLocaleString("en-US")} px
       </div>
       <button
         className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-300 text-sm flex items-center gap-1"
@@ -213,9 +213,9 @@ function FileInfo({
 
 function ResizeCanvasDialog({ onClose }: { onClose: () => void }) {
   const store = useAppState();
-  const layers = store.stateContainer.state.layers;
-  const currentWidth = layers[0]?.canvas.width ?? 1;
-  const currentHeight = layers[0]?.canvas.height ?? 1;
+  const canvasSize = store.canvasSize();
+  const currentWidth = canvasSize.width;
+  const currentHeight = canvasSize.height;
   const [width, setWidth] = useState(currentWidth);
   const [height, setHeight] = useState(currentHeight);
 
@@ -279,8 +279,8 @@ function ResizeCanvasDialog({ onClose }: { onClose: () => void }) {
 
 function intoResizeCanvasMode(width: number, height: number) {
   const state = useAppState.getState();
-  const firstCanvas = state.stateContainer.state.layers[0].canvas;
-  const canvas = new OffscreenCanvas(firstCanvas.width, firstCanvas.height);
+  const canvasSize = state.canvasSize();
+  const canvas = new OffscreenCanvas(canvasSize.width, canvasSize.height);
   const ctx = canvas.getContext("2d")!;
   StateRender(state.stateContainer.state.layers, ctx, null);
 
@@ -306,8 +306,8 @@ async function exportToPNG() {
 
   if (!meta) return;
 
-  const firstCanvas = state.stateContainer.state.layers[0].canvas;
-  const canvas = new OffscreenCanvas(firstCanvas.width, firstCanvas.height);
+  const canvasSize = state.canvasSize();
+  const canvas = new OffscreenCanvas(canvasSize.width, canvasSize.height);
   const ctx = canvas.getContext("2d")!;
   StateRender(state.stateContainer.state.layers, ctx, null);
 

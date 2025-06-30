@@ -50,8 +50,8 @@ export async function save() {
 
 function createThumbnail() {
   const state = useAppState.getState();
-  const c = state.stateContainer.state.layers[0].canvas;
-  const canvas = new OffscreenCanvas(c.width, c.height);
+  const canvasSize = state.canvasSize();
+  const canvas = new OffscreenCanvas(canvasSize.width, canvasSize.height);
   const ctx = canvas.getContext("2d")!;
   StateRender(state.stateContainer.state.layers, ctx, null);
   return canvas.convertToBlob();
