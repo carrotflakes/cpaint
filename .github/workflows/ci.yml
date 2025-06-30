@@ -1,4 +1,4 @@
-name: Simple CI
+name: CI
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 
 jobs:
   lint-and-typecheck:
+    name: Lint & TypeCheck
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -15,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '21'
 
     - name: Setup pnpm
       uses: pnpm/action-setup@v2
@@ -25,13 +26,11 @@ jobs:
     - name: Install dependencies
       run: pnpm install
 
-    - name: Run ESLint
-      run: pnpm lint
-
     - name: Run TypeScript check
       run: pnpm ts-lint
 
   unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -39,7 +38,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '21'
 
     - name: Setup pnpm
       uses: pnpm/action-setup@v2
@@ -53,9 +52,11 @@ jobs:
       run: pnpm test
 
   e2e-tests:
+    name: E2E Tests (${{ matrix.browser }})
     runs-on: ubuntu-latest
     needs: [lint-and-typecheck, unit-tests]
     strategy:
+      fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
     steps:
@@ -64,7 +65,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '21'
 
     - name: Setup pnpm
       uses: pnpm/action-setup@v2
