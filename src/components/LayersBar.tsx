@@ -96,7 +96,10 @@ export function LayersBar() {
   );
 
   return (
-    <div className="max-h-full flex flex-col items-stretch bg-gray-50 dark:bg-gray-800 border-l border-b border-gray-300">
+    <div 
+      data-testid="layers-bar"
+      className="max-h-full flex flex-col items-stretch bg-gray-50 dark:bg-gray-800 border-l border-b border-gray-300"
+    >
       <div
         className="p-2 flex gap-2 cursor-pointer"
         onClick={() => setLayersVisible((v) => !v)}

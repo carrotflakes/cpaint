@@ -32,7 +32,10 @@ function App() {
   const showOpHistory = useGlobalSettings((s) => s.showOpHistory);
 
   return (
-    <div className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden text-gray-800 dark:text-gray-100 relative">
+    <div 
+      data-testid="app"
+      className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden text-gray-800 dark:text-gray-100 relative"
+    >
       <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-300">
         <Header />
       </div>

@@ -50,7 +50,11 @@ export function ToolBar() {
 
   const currentLayer = store.stateContainer.state.layers[uiState.layerIndex];
   return (
-    <div className="h-full p-2 flex flex-col gap-2 overflow-y-auto" data-scroll>
+    <div 
+      data-testid="toolbar"
+      className="h-full p-2 flex flex-col gap-2 overflow-y-auto" 
+      data-scroll
+    >
       <Popover.Root>
         <Popover.Trigger asChild>
           <div
