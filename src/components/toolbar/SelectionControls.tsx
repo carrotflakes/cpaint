@@ -1,5 +1,6 @@
 import { ReactComponent as IconLasso } from "@/assets/icons/lasso.svg";
 import { ReactComponent as IconMagicWand } from "@/assets/icons/magic-wand.svg";
+import { getLayerById } from "@/model/state";
 import {
   SelectionOperation,
   SelectionTool,
@@ -182,15 +183,17 @@ function fillSelection() {
   const store = useAppState.getState();
   const selection = store.stateContainer.state.selection;
 
-  const currentLayer =
-    store.stateContainer.state.layers[store.uiState.layerIndex];
+  const currentLayer = getLayerById(
+    store.stateContainer.state.layers,
+    store.uiState.currentLayerId
+  );
   if (!currentLayer) return;
 
   const op = {
     type: "selectionFill",
     fillColor: store.uiState.color,
     opacity: store.uiState.opacity,
-    layerIndex: store.uiState.layerIndex,
+    layerId: store.uiState.currentLayerId,
   } as const;
 
   const transfer = (ctx: OffscreenCanvasRenderingContext2D) => {
@@ -211,13 +214,15 @@ function deleteSelection() {
 
   if (!selection) return;
 
-  const currentLayer =
-    store.stateContainer.state.layers[store.uiState.layerIndex];
+  const currentLayer = getLayerById(
+    store.stateContainer.state.layers,
+    store.uiState.currentLayerId
+  );
   if (!currentLayer) return;
 
   const op = {
     type: "selectionDelete",
-    layerIndex: store.uiState.layerIndex,
+    layerId: store.uiState.currentLayerId,
   } as const;
 
   const transfer = (ctx: OffscreenCanvasRenderingContext2D) => {

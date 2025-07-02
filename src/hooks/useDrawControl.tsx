@@ -97,8 +97,7 @@ function startDrawing(
   const store = useAppState.getState();
   const { pressureCurve } = useGlobalSettings.getState();
 
-  const layerId =
-    store.stateContainer.state.layers[store.uiState.layerIndex]?.id;
+  const layerId = store.uiState.currentLayerId;
   if (!layerId) return;
 
   const bucketFill = store.uiState.tool === "bucketFill";

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useViewControl } from "../hooks/useViewControl";
-import { StateRender } from "../model/state";
+import { StateRender, getLayerById } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
 import {
@@ -21,8 +21,10 @@ export default function Transform() {
   const canvases = useMemo(() => {
     if (!layerTransform) return null;
 
-    const canvas =
-      store.stateContainer.state.layers[layerTransform.layerIndex].canvas;
+    const canvas = getLayerById(
+      store.stateContainer.state.layers,
+      layerTransform.layerId
+    )?.canvas;
 
     let selection = store.stateContainer.state.selection;
     if (!selection) {
@@ -36,7 +38,7 @@ export default function Transform() {
   }, [
     store.stateContainer.state.layers,
     store.stateContainer.state.selection,
-    layerTransform?.layerIndex,
+    layerTransform?.layerId,
   ]);
 
   useViewControl(containerRef);
@@ -47,7 +49,10 @@ export default function Transform() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    const layer = store.stateContainer.state.layers[layerTransform.layerIndex];
+    const layer = getLayerById(
+      store.stateContainer.state.layers,
+      layerTransform.layerId
+    );
     const touch = {
       layerId: layer.id,
       apply: makeApply(canvases.base, canvases.target, layerTransform.rect),
@@ -100,7 +105,7 @@ export default function Transform() {
 
             const op = {
               type: "layerTransform" as const,
-              layerIndex: layerTransform.layerIndex,
+              layerId: layerTransform.layerId,
               rect: layerTransform.rect,
             };
 

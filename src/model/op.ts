@@ -8,6 +8,7 @@ import { Patch } from "../libs/patch";
 import { startTouchBrush } from "../libs/touch/brush";
 import { startTouchFill } from "../libs/touch/fill";
 import type { State, StateDiff } from "./state";
+import { findLayerIndexById } from "./state";
 
 export type Op = {
   type: "stroke";
@@ -20,14 +21,14 @@ export type Op = {
   };
   opacity: number;
   path: { pos: [number, number], pressure: number }[];
-  layerIndex: number;
+  layerId: string;
 } | {
   type: "fill";
   fillColor: string;
   opacity: number;
   erase: boolean;
   path: { pos: [number, number] }[];
-  layerIndex: number;
+  layerId: string;
 } | {
   type: "bucketFill";
   fillColor: string;
@@ -35,23 +36,23 @@ export type Op = {
   erase: boolean;
   tolerance: number;
   pos: [number, number];
-  layerIndex: number;
+  layerId: string;
 } | {
   type: "layerTransform";
-  layerIndex: number;
+  layerId: string;
   rect: TransformRect;
 } | {
   type: "selectionFill";
   fillColor: string;
   opacity: number;
-  layerIndex: number;
+  layerId: string;
 } | {
   type: "selectionDelete";
-  layerIndex: number;
+  layerId: string;
 } | {
   type: "applyEffect";
   effect: Effect;
-  layerIndex: number;
+  layerId: string;
 } | {
   type: "patch";
   name: string;
@@ -66,7 +67,9 @@ export function applyOp(
   diff: StateDiff;
 } | null {
   if (op.type === "stroke" || op.type === "fill") {
-    const layer = state.layers[op.layerIndex];
+    const layerIndex = findLayerIndexById(state.layers, op.layerId);
+    if (layerIndex === -1) return null;
+    const layer = state.layers[layerIndex];
     const touch = op.type === "stroke" ?
       startTouchBrush({
         brushType: op.strokeStyle.brushType,
@@ -116,8 +119,8 @@ export function applyOp(
       }],
     };
     const newState = produce(state, (draft) => {
-      draft.layers[op.layerIndex] = {
-        ...draft.layers[op.layerIndex],
+      draft.layers[layerIndex] = {
+        ...draft.layers[layerIndex],
         canvas: newCanvas,
       };
     });

@@ -13,7 +13,7 @@ import {
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
 import { startTouchFill } from '../libs/touch/fill';
 import { Op } from '../model/op';
-import { State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerRedo, StateContainerUndo, StateNew } from '../model/state';
+import { State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerRedo, StateContainerUndo, StateNew, findLayerById, getLayerById } from '../model/state';
 
 export type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
 export type SelectionOperation = 'new' | 'add' | 'subtract' | 'intersect';
@@ -32,7 +32,7 @@ export type AppState = {
     penSize: number
     opacity: number
     brushType: string
-    layerIndex: number
+    currentLayerId: string
     bucketFillTolerance: number
     alphaLock: boolean
     selectionTool: SelectionTool
@@ -51,7 +51,7 @@ export type AppState = {
     type: "draw"
   } | {
     type: "layerTransform"
-    layerIndex: number
+    layerId: string
     rect: TransformRect
   } | {
     type: "canvasResize"
@@ -96,7 +96,7 @@ export const useAppState = create<AppState>()((set, get) => {
       opacity: 1,
       softPen: false,
       brushType: "particle1",
-      layerIndex: 0,
+      currentLayerId: "", // Will be set when opening a file
       bucketFillTolerance: 0,
       alphaLock: false,
       selectionTool: "rectangle" as SelectionTool,
@@ -122,8 +122,8 @@ export const useAppState = create<AppState>()((set, get) => {
     },
     apply(op, transfer) {
       // Check if the operation affects a locked layer
-      if ('layerIndex' in op && typeof op.layerIndex === 'number') {
-        const layer = get().stateContainer.state.layers[op.layerIndex];
+      if ('layerId' in op && typeof op.layerId === 'string') {
+        const layer = findLayerById(get().stateContainer.state.layers, op.layerId);
         if (layer?.locked) {
           // Don't apply operations to locked layers
           pushToast("Cannot apply operation to a locked layer!", {
@@ -135,7 +135,7 @@ export const useAppState = create<AppState>()((set, get) => {
 
       set(state => ({
         stateContainer: StateContainerDo(state.stateContainer, op, transfer && op.type !== "patch" ? {
-          layerId: state.stateContainer.state.layers[op.layerIndex].id,
+          layerId: op.layerId,
           apply: transfer
         } : null),
       }))
@@ -148,12 +148,12 @@ export const useAppState = create<AppState>()((set, get) => {
         savedState: stateContainer.state,
         uiState: {
           ...get().uiState,
-          layerIndex: stateContainer.state.layers.length - 1,
+          currentLayerId: stateContainer.state.layers.at(-1)?.id ?? "",
           colorHistory: colorHistory,
           canvasView: {
             angle: 0,
             scale: 1,
-            pan: [0, 0],
+            pan: [0, 0] as const,
             flipX: false,
             flipY: false,
           },
@@ -194,14 +194,16 @@ export const useAppState = create<AppState>()((set, get) => {
     undo() {
       set((state) => ({
         stateContainer: StateContainerUndo(state.stateContainer),
-      })
-      )
+      }));
+      // TODO: Select the last layer after undo
+      ensureCurrentLayerId();
     },
     redo() {
       set((state) => ({
         stateContainer: StateContainerRedo(state.stateContainer),
-      })
-      )
+      }));
+      // TODO: Select the last layer after redo
+      ensureCurrentLayerId();
     },
     hasUnsavedChanges() {
       const state = get();
@@ -215,7 +217,7 @@ export const useAppState = create<AppState>()((set, get) => {
 
     async startEffectPreview(effect) {
       const store = get();
-      const layer = store.stateContainer.state.layers[store.uiState.layerIndex];
+      const layer = getLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
       if (!layer || layer.locked) return;
 
       const originalCanvas = new MCanvas(layer.canvas.width, layer.canvas.height);
@@ -261,7 +263,7 @@ export const useAppState = create<AppState>()((set, get) => {
 
       const op: Op = {
         type: "applyEffect",
-        layerIndex: store.uiState.layerIndex,
+        layerId: store.uiState.currentLayerId,
         effect: store.mode.effect,
       };
 
@@ -278,6 +280,17 @@ export const useAppState = create<AppState>()((set, get) => {
   })
 });
 
+function ensureCurrentLayerId() {
+  const store = useAppState.getState();
+  if (!findLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId)) {
+    const lastLayer = store.stateContainer.state.layers.at(-1);
+    if (!lastLayer) return;
+    store.update((draft) => {
+      draft.uiState.currentLayerId = lastLayer.id;
+    });
+  }
+}
+
 export function ImageMetaNew(name?: string) {
   return {
     id: Date.now(),
@@ -286,8 +299,9 @@ export function ImageMetaNew(name?: string) {
   };
 }
 
-export function isLayerLocked(store: AppState, layerIndex: number = store.uiState.layerIndex): boolean {
-  const layer = store.stateContainer.state.layers[layerIndex];
+export function isLayerLocked(store: AppState, layerId?: string): boolean {
+  const targetLayerId = layerId ?? store.uiState.currentLayerId;
+  const layer = findLayerById(store.stateContainer.state.layers, targetLayerId);
   return layer?.locked ?? false;
 }
 
@@ -305,12 +319,12 @@ export function createOp(store: AppState): Op | null {
         opacity: store.uiState.opacity,
         erase: store.uiState.erase,
         path: [],
-        layerIndex: store.uiState.layerIndex,
+        layerId: store.uiState.currentLayerId,
       };
     case "brush":
       return {
         type: "stroke",
-        layerIndex: store.uiState.layerIndex,
+        layerId: store.uiState.currentLayerId,
         strokeStyle: {
           color: store.uiState.color,
           width: store.uiState.penSize,
@@ -329,7 +343,7 @@ export function createOp(store: AppState): Op | null {
         erase: store.uiState.erase,
         tolerance: store.uiState.bucketFillTolerance,
         pos: [0, 0], // Placeholder, will be set later
-        layerIndex: store.uiState.layerIndex,
+        layerId: store.uiState.currentLayerId,
       };
     default:
       return null;
@@ -342,7 +356,8 @@ export function createTouch(store: AppState) {
     return null;
   }
 
-  const canvas = store.stateContainer.state.layers[store.uiState.layerIndex].canvas;
+  const layer = getLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
+  const canvas = layer.canvas;
   const canvasSize: [number, number] = [canvas.width, canvas.height];
 
   switch (store.uiState.tool) {
@@ -392,8 +407,7 @@ export function wrapTransferWithClip(
 export async function appApplyEffect(effect: Effect) {
   const store = useAppState.getState();
   const performanceSettings = usePerformanceSettings.getState();
-  const layerOrg =
-    store.stateContainer.state.layers[store.uiState.layerIndex];
+  const layerOrg = getLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
   if (!layerOrg)
     return;
 
@@ -422,7 +436,7 @@ export async function appApplyEffect(effect: Effect) {
 
   const op: Op = {
     type: "applyEffect",
-    layerIndex: store.uiState.layerIndex,
+    layerId: store.uiState.currentLayerId,
     effect,
   };
   store.apply(op, (ctx) => {

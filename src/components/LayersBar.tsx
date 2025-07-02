@@ -8,7 +8,12 @@ import { ReactComponent as IconLock } from "../assets/icons/lock.svg";
 import { ReactComponent as IconMenu } from "../assets/icons/menu.svg";
 import { MCanvas } from "../libs/MCanvas";
 import { BlendMode } from "../model/blendMode";
-import { DEFAULT_LAYER_PROPS, newLayerId, State } from "../model/state";
+import {
+  DEFAULT_LAYER_PROPS,
+  findLayerIndexById,
+  newLayerId,
+  State
+} from "../model/state";
 import { AppState, useAppState } from "../store/appState";
 import { SliderH } from "./slider";
 
@@ -96,7 +101,7 @@ export function LayersBar() {
   );
 
   return (
-    <div 
+    <div
       data-testid="layers-bar"
       className="max-h-full flex flex-col items-stretch bg-gray-50 dark:bg-gray-800 border-l border-b border-gray-300"
     >
@@ -119,7 +124,7 @@ export function LayersBar() {
                 className={`relative p-1 flex items-center gap-2 ${
                   dragOverIndex === i && draggedIndex !== null
                     ? "bg-blue-100 dark:bg-blue-900"
-                    : i === store.uiState.layerIndex
+                    : layer.id === store.uiState.currentLayerId
                     ? "bg-gray-200 dark:bg-gray-700"
                     : ""
                 }`}
@@ -196,7 +201,7 @@ export function LayersBar() {
                   className="grow flex items-center gap-2 cursor-pointer"
                   onClick={() => {
                     store.update((draft) => {
-                      draft.uiState.layerIndex = i;
+                      draft.uiState.currentLayerId = layer.id;
                     });
                   }}
                 >
@@ -233,7 +238,7 @@ export function LayersBar() {
                       }
                     >
                       <ContextMenuPopover
-                        layerIndex={i}
+                        layerId={layer.id}
                         store={store}
                         closePopover={() =>
                           setPopoverOpen({ open: false, layerIndex: 0 })
@@ -255,14 +260,19 @@ export function LayersBar() {
 }
 
 function ContextMenuPopover({
-  layerIndex,
+  layerId,
   closePopover,
   store,
 }: {
-  layerIndex: number;
+  layerId: string;
   closePopover: () => void;
   store: AppState;
 }) {
+  const layerIndex = findLayerIndexById(
+    store.stateContainer.state.layers,
+    layerId
+  );
+
   const updateOpacity = useCallback(
     (index: number, opacity: number) => {
       store.apply(
@@ -337,6 +347,21 @@ function ContextMenuPopover({
         },
         null
       );
+
+      // Update the current layer index if necessary
+      store.update((draft) => {
+        if (
+          !draft.stateContainer.state.layers.find(
+            (l) => l.id === draft.uiState.currentLayerId
+          )
+        ) {
+          draft.uiState.currentLayerId =
+            draft.stateContainer.state.layers[
+              Math.min(index, draft.stateContainer.state.layers.length - 1)
+            ].id;
+        }
+      });
+
       closePopover();
     },
     [store, closePopover]
@@ -397,8 +422,12 @@ function ContextMenuPopover({
 
       // Update the current layer index if necessary
       store.update((draft) => {
-        if (draft.uiState.layerIndex >= index) {
-          draft.uiState.layerIndex = Math.max(0, draft.uiState.layerIndex - 1);
+        if (
+          !draft.stateContainer.state.layers.find(
+            (l) => l.id === draft.uiState.currentLayerId
+          )
+        ) {
+          draft.uiState.currentLayerId = mergedLayer.id;
         }
       });
 
@@ -407,11 +436,13 @@ function ContextMenuPopover({
     [store, closePopover]
   );
 
+  const layer = store.stateContainer.state.layers[layerIndex];
+  if (!layer) return null;
   return (
     <div className="flex flex-col text-gray-800 bg-gray-50">
       <div className="p-2 hover:bg-gray-100">
         <select
-          value={store.stateContainer.state.layers[layerIndex].blendMode}
+          value={layer.blendMode}
           onChange={(e) =>
             store.apply(
               {
@@ -441,7 +472,7 @@ function ContextMenuPopover({
       <div className="p-2 hover:bg-gray-100">
         <SliderH
           className="h-5"
-          value={store.stateContainer.state.layers[layerIndex].opacity}
+          value={layer.opacity}
           onChange={(value) => updateOpacity(layerIndex, value)}
         />
       </div>
@@ -451,7 +482,6 @@ function ContextMenuPopover({
       <div
         className="p-2 cursor-pointer hover:bg-gray-100"
         onClick={() => {
-          const layer = store.stateContainer.state.layers[layerIndex];
           store.apply(
             {
               type: "patch",
@@ -470,9 +500,7 @@ function ContextMenuPopover({
           closePopover();
         }}
       >
-        {store.stateContainer.state.layers[layerIndex].locked
-          ? "Unlock Layer"
-          : "Lock Layer"}
+        {layer.locked ? "Unlock Layer" : "Lock Layer"}
       </div>
 
       <hr className="opacity-20" />

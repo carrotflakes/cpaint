@@ -134,8 +134,9 @@ export function StateContainerDo(
       // No difference found
       return sc;
     }
+    const layerIndex = findLayerIndexById(sc.state.layers, layer.id);
     const state = produce(sc.state, draft => {
-      draft.layers[op.layerIndex].canvas = canvas;
+      draft.layers[layerIndex].canvas = canvas;
     });
     return {
       state,
@@ -322,4 +323,21 @@ export type LayerMod = {
 
 export function newLayerId() {
   return `${Date.now() % 1000000}`;
+}
+
+// Helper functions for layer ID-based operations
+export function findLayerById(layers: State["layers"], layerId: string): State["layers"][number] | undefined {
+  return layers.find(layer => layer.id === layerId);
+}
+
+export function findLayerIndexById(layers: State["layers"], layerId: string): number {
+  return layers.findIndex(layer => layer.id === layerId);
+}
+
+export function getLayerById(layers: State["layers"], layerId: string): State["layers"][number] {
+  const layer = findLayerById(layers, layerId);
+  if (!layer) {
+    throw new Error(`Layer with id ${layerId} not found`);
+  }
+  return layer;
 }

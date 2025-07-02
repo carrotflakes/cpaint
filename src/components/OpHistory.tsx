@@ -101,7 +101,7 @@ function formatOpDetails(op: Op) {
       if (op.erase) details.push("Mode: Erase");
       break;
     case "layerTransform":
-      details.push(`Layer: ${op.layerIndex}`);
+      details.push(`Layer: ${op.layerId}`);
       details.push(`Transform: ${JSON.stringify(op.rect, null, 2)}`);
       break;
     case "selectionFill":
@@ -109,7 +109,7 @@ function formatOpDetails(op: Op) {
       details.push(`Opacity: ${(op.opacity * 100).toFixed(0)}%`);
       break;
     case "selectionDelete":
-      details.push(`Layer: ${op.layerIndex}`);
+      details.push(`Layer: ${op.layerId}`);
       break;
     case "applyEffect":
       details.push(`Effect: ${op.effect.type}`);

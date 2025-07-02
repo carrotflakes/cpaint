@@ -14,7 +14,11 @@ import { ReactComponent as IconRedo } from "@/assets/icons/redo.svg";
 import { ReactComponent as IconSelection } from "@/assets/icons/selection.svg";
 import { ReactComponent as IconSparkle } from "@/assets/icons/sparkle.svg";
 import { ReactComponent as IconUndo } from "@/assets/icons/undo.svg";
-import { StateContainerHasRedo, StateContainerHasUndo } from "@/model/state";
+import {
+  StateContainerHasRedo,
+  StateContainerHasUndo,
+  findLayerById,
+} from "@/model/state";
 import { AppState, useAppState } from "@/store/appState";
 import { BrushPreview } from "./BrushPreview";
 import { BrushSelector } from "./BrushSelector";
@@ -48,11 +52,14 @@ export function ToolBar() {
     sensitivity: 0.01,
   });
 
-  const currentLayer = store.stateContainer.state.layers[uiState.layerIndex];
+  const currentLayer = findLayerById(
+    store.stateContainer.state.layers,
+    uiState.currentLayerId
+  );
   return (
-    <div 
+    <div
       data-testid="toolbar"
-      className="h-full p-2 flex flex-col gap-2 overflow-y-auto" 
+      className="h-full p-2 flex flex-col gap-2 overflow-y-auto"
       data-scroll
     >
       <Popover.Root>
@@ -437,14 +444,17 @@ export function ToolBar() {
 
 function intoLayerTransformMode(store: AppState) {
   store.update((draft) => {
-    const canvas =
-      draft.stateContainer.state.layers[draft.uiState.layerIndex].canvas;
+    const layer = draft.stateContainer.state.layers.find(
+      (l) => l.id === draft.uiState.currentLayerId
+    );
+    const canvas = layer?.canvas;
+    if (!canvas) return;
     const bbox =
       draft.stateContainer.state.selection?.getBounds() ?? canvas.getBbox();
     if (!bbox) return;
     draft.mode = {
       type: "layerTransform",
-      layerIndex: draft.uiState.layerIndex,
+      layerId: draft.uiState.currentLayerId,
       rect: {
         cx: bbox.width / 2 + bbox.x,
         cy: bbox.height / 2 + bbox.y,

@@ -21,8 +21,8 @@ export default function EffectPreview() {
     const ctx = canvas.getContext("2d")!;
 
     // Render all layers with the current layer replaced by preview canvas
-    const layers = store.stateContainer.state.layers.map((layer, index) => {
-      if (index === store.uiState.layerIndex) {
+    const layers = store.stateContainer.state.layers.map((layer) => {
+      if (layer.id === store.uiState.currentLayerId) {
         return {
           ...layer,
           canvas: effectPreview.previewCanvas,
@@ -35,7 +35,7 @@ export default function EffectPreview() {
   }, [
     store.stateContainer.state.layers,
     effectPreview?.previewCanvas,
-    store.uiState.layerIndex,
+    store.uiState.currentLayerId,
     canvasRef,
   ]);
 
