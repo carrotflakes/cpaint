@@ -1,5 +1,5 @@
-import { useUnsavedChangesDialog } from "../store/unsavedChangesDialog";
-import { ModalDialog } from "./ModalDialog";
+import { useUnsavedChangesDialog } from "./store";
+import { ModalDialog } from "@/components/ModalDialog";
 
 export function UnsavedChangesDialog() {
   const { isOpen, message, onConfirm, onCancel } = useUnsavedChangesDialog();

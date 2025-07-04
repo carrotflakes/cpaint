@@ -1,5 +1,5 @@
+import { useUnsavedChangesGuard } from "@/features/unsaved-changes";
 import { useEffect, useState } from "react";
-import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import { loadImageFromFile } from "../libs/loadImageFile";
 import { StateFromImage } from "../model/state";
 import { ImageMetaNew, useAppState } from "../store/appState";

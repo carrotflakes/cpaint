@@ -1,3 +1,4 @@
+import { useUnsavedChangesGuard } from "@/features/unsaved-changes";
 import * as Popover from "@radix-ui/react-popover";
 import { useState } from "react";
 import logo from "../assets/cpaint.svg";
@@ -5,7 +6,6 @@ import { ReactComponent as IconCaretLeft } from "../assets/icons/caret-left.svg"
 import { ReactComponent as IconFrameCorners } from "../assets/icons/frame-corners.svg";
 import { ReactComponent as IconGear } from "../assets/icons/gear.svg";
 import { ReactComponent as IconSave } from "../assets/icons/save.svg";
-import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import { MCanvas } from "../libs/MCanvas";
 import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";

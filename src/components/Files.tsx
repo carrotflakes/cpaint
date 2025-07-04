@@ -1,13 +1,13 @@
 import { loadImage } from "@/store/save";
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
-import { useUnsavedChangesGuard } from "../hooks/useUnsavedChangesGuard";
 import { CHECK_PATTERN } from "../libs/check";
 import { loadImageFromFile } from "../libs/loadImageFile";
 import { StateFromImage, StateNew } from "../model/state";
 import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
+import { useUnsavedChangesGuard } from "@/features/unsaved-changes";
 
 export function Files() {
   const [files, setFiles] = useState(
