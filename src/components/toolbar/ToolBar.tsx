@@ -17,8 +17,8 @@ import { ReactComponent as IconUndo } from "@/assets/icons/undo.svg";
 import {
   StateContainerHasRedo,
   StateContainerHasUndo,
-  findLayerById,
-} from "@/model/state";
+} from "@/model/stateContainer";
+import { findLayerById } from "@/model/state";
 import { AppState, useAppState } from "@/store/appState";
 import { BrushPreview } from "./BrushPreview";
 import { BrushSelector } from "./BrushSelector";

@@ -7,8 +7,9 @@ import { MCanvas } from "../libs/MCanvas";
 import { Patch } from "../libs/patch";
 import { startTouchBrush } from "../libs/touch/brush";
 import { startTouchFill } from "../libs/touch/fill";
-import type { State, StateDiff } from "./state";
+import type { State } from "./state";
 import { findLayerIndexById } from "./state";
+import { StateDiff } from "./stateContainer";
 
 export type Op = {
   type: "stroke";

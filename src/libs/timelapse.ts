@@ -1,4 +1,5 @@
-import { State, StateContainer, StateRender, applyStateDiff } from "../model/state";
+import { State, StateRender } from "@/model/state";
+import { StateContainer, applyStateDiff } from "@/model/stateContainer";
 
 // Deep clone utility for State objects
 function deepCloneState(state: State): State {

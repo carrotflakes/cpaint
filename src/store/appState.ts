@@ -13,7 +13,8 @@ import {
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
 import { startTouchFill } from '../libs/touch/fill';
 import { Op } from '../model/op';
-import { findLayerById, getLayerById, State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerRedo, StateContainerUndo, StateNew } from '../model/state';
+import { findLayerById, getLayerById, State, StateNew } from '../model/state';
+import { StateContainer, StateContainerDo, StateContainerFromState, StateContainerRedo, StateContainerUndo, } from '../model/stateContainer';
 import { createUiStateSlice, UiStateSlice } from './uiStateSlice';
 
 type Mode = {
