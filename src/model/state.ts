@@ -16,6 +16,7 @@ export type State = Readonly<{
     width: number;
     height: number;
   };
+  nextLayerId: number;
 }>
 
 export const DEFAULT_LAYER_PROPS = {
@@ -30,10 +31,11 @@ export function StateNew(
   height: number,
   addWhiteBackground: boolean,
 ): State {
+  let layerId = 1;
   const layers = [
     {
       ...DEFAULT_LAYER_PROPS,
-      id: newLayerId(),
+      id: newLayerId(layerId++),
       canvas: new MCanvas(width, height),
     },
   ];
@@ -57,6 +59,7 @@ export function StateNew(
       width,
       height,
     },
+    nextLayerId: layerId,
   };
 }
 
@@ -69,7 +72,7 @@ export function StateFromImage(image: HTMLImageElement) {
     layers: [
       {
         ...DEFAULT_LAYER_PROPS,
-        id: newLayerId(),
+        id: newLayerId(1),
         canvas,
       },
     ],
@@ -78,6 +81,7 @@ export function StateFromImage(image: HTMLImageElement) {
       width,
       height,
     },
+    nextLayerId: 2,
   };
 }
 
@@ -132,8 +136,18 @@ export type LayerMod = {
   apply: (ctx: OffscreenCanvasRenderingContext2D) => void;
 }
 
-export function newLayerId() {
-  return `${Date.now() % 1000000}`;
+export function newLayerId(state: State | number): string {
+  return `layer-${typeof state === "number" ? state : state.nextLayerId}`;
+}
+
+export function computeNextLayerIdFromLayerIds(layerIds: string[]): number {
+  let maxId = 0;
+  for (const id of layerIds) {
+    const match = id.match(/layer-(\d+)/);
+    if (match)
+      maxId = Math.max(maxId, parseInt(match[1], 10));
+  }
+  return maxId + 1;
 }
 
 // Helper functions for layer ID-based operations

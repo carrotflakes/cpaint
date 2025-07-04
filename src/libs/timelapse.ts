@@ -12,6 +12,7 @@ function deepCloneState(state: State): State {
     size: {
       ...state.size,
     },
+    nextLayerId: state.nextLayerId,
   };
 }
 

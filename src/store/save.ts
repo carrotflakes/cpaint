@@ -3,7 +3,7 @@ import { Selection } from "@/libs/Selection";
 import { BlendMode } from "@/model/blendMode";
 import { pushToast } from "../components/Toasts";
 import { storage } from "../libs/Storage";
-import { StateRender } from "../model/state";
+import { computeNextLayerIdFromLayerIds, StateRender } from "../model/state";
 import { useAppState } from "./appState";
 
 export async function save() {
@@ -106,6 +106,9 @@ export async function loadImage(id: number) {
       width,
       height,
     },
+    nextLayerId: computeNextLayerIdFromLayerIds(
+      layers.map((layer) => layer.id)
+    ),
   };
   useAppState.getState().open(imageMeta, state, imageData.colorHistory || []);
 }

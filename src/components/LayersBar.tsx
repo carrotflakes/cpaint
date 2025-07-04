@@ -12,7 +12,7 @@ import {
   DEFAULT_LAYER_PROPS,
   findLayerIndexById,
   newLayerId,
-  State
+  State,
 } from "../model/state";
 import { AppState, useAppState } from "../store/appState";
 import { SliderH } from "./slider";
@@ -47,9 +47,15 @@ export function LayersBar() {
             path: `/layers/${layers.length}`,
             value: {
               ...DEFAULT_LAYER_PROPS,
-              id: newLayerId(),
+              id: newLayerId(store.stateContainer.state),
               canvas,
             } satisfies State["layers"][number],
+          },
+          {
+            op: "replace",
+            path: "/nextLayerId",
+            value: (store.stateContainer.state.nextLayerId +
+              1) satisfies State["nextLayerId"],
           },
         ],
       },
@@ -310,13 +316,19 @@ function ContextMenuPopover({
               op: "add",
               path: `/layers/${index + 1}`,
               value: {
-                id: newLayerId(),
+                id: newLayerId(store.stateContainer.state),
                 canvas: newCanvas,
                 visible: true,
                 opacity: layer.opacity,
                 blendMode: layer.blendMode,
                 locked: layer.locked,
               } satisfies State["layers"][number],
+            },
+            {
+              op: "replace",
+              path: "/nextLayerId",
+              value: (store.stateContainer.state.nextLayerId +
+                1) satisfies State["nextLayerId"],
             },
           ],
         },
@@ -393,7 +405,7 @@ function ContextMenuPopover({
       mergedCtx.restore();
 
       const mergedLayer = {
-        id: newLayerId(),
+        id: newLayerId(store.stateContainer.state),
         canvas: mergedCanvas,
         visible: belowLayer.visible,
         opacity: belowLayer.opacity,
@@ -414,6 +426,12 @@ function ContextMenuPopover({
               op: "replace",
               path: `/layers/${index - 1}`,
               value: mergedLayer,
+            },
+            {
+              op: "replace",
+              path: "/nextLayerId",
+              value: (store.stateContainer.state.nextLayerId +
+                1) satisfies State["nextLayerId"],
             },
           ],
         },

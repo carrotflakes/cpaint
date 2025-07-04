@@ -3,7 +3,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { CHECK_PATTERN } from "../libs/check";
 import { loadImageFromFile } from "../libs/loadImageFile";
-import { StateFromImage, StateNew } from "../model/state";
+import {
+  computeNextLayerIdFromLayerIds,
+  StateFromImage,
+  StateNew,
+} from "../model/state";
 import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
@@ -104,6 +108,9 @@ export function Files() {
                     layers: psdData.layers,
                     selection: null,
                     size: { width: psdData.width, height: psdData.height },
+                    nextLayerId: computeNextLayerIdFromLayerIds(
+                      psdData.layers.map((layer) => layer.id)
+                    ),
                   });
                 } else {
                   try {
