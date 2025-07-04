@@ -28,7 +28,7 @@ export default function MainCanvasArea() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    StateRender(store.stateContainer.state.layers, ctx, layerMod);
+    StateRender(store.stateContainer.state, ctx, layerMod);
   }, [store.stateContainer.state, canvasRef, layerMod]);
 
   const canvasSize = store.canvasSize();

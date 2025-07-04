@@ -8,6 +8,9 @@ function deepCloneState(state: State): State {
       canvas: layer.canvas.clone(),
     })),
     selection: state.selection?.clone() ?? null,
+    size: {
+      ...state.size,
+    },
   };
 }
 
@@ -83,7 +86,7 @@ export class TimelapseGenerator {
       ctx.translate(offsetX, offsetY);
       ctx.scale(scale, scale);
 
-      StateRender(state.layers, ctx, null);
+      StateRender(state, ctx, null);
 
       ctx.restore();
     }

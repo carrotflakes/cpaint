@@ -24,6 +24,10 @@ const ImageDataSchema = z.object({
     height: z.number(),
     data: z.instanceof(Blob),
   }).nullable().optional(),
+  size: z.object({
+    width: z.number(),
+    height: z.number(),
+  }).optional(), // TODO: remove this when all images are migrated
   colorHistory: z.array(z.string()).optional(),
 });
 

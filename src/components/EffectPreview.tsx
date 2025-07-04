@@ -31,7 +31,14 @@ export default function EffectPreview() {
       return layer;
     });
 
-    StateRender(layers, ctx, null);
+    StateRender(
+      {
+        ...store.stateContainer.state,
+        layers,
+      },
+      ctx,
+      null
+    );
   }, [
     store.stateContainer.state.layers,
     effectPreview?.previewCanvas,

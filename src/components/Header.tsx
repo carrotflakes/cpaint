@@ -282,7 +282,7 @@ function intoResizeCanvasMode(width: number, height: number) {
   const canvasSize = state.canvasSize();
   const canvas = new OffscreenCanvas(canvasSize.width, canvasSize.height);
   const ctx = canvas.getContext("2d")!;
-  StateRender(state.stateContainer.state.layers, ctx, null);
+  StateRender(state.stateContainer.state, ctx, null);
 
   useAppState.getState().update((state) => {
     state.mode = {
@@ -309,7 +309,7 @@ async function exportToPNG() {
   const canvasSize = state.canvasSize();
   const canvas = new OffscreenCanvas(canvasSize.width, canvasSize.height);
   const ctx = canvas.getContext("2d")!;
-  StateRender(state.stateContainer.state.layers, ctx, null);
+  StateRender(state.stateContainer.state, ctx, null);
 
   const blob = await canvas.convertToBlob({ type: "image/png" });
   const url = URL.createObjectURL(blob);

@@ -18,6 +18,10 @@ export type State = Readonly<{
     locked: boolean;
   }[];
   selection: Selection | null;
+  size: {
+    width: number;
+    height: number;
+  };
 }>
 
 export type StateContainer = Readonly<{
@@ -72,6 +76,10 @@ export function StateNew(
   return {
     layers,
     selection: null,
+    size: {
+      width,
+      height,
+    },
   };
 }
 
@@ -89,6 +97,10 @@ export function StateFromImage(image: HTMLImageElement) {
       },
     ],
     selection: null,
+    size: {
+      width,
+      height,
+    },
   };
 }
 
@@ -272,15 +284,15 @@ export function applyStateDiff(
 
 // Render the state to the canvas
 export function StateRender(
-  layers: State["layers"],
+  state: State,
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   layerMod: LayerMod | null,
 ) {
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.clearRect(0, 0, state.size.width, state.size.height);
 
   ctx.save();
-  for (let i = 0; i < layers.length; i++) {
-    const layer = layers[i];
+  for (let i = 0; i < state.layers.length; i++) {
+    const layer = state.layers[i];
     if (!layer.visible) continue; // Skip rendering invisible layers
 
     if (layer.id === layerMod?.layerId) {

@@ -29,6 +29,7 @@ export async function save() {
     const imageData = {
       layers,
       selection,
+      size: state.stateContainer.state.size,
       colorHistory: state.uiState.colorHistory,
     };
     await storage.putImage(meta, imageData, thumbnail);
@@ -53,7 +54,7 @@ function createThumbnail() {
   const canvasSize = state.canvasSize();
   const canvas = new OffscreenCanvas(canvasSize.width, canvasSize.height);
   const ctx = canvas.getContext("2d")!;
-  StateRender(state.stateContainer.state.layers, ctx, null);
+  StateRender(state.stateContainer.state, ctx, null);
   return canvas.convertToBlob();
 }
 
@@ -93,9 +94,18 @@ export async function loadImage(id: number) {
     ? await Selection.fromStorable(imageData.selection)
     : null;
 
+  // Calculate the size from layers (use the first layer's dimensions)
+  const firstLayer = layers[0];
+  const width = firstLayer?.canvas.width || 0;
+  const height = firstLayer?.canvas.height || 0;
+
   const state = {
     layers,
     selection,
+    size: imageData.size ?? {
+      width,
+      height,
+    },
   };
   useAppState.getState().open(imageMeta, state, imageData.colorHistory || []);
 }

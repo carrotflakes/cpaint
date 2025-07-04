@@ -116,6 +116,7 @@ function ImportImage({ onClose, file }: { onClose: () => void; file: File }) {
                   useAppState.getState().open(ImageMetaNew(file.name), {
                     layers: psdData.layers,
                     selection: null,
+                    size: { width: psdData.width, height: psdData.height },
                   });
                 } else {
                   try {

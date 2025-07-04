@@ -103,6 +103,7 @@ export function Files() {
                   useAppState.getState().open(ImageMetaNew(file.name), {
                     layers: psdData.layers,
                     selection: null,
+                    size: { width: psdData.width, height: psdData.height },
                   });
                 } else {
                   try {

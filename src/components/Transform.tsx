@@ -57,7 +57,7 @@ export default function Transform() {
       layerId: layer.id,
       apply: makeApply(canvases.base, canvases.target, layerTransform.rect),
     };
-    StateRender(store.stateContainer.state.layers, ctx, touch);
+    StateRender(store.stateContainer.state, ctx, touch);
   }, [store.stateContainer.state.layers, canvases, canvasRef, layerTransform]);
 
   if (!layerTransform) {

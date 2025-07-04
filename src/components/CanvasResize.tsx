@@ -109,6 +109,14 @@ function applyCanvasResize(canvasResize: {
         path: "/layers",
         value: layers satisfies State["layers"],
       },
+      {
+        op: "replace",
+        path: "/size",
+        value: {
+          width: canvasResize.size[0],
+          height: canvasResize.size[1],
+        } satisfies State["size"],
+      },
     ],
   };
   store.apply(op, null);

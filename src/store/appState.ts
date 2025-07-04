@@ -118,7 +118,7 @@ export const useAppState = create<AppState>()((set, get) => {
     savedState: null,
 
     canvasSize() {
-      return this.stateContainer.state.layers[0].canvas;
+      return this.stateContainer.state.size;
     },
     apply(op, transfer) {
       // Check if the operation affects a locked layer
