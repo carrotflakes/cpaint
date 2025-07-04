@@ -1,8 +1,8 @@
 import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
 import { Rect as TransformRect } from '../components/overlays/TransformRectHandles';
-import { pushToast } from '../components/Toasts';
 import { usePerformanceSettings } from '../components/PerformanceSettings';
+import { pushToast } from '../components/Toasts';
 import { applyEffect, Effect } from '../features/effects';
 import { MCanvas } from '../libs/MCanvas';
 import { Selection } from '../libs/Selection';
@@ -13,11 +13,30 @@ import {
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
 import { startTouchFill } from '../libs/touch/fill';
 import { Op } from '../model/op';
-import { State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerRedo, StateContainerUndo, StateNew, findLayerById, getLayerById } from '../model/state';
+import { findLayerById, getLayerById, State, StateContainer, StateContainerDo, StateContainerFromState, StateContainerRedo, StateContainerUndo, StateNew } from '../model/state';
+import { createUiStateSlice, UiStateSlice } from './uiStateSlice';
 
-export type ToolType = "brush" | "fill" | "bucketFill" | "eyeDropper" | "selection";
-export type SelectionOperation = 'new' | 'add' | 'subtract' | 'intersect';
-export type SelectionTool = 'rectangle' | 'ellipse' | 'lasso' | 'magicWand' | 'paint';
+type Mode = {
+  type: "draw"
+} | {
+  type: "layerTransform"
+  layerId: string
+  rect: TransformRect
+} | {
+  type: "canvasResize"
+  rendered: MCanvas
+  size: [number, number]
+  rect: TransformRect
+} | {
+  type: "addImageAsLayer"
+  image: MCanvas
+  rect: TransformRect
+} | {
+  type: "effectPreview"
+  effect: Effect
+  originalCanvas: MCanvas
+  previewCanvas: MCanvas
+}
 
 export type AppState = {
   imageMeta: null | {
@@ -25,49 +44,7 @@ export type AppState = {
     name: string,
     createdAt: number,
   }
-  uiState: {
-    tool: ToolType
-    color: string
-    erase: boolean
-    penSize: number
-    opacity: number
-    brushType: string
-    currentLayerId: string
-    bucketFillTolerance: number
-    alphaLock: boolean
-    selectionTool: SelectionTool
-    selectionOperation: SelectionOperation
-    selectionTolerance: number
-    canvasView: {
-      angle: number
-      scale: number
-      pan: [number, number]
-      flipX: boolean
-      flipY: boolean
-    }
-    colorHistory: string[]
-  }
-  mode: {
-    type: "draw"
-  } | {
-    type: "layerTransform"
-    layerId: string
-    rect: TransformRect
-  } | {
-    type: "canvasResize"
-    rendered: MCanvas
-    size: [number, number]
-    rect: TransformRect
-  } | {
-    type: "addImageAsLayer"
-    image: MCanvas
-    rect: TransformRect
-  } | {
-    type: "effectPreview"
-    effect: Effect
-    originalCanvas: MCanvas
-    previewCanvas: MCanvas
-  }
+  mode: Mode
   stateContainer: StateContainer
   savedState: State | null
 
@@ -83,34 +60,12 @@ export type AppState = {
   startEffectPreview: (effect: Effect) => void
   updateEffectPreview: (effect: Effect) => void
   applyEffectPreview: () => void
-};
+} & UiStateSlice;
 
 export const useAppState = create<AppState>()((set, get) => {
   return ({
+    ...createUiStateSlice(),
     imageMeta: null,
-    uiState: {
-      tool: "brush" as ToolType,
-      color: "#000",
-      erase: false,
-      penSize: 10,
-      opacity: 1,
-      softPen: false,
-      brushType: "particle1",
-      currentLayerId: "", // Will be set when opening a file
-      bucketFillTolerance: 0,
-      alphaLock: false,
-      selectionTool: "rectangle" as SelectionTool,
-      selectionOperation: "new" as SelectionOperation,
-      selectionTolerance: 0,
-      canvasView: {
-        angle: 0,
-        scale: 1,
-        pan: [0, 0],
-        flipX: false,
-        flipY: false,
-      },
-      colorHistory: [],
-    },
     mode: {
       type: "draw",
     },

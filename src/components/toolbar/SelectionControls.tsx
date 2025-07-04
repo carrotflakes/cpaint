@@ -1,12 +1,9 @@
 import { ReactComponent as IconLasso } from "@/assets/icons/lasso.svg";
 import { ReactComponent as IconMagicWand } from "@/assets/icons/magic-wand.svg";
 import { getLayerById } from "@/model/state";
-import {
-  SelectionOperation,
-  SelectionTool,
-  useAppState,
-} from "@/store/appState";
+import { useAppState } from "@/store/appState";
 import { selectAll, selectClear, selectInvert } from "@/store/selection";
+import { SelectionOperation, SelectionTool } from "@/store/uiStateSlice";
 import { ReactNode } from "react";
 
 const SELECTION_TOOLS: {
