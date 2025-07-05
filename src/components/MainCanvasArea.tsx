@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useDrawControl } from "../hooks/useDrawControl";
+import { useDrawControl } from "@/hooks/useDrawControl";
 import { useViewControl } from "../hooks/useViewControl";
 import { useGestureControl } from "../hooks/useGestureControl";
 import { StateRender } from "../model/state";
