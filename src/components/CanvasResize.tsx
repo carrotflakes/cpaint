@@ -106,12 +106,12 @@ function applyCanvasResize(canvasResize: {
     patches: [
       {
         op: "replace",
-        path: "/layers",
+        path: ["layers"],
         value: layers satisfies State["layers"],
       },
       {
         op: "replace",
-        path: "/size",
+        path: ["size"],
         value: {
           width: canvasResize.size[0],
           height: canvasResize.size[1],

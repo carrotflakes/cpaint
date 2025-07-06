@@ -18,7 +18,7 @@ export function addLayer(store: AppState, layers: State["layers"]) {
       patches: [
         {
           op: "add",
-          path: `/layers/${layers.length}`,
+          path: ["layers", layers.length],
           value: {
             ...DEFAULT_LAYER_PROPS,
             id: newLayerId(store.stateContainer.state),
@@ -27,7 +27,7 @@ export function addLayer(store: AppState, layers: State["layers"]) {
         },
         {
           op: "replace",
-          path: "/nextLayerId",
+          path: ["nextLayerId"],
           value: (store.stateContainer.state.nextLayerId +
             1) satisfies State["nextLayerId"],
         },
@@ -50,7 +50,7 @@ export function toggleVisibility(
       patches: [
         {
           op: "replace",
-          path: `/layers/${index}/visible`,
+          path: ["layers", index, "visible"],
           value: !layer.visible satisfies State["layers"][number]["visible"],
         },
       ],
@@ -68,8 +68,8 @@ export function moveLayer(store: AppState, from: number, to: number) {
       patches: [
         {
           op: "move",
-          from: `/layers/${from}`,
-          to: `/layers/${to > from ? to + 1 : to}`,
+          from: ["layers", from],
+          to: ["layers", to],
         },
       ],
     },
@@ -85,7 +85,7 @@ export function updateOpacity(store: AppState, index: number, opacity: number) {
       patches: [
         {
           op: "replace",
-          path: `/layers/${index}/opacity`,
+          path: ["layers", index, "opacity"],
           value: opacity satisfies State["layers"][number]["opacity"],
         },
       ],
@@ -108,7 +108,7 @@ export function duplicateLayer(store: AppState, index: number) {
       patches: [
         {
           op: "add",
-          path: `/layers/${index + 1}`,
+          path: ["layers", index + 1],
           value: {
             id: newLayerId(store.stateContainer.state),
             canvas: newCanvas,
@@ -120,7 +120,7 @@ export function duplicateLayer(store: AppState, index: number) {
         },
         {
           op: "replace",
-          path: "/nextLayerId",
+          path: ["nextLayerId"],
           value: (store.stateContainer.state.nextLayerId +
             1) satisfies State["nextLayerId"],
         },
@@ -143,7 +143,7 @@ export function deleteLayer(store: AppState, index: number) {
       patches: [
         {
           op: "remove",
-          path: `/layers/${index}`,
+          path: ["layers", index],
         },
       ],
     },
@@ -205,16 +205,16 @@ export function mergeLayer(store: AppState, index: number) {
       patches: [
         {
           op: "remove",
-          path: `/layers/${index}`,
+          path: ["layers", index],
         },
         {
           op: "replace",
-          path: `/layers/${index - 1}`,
+          path: ["layers", index - 1],
           value: mergedLayer,
         },
         {
           op: "replace",
-          path: "/nextLayerId",
+          path: ["nextLayerId"],
           value: (store.stateContainer.state.nextLayerId +
             1) satisfies State["nextLayerId"],
         },
@@ -247,7 +247,7 @@ export function updateBlendMode(
       patches: [
         {
           op: "replace",
-          path: `/layers/${layerIndex}/blendMode`,
+          path: ["layers", layerIndex, "blendMode"],
           value: blendMode satisfies State["layers"][number]["blendMode"],
         },
       ],
@@ -264,7 +264,7 @@ export function toggleLockLayer(store: AppState, layerIndex: number, locked: boo
       patches: [
         {
           op: "replace",
-          path: `/layers/${layerIndex}/locked`,
+          path: ["layers", layerIndex, "locked"],
           value: !locked satisfies State["layers"][number]["locked"],
         },
       ],

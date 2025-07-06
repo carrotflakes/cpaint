@@ -5,19 +5,19 @@ export type Obj = string | number | boolean | null | readonly Obj[] | { readonly
 
 export type Patch = {
   op: "add",
-  path: string,
+  path: readonly (string | number)[],
   value: Obj,
 } | {
   op: "remove",
-  path: string,
+  path: readonly (string | number)[],
 } | {
   op: "replace",
-  path: string,
+  path: readonly (string | number)[],
   value: Obj,
 } | {
   op: "move",
-  from: string,
-  to: string,
+  from: readonly (string | number)[],
+  to: readonly (string | number)[],
 }
 
 export function applyPatch(
@@ -26,36 +26,27 @@ export function applyPatch(
 ): Obj {
   switch (patch.op) {
     case "add": {
-      const pathParts = patch.path.split("/");
-      if (pathParts.shift() !== "")
+      if (patch.path.length === 0)
         throw new Error(`Invalid path: ${JSON.stringify(patch)}`);
-      return applyAdd(obj, pathParts, patch.value);
+      return applyAdd(obj, [...patch.path], patch.value);
     }
     case "remove": {
-      const pathParts = patch.path.split("/");
-      if (pathParts.shift() !== "" || pathParts.length === 0)
+      if (patch.path.length === 0)
         throw new Error(`Invalid path: ${JSON.stringify(patch)}`);
-      return applyRemove(obj, pathParts);
+      return applyRemove(obj, [...patch.path]);
     }
     case "replace": {
-      const pathParts = patch.path.split("/");
-      if (pathParts.shift() !== "" || pathParts.length === 0)
+      if (patch.path.length === 0)
         throw new Error(`Invalid path: ${JSON.stringify(patch)}`);
-      return applyReplace(obj, pathParts, patch.value);
+      return applyReplace(obj, [...patch.path], patch.value);
     }
     case "move": {
-      const fromParts = patch.from.split("/");
-      if (fromParts.shift() !== "" || fromParts.length === 0)
+      if (patch.from.length === 0)
         throw new Error(`Invalid path: ${JSON.stringify(patch)}`);
-      const toParts = patch.to.split("/");
-      if (toParts.shift() !== "" || toParts.length === 0)
+      if (patch.to.length === 0)
         throw new Error(`Invalid path: ${JSON.stringify(patch)}`);
-      const value = getValue(obj, [...fromParts]);
-      if (pathCmp(fromParts, toParts) === "<") {
-        return applyRemove(applyAdd(obj, toParts, value), fromParts);
-      } else {
-        return applyAdd(applyRemove(obj, fromParts), toParts, value);
-      }
+      const value = getValue(obj, [...patch.from]);
+      return applyAdd(applyRemove(obj, [...patch.from]), [...patch.to], value);
     }
   }
 }
@@ -71,13 +62,13 @@ export function reversePatch(obj: Obj, patch: Patch): Patch {
       return {
         op: "add",
         path: patch.path,
-        value: getValue(obj, patch.path.split("/").slice(1)),
+        value: getValue(obj, [...patch.path]),
       };
     case "replace":
       return {
         op: "replace",
         path: patch.path,
-        value: getValue(obj, patch.path.split("/").slice(1)),
+        value: getValue(obj, [...patch.path]),
       };
     case "move": {
       return {
@@ -89,17 +80,19 @@ export function reversePatch(obj: Obj, patch: Patch): Patch {
   }
 }
 
-function applyAdd(obj: Obj, path: string[], value: Obj): Obj {
+function applyAdd(obj: Obj, path: (string | number)[], value: Obj): Obj {
   const key = path.shift();
   if (key === undefined) {
     return value;
   }
   if (Array.isArray(obj)) {
-    const index = parseInt(key, 10);
+    if (typeof key !== "number") {
+      throw new Error(`Invalid key for array: ${key}`);
+    }
     if (path.length === 0) {
-      return [...obj.slice(0, index), applyAdd(obj[index], path, value), ...obj.slice(index)];
+      return [...obj.slice(0, key), applyAdd(obj[key], path, value), ...obj.slice(key)];
     } else {
-      return [...obj.slice(0, index), applyAdd(obj[index], path, value), ...obj.slice(index + 1)];
+      return [...obj.slice(0, key), applyAdd(obj[key], path, value), ...obj.slice(key + 1)];
     }
   } else if (isPlainObject(obj)) {
     return {
@@ -111,14 +104,16 @@ function applyAdd(obj: Obj, path: string[], value: Obj): Obj {
   }
 }
 
-function applyRemove(obj: Obj, path: string[]): Obj {
+function applyRemove(obj: Obj, path: (string | number)[]): Obj {
   const key = path.shift()!;
   if (Array.isArray(obj)) {
-    const index = parseInt(key, 10);
+    if (typeof key !== "number") {
+      throw new Error(`Invalid key for array: ${key}`);
+    }
     if (path.length === 0) {
-      return [...obj.slice(0, index), ...obj.slice(index + 1)];
+      return [...obj.slice(0, key), ...obj.slice(key + 1)];
     } else {
-      return [...obj.slice(0, index), applyRemove(obj[index], path), ...obj.slice(index + 1)];
+      return [...obj.slice(0, key), applyRemove(obj[key], path), ...obj.slice(key + 1)];
     }
   } else if (isPlainObject(obj)) {
     if (path.length === 0) {
@@ -136,14 +131,16 @@ function applyRemove(obj: Obj, path: string[]): Obj {
   }
 }
 
-function applyReplace(obj: Obj, path: string[], value: Obj): Obj {
+function applyReplace(obj: Obj, path: (string | number)[], value: Obj): Obj {
   const key = path.shift();
   if (key === undefined) {
     return value;
   }
   if (Array.isArray(obj)) {
-    const index = parseInt(key, 10);
-    return [...obj.slice(0, index), applyReplace(obj[index], path, value), ...obj.slice(index + 1)];
+    if (typeof key !== "number") {
+      throw new Error(`Invalid key for array: ${key}`);
+    }
+    return [...obj.slice(0, key), applyReplace(obj[key], path, value), ...obj.slice(key + 1)];
   } else if (isPlainObject(obj)) {
     return {
       ...obj,
@@ -154,32 +151,21 @@ function applyReplace(obj: Obj, path: string[], value: Obj): Obj {
   }
 }
 
-function getValue(obj: Obj, path: string[]): Obj {
+function getValue(obj: Obj, path: (string | number)[]): Obj {
   const key = path.shift();
   if (key === undefined) {
     return obj;
   }
   if (Array.isArray(obj)) {
-    const index = parseInt(key, 10);
-    return getValue(obj[index], path);
+    if (typeof key !== "number") {
+      throw new Error(`Invalid key for array: ${key}`);
+    }
+    return getValue(obj[key], path);
   } else if (isPlainObject(obj)) {
     return getValue(obj[key], path);
   } else {
     throw new Error("Invalid patch");
   }
-}
-
-function pathCmp(path1: string[], path2: string[]): ">" | "<" | null {
-  for (let i = 0; i < Math.min(path1.length, path2.length); i++) {
-    const left = parseInt(path1[i]);
-    const right = parseInt(path2[i]);
-    if (!isNaN(left) && !isNaN(right)) {
-      if (left < right) return "<";
-      if (left > right) return ">";
-    }
-    if (path1[i] != path2[i]) return null;
-  }
-  return null;
 }
 
 function isPlainObject(obj: any): obj is { [key: string]: Obj } {

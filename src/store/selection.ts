@@ -14,7 +14,7 @@ function patchSelection(selection: Selection | null) {
       patches: [
         {
           op: "replace",
-          path: "/selection",
+          path: ["selection"],
           value: selection satisfies State["selection"],
         },
       ],

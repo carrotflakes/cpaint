@@ -168,7 +168,8 @@ export function shrinkPatches(patches: Patch[]): Patch[] | null {
     for (let i = 0; i < patches.length; i++) {
       const current = patches[i];
       const next = patches[i + 1];
-      if (next && current.op === "replace" && next.op === "replace" && current.path === next.path) {
+      if (next && current.op === "replace" && next.op === "replace" &&
+        JSON.stringify(current.path) === JSON.stringify(next.path)) {
         patches.splice(i, 1);
         shrinked = true;
         continue iterate;

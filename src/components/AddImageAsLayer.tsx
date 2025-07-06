@@ -102,7 +102,7 @@ function applyAddImageAsLayer(addImageAsLayer: { image: MCanvas; rect: Rect }) {
     patches: [
       {
         op: "add",
-        path: `/layers/${store.stateContainer.state.layers.length}`,
+        path: ["layers", store.stateContainer.state.layers.length],
         value: {
           ...DEFAULT_LAYER_PROPS,
           id: newLayerId(store.stateContainer.state),
@@ -111,7 +111,7 @@ function applyAddImageAsLayer(addImageAsLayer: { image: MCanvas; rect: Rect }) {
       },
       {
         op: "replace",
-        path: "/nextLayerId",
+        path: ["nextLayerId"],
         value: (store.stateContainer.state.nextLayerId +
           1) satisfies State["nextLayerId"],
       },
