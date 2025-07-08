@@ -1,6 +1,6 @@
 import { ReactComponent as IconLasso } from "@/assets/icons/lasso.svg";
 import { ReactComponent as IconMagicWand } from "@/assets/icons/magic-wand.svg";
-import { getLayerById } from "@/model/state";
+import { findLayerById } from "@/model/state";
 import { useAppState } from "@/store/appState";
 import { selectAll, selectClear, selectInvert } from "@/store/selection";
 import { SelectionOperation, SelectionTool } from "@/store/uiStateSlice";
@@ -180,11 +180,11 @@ function fillSelection() {
   const store = useAppState.getState();
   const selection = store.stateContainer.state.selection;
 
-  const currentLayer = getLayerById(
+  const currentLayer = findLayerById(
     store.stateContainer.state.layers,
     store.uiState.currentLayerId
   );
-  if (!currentLayer) return;
+  if (currentLayer?.type !== "layer") return;
 
   const op = {
     type: "selectionFill",
@@ -211,11 +211,11 @@ function deleteSelection() {
 
   if (!selection) return;
 
-  const currentLayer = getLayerById(
+  const currentLayer = findLayerById(
     store.stateContainer.state.layers,
     store.uiState.currentLayerId
   );
-  if (!currentLayer) return;
+  if (currentLayer?.type !== "layer") return;
 
   const op = {
     type: "selectionDelete",

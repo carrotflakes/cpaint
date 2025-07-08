@@ -3,7 +3,7 @@ import { EyeDropper } from "@/components/overlays/EyeDropper";
 import { EyeDropperLens } from "@/components/overlays/EyeDropperLens";
 import { isSafari } from "@/libs/browser";
 import { Pos } from "@/libs/geometry";
-import { LayerMod } from "@/model/state";
+import { LayerMod } from "@/model/StateRenderer";
 import { useAppState } from "@/store/appState";
 import * as color from "color-convert";
 import { JSX } from "react";

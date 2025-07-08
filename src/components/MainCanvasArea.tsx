@@ -1,8 +1,8 @@
-import { useEffect, useRef } from "react";
 import { useDrawControl } from "@/hooks/useDrawControl";
-import { useViewControl } from "../hooks/useViewControl";
+import { StateContainerRender } from "@/model/stateContainer";
+import { useEffect, useRef } from "react";
 import { useGestureControl } from "../hooks/useGestureControl";
-import { StateRender } from "../model/state";
+import { useViewControl } from "../hooks/useViewControl";
 import { useAppState } from "../store/appState";
 import { save } from "../store/save";
 import CanvasArea from "./CanvasArea";
@@ -28,8 +28,8 @@ export default function MainCanvasArea() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    StateRender(store.stateContainer.state, ctx, layerMod);
-  }, [store.stateContainer.state, canvasRef, layerMod]);
+    StateContainerRender(store.stateContainer, ctx, layerMod);
+  }, [store.stateContainer, canvasRef, layerMod]);
 
   const canvasSize = store.canvasSize();
   return (

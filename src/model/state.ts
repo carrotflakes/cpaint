@@ -1,23 +1,37 @@
 import { MCanvas } from "@/libs/MCanvas";
 import { Selection } from "@/libs/Selection";
 import { BlendMode } from "./blendMode";
+import { produce } from "immer";
+
+export type Layer = Readonly<{
+  type: "layer";
+  id: string;
+  canvas: MCanvas;
+  visible: boolean;
+  opacity: number;
+  blendMode: BlendMode;
+  locked: boolean;
+}>;
+
+export type LayerGroup = Readonly<{
+  type: "group";
+  id: string;
+  layers: readonly (Layer | LayerGroup)[];
+  visible: boolean;
+  opacity: number;
+  blendMode: BlendMode;
+  locked: boolean;
+}>;
 
 export type State = Readonly<{
-  layers: readonly {
-    id: string;
-    canvas: MCanvas;
-    visible: boolean;
-    opacity: number;
-    blendMode: BlendMode;
-    locked: boolean;
-  }[];
+  layers: readonly (Layer | LayerGroup)[];
   selection: Selection | null;
   size: {
     width: number;
     height: number;
   };
   nextLayerId: number;
-}>
+}>;
 
 export const DEFAULT_LAYER_PROPS = {
   visible: true,
@@ -32,9 +46,10 @@ export function StateNew(
   addWhiteBackground: boolean,
 ): State {
   let layerId = 1;
-  const layers = [
+  const layers: Layer[] = [
     {
       ...DEFAULT_LAYER_PROPS,
+      type: "layer",
       id: newLayerId(layerId++),
       canvas: new MCanvas(width, height),
     },
@@ -47,6 +62,7 @@ export function StateNew(
     ctx.fillRect(0, 0, width, height);
     layers.unshift({
       ...DEFAULT_LAYER_PROPS,
+      type: "layer",
       id: "bg",
       canvas,
     });
@@ -63,7 +79,7 @@ export function StateNew(
   };
 }
 
-export function StateFromImage(image: HTMLImageElement) {
+export function StateFromImage(image: HTMLImageElement): State {
   const { width, height } = image;
   const canvas = new MCanvas(width, height);
   const ctx = canvas.getContextWrite();
@@ -72,6 +88,7 @@ export function StateFromImage(image: HTMLImageElement) {
     layers: [
       {
         ...DEFAULT_LAYER_PROPS,
+        type: "layer",
         id: newLayerId(1),
         canvas,
       },
@@ -83,57 +100,6 @@ export function StateFromImage(image: HTMLImageElement) {
     },
     nextLayerId: 2,
   };
-}
-
-// Render the state to the canvas
-export function StateRender(
-  state: State,
-  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-  layerMod: LayerMod | null,
-) {
-  ctx.clearRect(0, 0, state.size.width, state.size.height);
-
-  ctx.save();
-  for (let i = 0; i < state.layers.length; i++) {
-    const layer = state.layers[i];
-    if (!layer.visible) continue; // Skip rendering invisible layers
-
-    if (layer.id === layerMod?.layerId) {
-      const canvas = getTmpCanvas(layer.canvas.width, layer.canvas.height);
-      const layerCtx = canvas.getContext("2d", { willReadFrequently: true });
-      if (!layerCtx) {
-        throw new Error("Failed to get context");
-      }
-      layerCtx.clearRect(0, 0, canvas.width, canvas.height);
-      layerCtx.drawImage(layer.canvas.getCanvas(), 0, 0);
-      layerCtx.save();
-      layerMod.apply(layerCtx);
-      layerCtx.restore();
-
-      ctx.globalAlpha = layer.opacity;
-      ctx.globalCompositeOperation = layer.blendMode;
-      ctx.drawImage(canvas, 0, 0);
-    } else {
-      ctx.globalAlpha = layer.opacity;
-      ctx.globalCompositeOperation = layer.blendMode;
-      ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
-    }
-  }
-  ctx.restore();
-}
-
-let tmpCanvas = new OffscreenCanvas(1, 1);
-
-function getTmpCanvas(width: number, height: number) {
-  if (tmpCanvas.width !== width || tmpCanvas.height !== height) {
-    tmpCanvas = new OffscreenCanvas(width, height);
-  }
-  return tmpCanvas;
-}
-
-export type LayerMod = {
-  layerId: string;
-  apply: (ctx: OffscreenCanvasRenderingContext2D) => void;
 }
 
 export function newLayerId(state: State | number): string {
@@ -151,12 +117,57 @@ export function computeNextLayerIdFromLayerIds(layerIds: string[]): number {
 }
 
 // Helper functions for layer ID-based operations
-export function findLayerById(layers: State["layers"], layerId: string): State["layers"][number] | undefined {
-  return layers.find(layer => layer.id === layerId);
+export function findLayerById(layers: State["layers"], layerId: string): State["layers"][number] | null {
+  for (const layer of layers) {
+    if (layer.id === layerId) {
+      return layer;
+    }
+    if (layer.type === "group") {
+      const found = findLayerById(layer.layers, layerId);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
-export function findLayerIndexById(layers: State["layers"], layerId: string): number {
-  return layers.findIndex(layer => layer.id === layerId);
+export function findLayerIndexById(layers: State["layers"], layerId: string): number[] | null {
+  function findIndex(layers: State["layers"], layerId: string): number[] | null {
+    for (let i = 0; i < layers.length; i++) {
+      const layer = layers[i];
+      if (layer.id === layerId) {
+        return [i];
+      }
+      if (layer.type === "group") {
+        const foundIndex = findIndex(layer.layers, layerId);
+        if (foundIndex) {
+          foundIndex.unshift(i);
+          return foundIndex;
+        }
+      }
+    }
+    return null;
+  }
+  return findIndex(layers, layerId);
+}
+
+export function StateReplaceLayerCanvas(
+  state: State,
+  layerId: string,
+  newCanvas: MCanvas,
+): State {
+  return produce(state, draft => {
+    function f(layers: typeof draft["layers"]) {
+      for (const layer of layers) {
+        if (layer.type === "layer") {
+          if (layer.id === layerId)
+            layer.canvas = newCanvas;
+        } else if (layer.type === "group") {
+          f(layer.layers);
+        }
+      }
+    }
+    f(draft.layers);
+  });
 }
 
 export function getLayerById(layers: State["layers"], layerId: string): State["layers"][number] {
@@ -165,4 +176,23 @@ export function getLayerById(layers: State["layers"], layerId: string): State["l
     throw new Error(`Layer with id ${layerId} not found`);
   }
   return layer;
+}
+
+export function getLayerByIndex(
+  layers: State["layers"],
+  index: number[],
+): State["layers"][number] {
+  let currentLayers = layers;
+  for (const i of index) {
+    const layer = currentLayers[i];
+    if (!layer) {
+      throw new Error(`Layer at index ${i} not found`);
+    }
+    if (layer.type === "group") {
+      currentLayers = layer.layers;
+    } else if (layer.type === "layer") {
+      return layer;
+    }
+  }
+  throw new Error(`No layer found at index ${index.join(", ")}`);
 }

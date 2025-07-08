@@ -1,5 +1,4 @@
 import { Effect } from "@/features/effects";
-import { produce } from "immer";
 import { Rect as TransformRect } from "../components/overlays/TransformRectHandles";
 import { applyPatches } from "../libs/applyPatches";
 import { canvasToImageDiff } from "../libs/imageDiff";
@@ -8,7 +7,7 @@ import { Patch } from "../libs/patch";
 import { startTouchBrush } from "../libs/touch/brush";
 import { startTouchFill } from "../libs/touch/fill";
 import type { State } from "./state";
-import { findLayerIndexById } from "./state";
+import { getLayerById, StateReplaceLayerCanvas } from "./state";
 import { StateDiff } from "./stateContainer";
 
 export type Op = {
@@ -68,9 +67,8 @@ export function applyOp(
   diff: StateDiff;
 } | null {
   if (op.type === "stroke" || op.type === "fill") {
-    const layerIndex = findLayerIndexById(state.layers, op.layerId);
-    if (layerIndex === -1) return null;
-    const layer = state.layers[layerIndex];
+    const layer = getLayerById(state.layers, op.layerId);
+    if (layer.type !== "layer") return null;
     const touch = op.type === "stroke" ?
       startTouchBrush({
         brushType: op.strokeStyle.brushType,
@@ -119,12 +117,7 @@ export function applyOp(
         imageDiff: id,
       }],
     };
-    const newState = produce(state, (draft) => {
-      draft.layers[layerIndex] = {
-        ...draft.layers[layerIndex],
-        canvas: newCanvas,
-      };
-    });
+    const newState = StateReplaceLayerCanvas(state, layer.id, newCanvas);
     return { state: newState, diff };
   }
   if (op.type === "bucketFill") {

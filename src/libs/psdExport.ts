@@ -1,6 +1,7 @@
-import { type BlendMode, type Layer, type Psd, writePsd } from "ag-psd";
+import { StateContainer, StateContainerRender } from "@/model/stateContainer";
+import { writePsd, type BlendMode, type Psd, type Layer as PsdLayer } from "ag-psd";
 import { BlendMode as CBlendMode } from "../model/blendMode";
-import type { State } from "../model/state";
+import { type Layer, type LayerGroup } from "../model/state";
 
 // Blend mode mapping (Photoshop compatible)
 const BLEND_MODE_MAP: Record<CBlendMode, BlendMode | null> = {
@@ -33,60 +34,61 @@ const BLEND_MODE_MAP: Record<CBlendMode, BlendMode | null> = {
 };
 
 export async function exportToPSD(
-  state: State
+  stateContainer: StateContainer
 ) {
+  const state = stateContainer.state;
   if (!state.layers || state.layers.length === 0) {
     throw new Error("No layers available for export");
   }
 
-  const firstLayer = state.layers[0];
-  const { width, height } = firstLayer.canvas;
+  const { width, height } = state.size;
 
   // Track unsupported blend modes
   const unsupportedBlendModes = new Set<string>();
 
   // Create PSD layer data
-  const psdLayers: Layer[] = await Promise.all(
-    state.layers
-      .map(async (layer, index) => {
-        const imageData = await canvasToImageData(layer.canvas.getCanvas());
+  function mapLayer(layer: Layer | LayerGroup): PsdLayer {
+    // Check if blend mode is supported
+    const blendMode = BLEND_MODE_MAP[layer.blendMode];
+    if (!blendMode) {
+      unsupportedBlendModes.add(layer.blendMode);
+    }
 
-        // Check if blend mode is supported
-        const blendMode = BLEND_MODE_MAP[layer.blendMode];
-        if (!blendMode) {
-          unsupportedBlendModes.add(layer.blendMode);
-        }
+    const props = {
+      name: layer.id,
+      hidden: !layer.visible,
+      opacity: layer.opacity, // ag-psd uses 0-1 range
+      blendMode: blendMode ?? "normal",
+      left: 0,
+      top: 0,
+      right: width,
+      bottom: height,
+    };
+    if (layer.type === "layer") {
+      const imageData = canvasToImageData(layer.canvas.getCanvas());
 
-        return {
-          name: layer.id || `Layer ${index + 1}`,
-          hidden: !layer.visible,
-          opacity: layer.opacity, // ag-psd uses 0-1 range
-          blendMode: blendMode ?? "normal",
-          left: 0,
-          top: 0,
-          right: width,
-          bottom: height,
-          imageData,
-        };
-      })
-  );
+      return {
+        ...props,
+        imageData,
+      };
+    } else if (layer.type === "group") {
+      return {
+        ...props,
+        children: layer.layers.map(mapLayer),
+      };
+    }
+    throw new Error(`Invalid layer type: ${layer}`);
+  }
+  const psdLayers: PsdLayer[] = state.layers.map(mapLayer);
 
   // Create composite image
   const compositeCanvas = new OffscreenCanvas(width, height);
   const compositeCtx = compositeCanvas.getContext("2d")!;
 
   // Composite all layers
-  for (const layer of state.layers) {
-    if (!layer.visible) continue;
+  StateContainerRender(stateContainer, compositeCtx);
 
-    compositeCtx.save();
-    compositeCtx.globalAlpha = layer.opacity;
-    compositeCtx.globalCompositeOperation = layer.blendMode satisfies GlobalCompositeOperation;
-    compositeCtx.drawImage(layer.canvas.getCanvas(), 0, 0);
-    compositeCtx.restore();
-  }
-
-  const compositeImageData = await canvasToImageData(compositeCanvas);
+  const compositeImageData = canvasToImageData(compositeCanvas);
 
   // Create PSD document structure
   const psd: Psd = {
@@ -105,7 +107,7 @@ export async function exportToPSD(
   return { buffer, unsupportedBlendModes };
 }
 
-async function canvasToImageData(canvas: OffscreenCanvas) {
+function canvasToImageData(canvas: OffscreenCanvas) {
   const ctx = canvas.getContext("2d")!;
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }

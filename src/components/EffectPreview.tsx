@@ -1,6 +1,6 @@
+import { StateContainerRender } from "@/model/stateContainer";
 import { useEffect, useRef } from "react";
 import { useViewControl } from "../hooks/useViewControl";
-import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
 import { EffectPreviewDialog } from "./toolbar/EffectPreviewDialog";
@@ -20,25 +20,17 @@ export default function EffectPreview() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    // Render all layers with the current layer replaced by preview canvas
-    const layers = store.stateContainer.state.layers.map((layer) => {
-      if (layer.id === store.uiState.currentLayerId) {
-        return {
-          ...layer,
-          canvas: effectPreview.previewCanvas,
-        };
-      }
-      return layer;
-    });
-
-    StateRender(
-      {
-        ...store.stateContainer.state,
-        layers,
+    const layerMod = {
+      layerId: store.uiState.currentLayerId,
+      apply: (
+        ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+      ) => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(effectPreview.previewCanvas.getCanvas(), 0, 0);
       },
-      ctx,
-      null
-    );
+    };
+
+    StateContainerRender(store.stateContainer, ctx, layerMod);
   }, [
     store.stateContainer.state.layers,
     effectPreview?.previewCanvas,

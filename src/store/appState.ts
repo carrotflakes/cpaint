@@ -13,7 +13,7 @@ import {
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
 import { startTouchFill } from '../libs/touch/fill';
 import { Op } from '../model/op';
-import { findLayerById, getLayerById, State, StateNew } from '../model/state';
+import { findLayerById, State, StateNew } from '../model/state';
 import { StateContainer, StateContainerDo, StateContainerFromState, StateContainerRedo, StateContainerUndo, } from '../model/stateContainer';
 import { createUiStateSlice, UiStateSlice } from './uiStateSlice';
 
@@ -173,8 +173,8 @@ export const useAppState = create<AppState>()((set, get) => {
 
     async startEffectPreview(effect) {
       const store = get();
-      const layer = getLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
-      if (!layer || layer.locked) return;
+      const layer = findLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
+      if (layer?.type !== "layer" || layer.locked) return;
 
       const originalCanvas = new MCanvas(layer.canvas.width, layer.canvas.height);
       {
@@ -312,7 +312,10 @@ export function createTouch(store: AppState) {
     return null;
   }
 
-  const layer = getLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
+  const layer = findLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
+  if (layer?.type !== "layer") {
+    return null;
+  }
   const canvas = layer.canvas;
   const canvasSize: [number, number] = [canvas.width, canvas.height];
 
@@ -363,8 +366,8 @@ export function wrapTransferWithClip(
 export async function appApplyEffect(effect: Effect) {
   const store = useAppState.getState();
   const performanceSettings = usePerformanceSettings.getState();
-  const layerOrg = getLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
-  if (!layerOrg)
+  const layerOrg = findLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
+  if (layerOrg?.type !== "layer")
     return;
 
   // Check if the layer is locked

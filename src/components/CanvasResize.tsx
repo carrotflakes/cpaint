@@ -90,15 +90,24 @@ function applyCanvasResize(canvasResize: {
 }) {
   const store = useAppState.getState();
 
-  const layers = store.stateContainer.state.layers.map((layer) => {
-    const canvas = new MCanvas(canvasResize.size[0], canvasResize.size[1]);
-    const ctx = canvas.getContextWrite();
-    makeApply(null, layer.canvas, canvasResize.rect)(ctx);
-    return {
-      ...layer,
-      canvas,
-    };
-  });
+  function mapLayer(layer: State["layers"][number]): State["layers"][number] {
+    if (layer.type === "layer") {
+      const canvas = new MCanvas(canvasResize.size[0], canvasResize.size[1]);
+      const ctx = canvas.getContextWrite();
+      makeApply(null, layer.canvas, canvasResize.rect)(ctx);
+      return {
+        ...layer,
+        canvas,
+      };
+    } else {
+      return {
+        ...layer,
+        layers: layer.layers.map(mapLayer),
+      };
+    }
+  }
+
+  const layers = store.stateContainer.state.layers.map(mapLayer);
 
   const op: Op = {
     type: "patch",

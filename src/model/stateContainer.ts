@@ -1,11 +1,11 @@
-import { produce } from "immer";
 import { applyPatches } from "@/libs/applyPatches";
 import { applyImageDiff, canvasToImageDiff, ImageDiff } from "@/libs/imageDiff";
 import { MCanvas } from "@/libs/MCanvas";
 import { Patch } from "@/libs/patch";
 import { applyOp, mergeOp, shrinkPatches, type Op } from "./op";
 import { OpTs, OpTsNew } from "./opts";
-import { findLayerIndexById, LayerMod, State } from "./state";
+import { getLayerById, State, StateReplaceLayerCanvas } from "./state";
+import { LayerMod, StateRenderer } from "./StateRenderer";
 
 export type StateDiff = {
   type: "imageDiffs";
@@ -34,9 +34,9 @@ export function applyStateDiff(
       layers: [],
     };
     for (const layerDiff of diff.layers) {
-      const layer = newState.layers.find(l => l.id === layerDiff.id);
-      if (!layer) {
-        continue;
+      const layer = getLayerById(newState.layers, layerDiff.id);
+      if (layer.type !== "layer") {
+        throw new Error(`Layer with id ${layerDiff.id} not found or is not a layer`);
       }
       const imageDiff = applyImageDiff(layer.canvas, layerDiff.imageDiff);
       diffRev.layers.push({
@@ -65,15 +65,17 @@ export type StateContainer = Readonly<{
   state: State;
   backward: readonly { op: OpTs; diff: StateDiff }[];
   forward: readonly { op: OpTs; diff: StateDiff }[];
+  renderer: StateRenderer;
 }>;
 
 export function StateContainerFromState(
   state: State,
-) {
+): StateContainer {
   return {
     state,
     backward: [],
     forward: [],
+    renderer: new StateRenderer(state.size.width, state.size.height),
   };
 }
 
@@ -88,9 +90,9 @@ export function StateContainerDo(
     throw new Error("LayerMod is required for applyEffect operation");
 
   if ((op.type === "stroke" || op.type === "fill" || op.type === "bucketFill" || op.type === "layerTransform" || op.type === "selectionFill" || op.type === "selectionDelete" || op.type === "applyEffect") && layerMod) {
-    const layer = sc.state.layers.find(l => l.id === layerMod.layerId);
-    if (!layer) {
-      throw new Error(`Layer ${layerMod.layerId} not found`);
+    const layer = getLayerById(sc.state.layers, layerMod.layerId);
+    if (layer.type !== "layer") {
+      throw new Error(`Layer with id ${layerMod.layerId} not found or is not a layer`);
     }
     const canvas = new MCanvas(
       layer.canvas.width,
@@ -109,14 +111,12 @@ export function StateContainerDo(
       // No difference found
       return sc;
     }
-    const layerIndex = findLayerIndexById(sc.state.layers, layer.id);
-    const state = produce(sc.state, draft => {
-      draft.layers[layerIndex].canvas = canvas;
-    });
+    const state = StateReplaceLayerCanvas(sc.state, layer.id, canvas);
     return {
       state,
       backward: newBackward(sc.backward, { op: opts, diff: { type: "imageDiffs", layers: [{ id: layer.id, imageDiff: diff }] } }),
       forward: [],
+      renderer: sc.renderer,
     }
   } else {
     const ao = applyOp(sc.state, op);
@@ -126,6 +126,7 @@ export function StateContainerDo(
       state: ao.state,
       backward: newBackward(sc.backward, { op: opts, diff: ao.diff }),
       forward: [],
+      renderer: sc.renderer,
     };
   }
 }
@@ -178,6 +179,7 @@ export function StateContainerRedo(
     state: asd.state,
     backward: [...sc.backward, { op: last.op, diff: asd.diffRev }],
     forward: newForward,
+    renderer: sc.renderer,
   };
 }
 
@@ -192,6 +194,7 @@ export function StateContainerUndo(
     state: asd.state,
     backward: newBackward,
     forward: [...sc.forward, { op: last.op, diff: asd.diffRev }],
+    renderer: sc.renderer,
   };
 }
 
@@ -200,4 +203,12 @@ export function StateContainerHasUndo(sc: StateContainer): boolean {
 }
 export function StateContainerHasRedo(sc: StateContainer): boolean {
   return sc.forward.length > 0;
+}
+
+export function StateContainerRender(
+  sc: StateContainer,
+  ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D,
+  layerMod: LayerMod | null = null,
+): void {
+  sc.renderer.render(sc.state, ctx, layerMod);
 }

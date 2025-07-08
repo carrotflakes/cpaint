@@ -1,4 +1,5 @@
 import { useUnsavedChangesGuard } from "@/features/unsaved-changes";
+import { StateContainerRender } from "@/model/stateContainer";
 import * as Popover from "@radix-ui/react-popover";
 import { useState } from "react";
 import logo from "../assets/cpaint.svg";
@@ -7,7 +8,6 @@ import { ReactComponent as IconFrameCorners } from "../assets/icons/frame-corner
 import { ReactComponent as IconGear } from "../assets/icons/gear.svg";
 import { ReactComponent as IconSave } from "../assets/icons/save.svg";
 import { MCanvas } from "../libs/MCanvas";
-import { StateRender } from "../model/state";
 import { useAppState } from "../store/appState";
 import { save } from "../store/save";
 import { ModalDialog } from "./ModalDialog";
@@ -282,7 +282,7 @@ function intoResizeCanvasMode(width: number, height: number) {
   const canvasSize = state.canvasSize();
   const canvas = new OffscreenCanvas(canvasSize.width, canvasSize.height);
   const ctx = canvas.getContext("2d")!;
-  StateRender(state.stateContainer.state, ctx, null);
+  StateContainerRender(state.stateContainer, ctx);
 
   useAppState.getState().update((state) => {
     state.mode = {
@@ -309,7 +309,7 @@ async function exportToPNG() {
   const canvasSize = state.canvasSize();
   const canvas = new OffscreenCanvas(canvasSize.width, canvasSize.height);
   const ctx = canvas.getContext("2d")!;
-  StateRender(state.stateContainer.state, ctx, null);
+  StateContainerRender(state.stateContainer, ctx);
 
   const blob = await canvas.convertToBlob({ type: "image/png" });
   const url = URL.createObjectURL(blob);
@@ -332,7 +332,7 @@ async function exportToPSD() {
 
   try {
     const { exportToPSD: performPSDExport } = await import("../libs/psdExport");
-    const res = await performPSDExport(state.stateContainer.state);
+    const res = await performPSDExport(state.stateContainer);
 
     // Report unsupported blend modes
     if (res.unsupportedBlendModes.size > 0) {

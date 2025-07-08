@@ -1,13 +1,25 @@
-import { State, StateRender } from "@/model/state";
+import { State } from "@/model/state";
 import { StateContainer, applyStateDiff } from "@/model/stateContainer";
+import { StateRenderer } from "@/model/StateRenderer";
 
 // Deep clone utility for State objects
 function deepCloneState(state: State): State {
+  function cloneLayer(layer: State["layers"][number]): State["layers"][number] {
+    if (layer.type === "layer") {
+      return {
+        ...layer,
+        canvas: layer.canvas.clone(),
+      };
+    } else {
+      return {
+        ...layer,
+        layers: layer.layers.map(cloneLayer),
+      };
+    }
+  }
+
   return {
-    layers: state.layers.map(layer => ({
-      ...layer,
-      canvas: layer.canvas.clone(),
-    })),
+    layers: state.layers.map(cloneLayer),
     selection: state.selection?.clone() ?? null,
     size: {
       ...state.size,
@@ -49,21 +61,23 @@ export class TimelapseGenerator {
     const frames: TimelapseFrame[] = [];
     let currentState = deepCloneState(finalState);
 
+    const renderer = new StateRenderer(finalState.size.width, finalState.size.height);
+
     // Add current state
-    frames.push(this.renderStateToFrame(currentState));
+    frames.push(this.renderStateToFrame(currentState, renderer));
 
     // Now apply backward operations to reconstruct history
     for (const { diff } of backward.toReversed()) {
       const result = applyStateDiff(currentState, diff);
       currentState = result.state;
-      frames.push(this.renderStateToFrame(currentState));
+      frames.push(this.renderStateToFrame(currentState, renderer));
     }
 
     return frames.reverse();
   }
 
 
-  private renderStateToFrame(state: State): TimelapseFrame {
+  private renderStateToFrame(state: State, renderer: StateRenderer): TimelapseFrame {
     const canvas = document.createElement('canvas');
     canvas.width = this.options.width;
     canvas.height = this.options.height;
@@ -74,13 +88,13 @@ export class TimelapseGenerator {
 
     // Scale the canvas to fit the render size
     if (state.layers.length > 0) {
-      const sourceCanvas = state.layers[0].canvas.getCanvas();
-      const scaleX = canvas.width / sourceCanvas.width;
-      const scaleY = canvas.height / sourceCanvas.height;
+      const canvasSize = state.size;
+      const scaleX = canvas.width / canvasSize.width;
+      const scaleY = canvas.height / canvasSize.height;
       const scale = Math.min(scaleX, scaleY);
 
-      const scaledWidth = sourceCanvas.width * scale;
-      const scaledHeight = sourceCanvas.height * scale;
+      const scaledWidth = canvasSize.width * scale;
+      const scaledHeight = canvasSize.height * scale;
       const offsetX = (canvas.width - scaledWidth) / 2;
       const offsetY = (canvas.height - scaledHeight) / 2;
 
@@ -88,7 +102,7 @@ export class TimelapseGenerator {
       ctx.translate(offsetX, offsetY);
       ctx.scale(scale, scale);
 
-      StateRender(state, ctx, null);
+      renderer.render(state, ctx, null);
 
       ctx.restore();
     }

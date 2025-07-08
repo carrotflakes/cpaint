@@ -2,14 +2,93 @@ import { MCanvas } from "../libs/MCanvas";
 import { BlendMode } from "../model/blendMode";
 import {
   DEFAULT_LAYER_PROPS,
+  getLayerByIndex,
   newLayerId,
-  State
+  State,
+  LayerGroup,
 } from "../model/state";
 import { AppState } from "../store/appState";
 
-export function addLayer(store: AppState, layers: State["layers"]) {
+export function updateVisibility(
+  store: AppState,
+  index: number[],
+  visible: boolean
+) {
+  store.apply(
+    {
+      type: "patch",
+      name: `Update Layer Visibility`,
+      patches: [
+        {
+          op: "replace",
+          path: [...indexToPath(index), 'visible'],
+          value: visible satisfies State["layers"][number]["visible"],
+        },
+      ],
+    },
+    null
+  );
+}
+
+export function updateOpacity(store: AppState, index: number[], opacity: number) {
+  store.apply(
+    {
+      type: "patch",
+      name: "Update Layer Opacity",
+      patches: [
+        {
+          op: "replace",
+          path: [...indexToPath(index), 'opacity'],
+          value: opacity satisfies State["layers"][number]["opacity"],
+        },
+      ],
+    },
+    null
+  );
+}
+
+export function updateBlendMode(
+  store: AppState,
+  index: number[],
+  blendMode: BlendMode
+) {
+  store.apply(
+    {
+      type: "patch",
+      name: "Update Layer Blend Mode",
+      patches: [
+        {
+          op: "replace",
+          path: [...indexToPath(index), 'blendMode'],
+          value: blendMode satisfies State["layers"][number]["blendMode"],
+        },
+      ],
+    },
+    null
+  );
+}
+
+export function updateLayerLock(store: AppState, index: number[], locked: boolean) {
+  store.apply(
+    {
+      type: "patch",
+      name: locked ? "Lock Layer" : "Unlock Layer",
+      patches: [
+        {
+          op: "replace",
+          path: [...indexToPath(index), 'locked'],
+          value: !locked satisfies State["layers"][number]["locked"],
+        },
+      ],
+    },
+    null
+  );
+}
+
+export function addLayer(store: AppState) {
   const canvasSize = store.canvasSize();
   const canvas = new MCanvas(canvasSize.width, canvasSize.height);
+  const index = store.stateContainer.state.layers.length;
 
   store.apply(
     {
@@ -18,9 +97,10 @@ export function addLayer(store: AppState, layers: State["layers"]) {
       patches: [
         {
           op: "add",
-          path: ["layers", layers.length],
+          path: ["layers", index],
           value: {
             ...DEFAULT_LAYER_PROPS,
+            type: "layer",
             id: newLayerId(store.stateContainer.state),
             canvas,
           } satisfies State["layers"][number],
@@ -37,30 +117,40 @@ export function addLayer(store: AppState, layers: State["layers"]) {
   );
 }
 
-export function toggleVisibility(
-  store: AppState,
-  layers: State["layers"],
-  index: number
-) {
-  const layer = layers[index];
+export function deleteLayer(store: AppState, index: number[]) {
   store.apply(
     {
       type: "patch",
-      name: `Toggle Layer Visibility`,
+      name: "Delete Layer",
       patches: [
         {
-          op: "replace",
-          path: ["layers", index, "visible"],
-          value: !layer.visible satisfies State["layers"][number]["visible"],
+          op: "remove",
+          path: indexToPath(index),
         },
       ],
     },
     null
   );
+
+  // TODO
+  // Update the current layer index if necessary
+  // store.update((draft) => {
+  //   if (
+  //     !draft.stateContainer.state.layers.find(
+  //       (l) => l.id === draft.uiState.currentLayerId
+  //     )
+  //   ) {
+  //     draft.uiState.currentLayerId =
+  //       draft.stateContainer.state.layers[
+  //         Math.min(index, draft.stateContainer.state.layers.length - 1)
+  //       ].id;
+  //   }
+  // });
 }
 
-export function moveLayer(store: AppState, from: number, to: number) {
-  if (from === to) return;
+export function moveLayer(store: AppState, from: number[], to: number[]) {
+  if ("" + from === "" + to) return;
+
   store.apply(
     {
       type: "patch",
@@ -68,8 +158,8 @@ export function moveLayer(store: AppState, from: number, to: number) {
       patches: [
         {
           op: "move",
-          from: ["layers", from],
-          to: ["layers", to],
+          from: indexToPath(from),
+          to: indexToPath(to),
         },
       ],
     },
@@ -77,25 +167,10 @@ export function moveLayer(store: AppState, from: number, to: number) {
   );
 }
 
-export function updateOpacity(store: AppState, index: number, opacity: number) {
-  store.apply(
-    {
-      type: "patch",
-      name: "Update Layer Opacity",
-      patches: [
-        {
-          op: "replace",
-          path: ["layers", index, "opacity"],
-          value: opacity satisfies State["layers"][number]["opacity"],
-        },
-      ],
-    },
-    null
-  );
-}
+export function duplicateLayer(store: AppState, index: number[]) {
+  const layer = getLayerByIndex(store.stateContainer.state.layers, index);
+  if (layer.type !== "layer") return; // Can only duplicate actual layers, not groups
 
-export function duplicateLayer(store: AppState, index: number) {
-  const layer = store.stateContainer.state.layers[index];
   // Create a new canvas with the same content
   const newCanvas = new MCanvas(layer.canvas.width, layer.canvas.height);
   const newCtx = newCanvas.getContextWrite();
@@ -108,8 +183,9 @@ export function duplicateLayer(store: AppState, index: number) {
       patches: [
         {
           op: "add",
-          path: ["layers", index + 1],
+          path: indexToPath([...index.slice(0, -1), index.at(-1)! + 1]),
           value: {
+            type: "layer",
             id: newLayerId(store.stateContainer.state),
             canvas: newCanvas,
             visible: true,
@@ -130,50 +206,21 @@ export function duplicateLayer(store: AppState, index: number) {
   );
 }
 
-export function deleteLayer(store: AppState, index: number) {
+export function mergeLayer(store: AppState, index: number[]) {
   const layers = store.stateContainer.state.layers;
-  if (layers.length <= 1) {
-    alert("Cannot delete the last layer.");
-    return;
-  }
-  store.apply(
-    {
-      type: "patch",
-      name: "Delete Layer",
-      patches: [
-        {
-          op: "remove",
-          path: ["layers", index],
-        },
-      ],
-    },
-    null
-  );
-
-  // Update the current layer index if necessary
-  store.update((draft) => {
-    if (
-      !draft.stateContainer.state.layers.find(
-        (l) => l.id === draft.uiState.currentLayerId
-      )
-    ) {
-      draft.uiState.currentLayerId =
-        draft.stateContainer.state.layers[
-          Math.min(index, draft.stateContainer.state.layers.length - 1)
-        ].id;
-    }
-  });
-}
-
-export function mergeLayer(store: AppState, index: number) {
-  const layers = store.stateContainer.state.layers;
-  if (index === 0) {
+  if (index.at(-1) === 0) {
     alert("Cannot merge the bottom layer.");
     return;
   }
 
-  const currentLayer = layers[index];
-  const belowLayer = layers[index - 1];
+  const currentLayer = getLayerByIndex(layers, index);
+  const belowLayer = getLayerByIndex(layers, [...index.slice(0, -1), index.at(-1)! - 1]);
+
+  // Can only merge layers, not groups
+  if (currentLayer.type !== "layer" || belowLayer.type !== "layer") {
+    alert("Can only merge actual layers, not groups.");
+    return;
+  }
 
   const mergedCanvas = new MCanvas(
     belowLayer.canvas.width,
@@ -190,6 +237,7 @@ export function mergeLayer(store: AppState, index: number) {
   mergedCtx.restore();
 
   const mergedLayer = {
+    type: "layer",
     id: newLayerId(store.stateContainer.state),
     canvas: mergedCanvas,
     visible: belowLayer.visible,
@@ -205,11 +253,11 @@ export function mergeLayer(store: AppState, index: number) {
       patches: [
         {
           op: "remove",
-          path: ["layers", index],
+          path: indexToPath(index),
         },
         {
           op: "replace",
-          path: ["layers", index - 1],
+          path: indexToPath([...index.slice(0, -1), index.at(-1)! - 1]),
           value: mergedLayer,
         },
         {
@@ -235,40 +283,44 @@ export function mergeLayer(store: AppState, index: number) {
   });
 }
 
-export function updateBlendMode(
-  store: AppState,
-  layerIndex: number,
-  blendMode: BlendMode
-) {
+export function createGroup(store: AppState, layerIndex: number[]) {
+  const layer = getLayerByIndex(store.stateContainer.state.layers, layerIndex);
+  if (!layer) return;
+
+  const newGroupId = newLayerId(store.stateContainer.state);
+  const newGroup: LayerGroup = {
+    type: "group",
+    id: newGroupId,
+    layers: [layer],
+    ...DEFAULT_LAYER_PROPS,
+  };
+
   store.apply(
     {
       type: "patch",
-      name: "Update Layer Blend Mode",
+      name: "Create Group",
       patches: [
         {
           op: "replace",
-          path: ["layers", layerIndex, "blendMode"],
-          value: blendMode satisfies State["layers"][number]["blendMode"],
+          path: indexToPath(layerIndex),
+          value: newGroup,
+        },
+        {
+          op: "replace",
+          path: ["nextLayerId"],
+          value: (store.stateContainer.state.nextLayerId + 1) satisfies State["nextLayerId"],
         },
       ],
     },
     null
   );
+
+  // Update the current layer to the group
+  store.update((draft) => {
+    draft.uiState.currentLayerId = newGroupId;
+  });
 }
 
-export function toggleLockLayer(store: AppState, layerIndex: number, locked: boolean) {
-  store.apply(
-    {
-      type: "patch",
-      name: locked ? "Unlock Layer" : "Lock Layer",
-      patches: [
-        {
-          op: "replace",
-          path: ["layers", layerIndex, "locked"],
-          value: !locked satisfies State["layers"][number]["locked"],
-        },
-      ],
-    },
-    null
-  );
+function indexToPath(index: number[]) {
+  return index.flatMap((i) => ["layers", i]);
 }

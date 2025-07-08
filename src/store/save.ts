@@ -2,8 +2,8 @@ import { MCanvas } from "@/libs/MCanvas";
 import { Selection } from "@/libs/Selection";
 import { BlendMode } from "@/model/blendMode";
 import { pushToast } from "../components/Toasts";
-import { storage } from "../libs/Storage";
-import { computeNextLayerIdFromLayerIds, StateRender } from "../model/state";
+import { storage, ImageData } from "../libs/Storage";
+import { computeNextLayerIdFromLayerIds, Layer, LayerGroup } from "../model/state";
 import { useAppState } from "./appState";
 
 export async function save() {
@@ -12,21 +12,32 @@ export async function save() {
 
   if (!meta) return;
 
-  try {
-    const thumbnail = await createThumbnail();
-    const layers = [];
-    for (const layer of state.stateContainer.state.layers) {
-      const blob = await layer.canvas.getCanvas().convertToBlob();
-      layers.push({
+  async function mapLayers(layers: readonly (Layer | LayerGroup)[]): Promise<ImageData["layers"]> {
+    return Promise.all(layers.map(async (layer) => layer.type === "layer" ? {
+      type: "layer",
+      id: layer.id,
+      canvas: await layer.canvas.getCanvas().convertToBlob(),
+      visible: layer.visible,
+      opacity: layer.opacity,
+      blendMode: layer.blendMode,
+      locked: layer.locked,
+    }
+      : {
+        type: "group",
         id: layer.id,
-        canvas: blob,
+        layers: await mapLayers(layer.layers),
         visible: layer.visible,
         opacity: layer.opacity,
         blendMode: layer.blendMode,
-      });
-    }
-    const selection = state.stateContainer.state.selection?.toStorable();
-    const imageData = {
+        locked: layer.locked,
+      }));
+  }
+
+  try {
+    const thumbnail = await createThumbnail();
+    const layers = await mapLayers(state.stateContainer.state.layers);
+    const selection = state.stateContainer.state.selection?.toStorable() ?? null;
+    const imageData: ImageData = {
       layers,
       selection,
       size: state.stateContainer.state.size,
@@ -54,7 +65,7 @@ function createThumbnail() {
   const canvasSize = state.canvasSize();
   const canvas = new OffscreenCanvas(canvasSize.width, canvasSize.height);
   const ctx = canvas.getContext("2d")!;
-  StateRender(state.stateContainer.state, ctx, null);
+  state.stateContainer.renderer.render(state.stateContainer.state, ctx, null);
   return canvas.convertToBlob();
 }
 
@@ -66,46 +77,47 @@ export async function loadImage(id: number) {
     return;
   }
 
-  const layers: {
-    id: string;
-    canvas: MCanvas;
-    visible: boolean;
-    opacity: number;
-    blendMode: BlendMode;
-    locked: boolean;
-  }[] = [];
-  for (const layerData of imageData.layers) {
-    const image = await blobToImage(layerData.canvas);
-    const canvas = new MCanvas(image.width, image.height);
-    {
-      const ctx = canvas.getContextWrite();
-      ctx.drawImage(image, 0, 0);
-    }
-    layers.push({
-      id: layerData.id,
-      canvas,
-      visible: layerData.visible,
-      opacity: layerData.opacity,
-      blendMode: layerData.blendMode,
-      locked: layerData.locked ?? false,
-    });
+  async function mapLayers(
+    layers: ImageData["layers"]
+  ): Promise<(Layer | LayerGroup)[]> {
+    return Promise.all(layers.map(async (layerData) => {
+      if (layerData.type === "layer") {
+        const image = await blobToImage(layerData.canvas);
+        const canvas = new MCanvas(image.width, image.height);
+        const ctx = canvas.getContextWrite();
+        ctx.drawImage(image, 0, 0);
+        return {
+          type: "layer",
+          id: layerData.id,
+          canvas,
+          visible: layerData.visible,
+          opacity: layerData.opacity,
+          blendMode: layerData.blendMode as BlendMode,
+          locked: layerData.locked,
+        };
+      } else {
+        return {
+          type: "group",
+          id: layerData.id,
+          layers: await mapLayers(layerData.layers),
+          visible: layerData.visible,
+          opacity: layerData.opacity,
+          blendMode: layerData.blendMode as BlendMode,
+          locked: layerData.locked,
+        };
+      }
+    }));
   }
+
+  const layers: (Layer | LayerGroup)[] = await mapLayers(imageData.layers);
   const selection = imageData.selection
     ? await Selection.fromStorable(imageData.selection)
     : null;
 
-  // Calculate the size from layers (use the first layer's dimensions)
-  const firstLayer = layers[0];
-  const width = firstLayer?.canvas.width || 0;
-  const height = firstLayer?.canvas.height || 0;
-
   const state = {
     layers,
     selection,
-    size: imageData.size ?? {
-      width,
-      height,
-    },
+    size: imageData.size,
     nextLayerId: computeNextLayerIdFromLayerIds(
       layers.map((layer) => layer.id)
     ),

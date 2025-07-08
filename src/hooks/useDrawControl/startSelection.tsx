@@ -1,7 +1,7 @@
 import { computePos } from "@/components/CanvasArea";
 import { LassoPath } from "@/components/overlays/LassoPath";
 import { SelectionRect } from "@/components/overlays/SelectionRect";
-import { LayerMod } from "@/model/state";
+import { LayerMod } from "@/model/StateRenderer";
 import { useAppState } from "@/store/appState";
 import { selectLasso, selectMagicWand, selectRect } from "@/store/selection";
 import { JSX } from "react";

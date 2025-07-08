@@ -1,6 +1,6 @@
 import { CursorIndicator } from "@/components/overlays/CursorIndicator";
 import { dist, Pos } from "@/libs/geometry";
-import { LayerMod } from "@/model/state";
+import { LayerMod } from "@/model/StateRenderer";
 import { useAppState } from "@/store/appState";
 import { useGlobalSettings } from "@/store/globalSetting";
 import { JSX, useEffect, useRef, useState } from "react";

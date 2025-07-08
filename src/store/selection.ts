@@ -1,6 +1,6 @@
 import { Selection } from "@/libs/Selection";
+import { getLayerById, State } from "@/model/state";
 import { useAppState } from "./appState";
-import { State, getLayerById } from "@/model/state";
 
 function patchSelection(selection: Selection | null) {
   // If the selection is empty, set it to null
@@ -89,7 +89,7 @@ export function selectMagicWand(x: number, y: number) {
     new Selection(canvasSize.width, canvasSize.height, false);
 
   const currentLayer = getLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
-  if (!currentLayer) return;
+  if (currentLayer.type !== "layer") return;
 
   selection.addMagicWand(
     currentLayer.canvas.getCanvas(),

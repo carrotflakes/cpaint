@@ -1,16 +1,16 @@
+import { StateContainerRender } from "@/model/stateContainer";
 import { useEffect, useRef } from "react";
 import { useViewControl } from "../hooks/useViewControl";
+import { MCanvas } from "../libs/MCanvas";
 import { Op } from "../model/op";
 import {
   DEFAULT_LAYER_PROPS,
   newLayerId,
-  State,
-  StateRender,
+  State
 } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
 import { Rect, TransformRectHandles } from "./overlays/TransformRectHandles";
-import { MCanvas } from "../libs/MCanvas";
 
 export default function AddImageAsLayer() {
   const store = useAppState();
@@ -28,7 +28,7 @@ export default function AddImageAsLayer() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    StateRender(store.stateContainer.state, ctx, null);
+    StateContainerRender(store.stateContainer, ctx);
 
     const { image, rect } = addImageAsLayer;
     renderImage(ctx, image, rect);
@@ -105,6 +105,7 @@ function applyAddImageAsLayer(addImageAsLayer: { image: MCanvas; rect: Rect }) {
         path: ["layers", store.stateContainer.state.layers.length],
         value: {
           ...DEFAULT_LAYER_PROPS,
+          type: "layer",
           id: newLayerId(store.stateContainer.state),
           canvas,
         } satisfies State["layers"][number],

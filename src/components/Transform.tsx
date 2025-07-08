@@ -1,14 +1,15 @@
+import { StateContainerRender } from "@/model/stateContainer";
 import { useEffect, useMemo, useRef } from "react";
 import { useViewControl } from "../hooks/useViewControl";
-import { StateRender, getLayerById } from "../model/state";
+import { MCanvas } from "../libs/MCanvas";
+import { Selection } from "../libs/Selection";
+import { findLayerById } from "../model/state";
 import { useAppState } from "../store/appState";
 import CanvasArea from "./CanvasArea";
 import {
   makeApply,
   TransformRectHandles,
 } from "./overlays/TransformRectHandles";
-import { Selection } from "../libs/Selection";
-import { MCanvas } from "../libs/MCanvas";
 
 export default function Transform() {
   const store = useAppState();
@@ -21,10 +22,14 @@ export default function Transform() {
   const canvases = useMemo(() => {
     if (!layerTransform) return null;
 
-    const canvas = getLayerById(
+    const layer = findLayerById(
       store.stateContainer.state.layers,
       layerTransform.layerId
-    )?.canvas;
+    );
+    if (layer?.type !== "layer") {
+      throw new Error("Not a valid layer for transformation");
+    }
+    const canvas = layer.canvas;
 
     let selection = store.stateContainer.state.selection;
     if (!selection) {
@@ -49,16 +54,20 @@ export default function Transform() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    const layer = getLayerById(
+    const layer = findLayerById(
       store.stateContainer.state.layers,
       layerTransform.layerId
     );
+    if (layer?.type !== "layer") {
+      throw new Error("Not a valid layer for transformation");
+    }
+
     const touch = {
       layerId: layer.id,
       apply: makeApply(canvases.base, canvases.target, layerTransform.rect),
     };
-    StateRender(store.stateContainer.state, ctx, touch);
-  }, [store.stateContainer.state.layers, canvases, canvasRef, layerTransform]);
+    StateContainerRender(store.stateContainer, ctx, touch);
+  }, [store.stateContainer, canvases, canvasRef, layerTransform]);
 
   if (!layerTransform) {
     return "Oops, not in transform mode🤔";

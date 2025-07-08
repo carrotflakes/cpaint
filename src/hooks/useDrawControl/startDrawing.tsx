@@ -2,7 +2,7 @@ import { computePos } from "@/components/CanvasArea";
 import { dist } from "@/libs/geometry";
 import { applyPressureCurve } from "@/libs/pressureCurve";
 import { Op } from "@/model/op";
-import { LayerMod } from "@/model/state";
+import { LayerMod } from "@/model/StateRenderer";
 import {
   createOp,
   createTouch,

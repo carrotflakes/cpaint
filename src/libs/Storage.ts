@@ -8,30 +8,55 @@ import { ALL_BLEND_MODES } from '../model/blendMode';
 const ImageMetaSchema = z.object({ id: z.number(), name: z.string(), createdAt: z.number() });
 type ImageMeta = z.infer<typeof ImageMetaSchema>;
 
+const layerSchema = z.object({
+  type: z.literal("layer"),
+  id: z.string(),
+  canvas: z.instanceof(Blob),
+  visible: z.boolean(),
+  opacity: z.number().min(0).max(1),
+  blendMode: z.enum(ALL_BLEND_MODES),
+  locked: z.boolean(),
+});
+
+// Define the recursive type using z.lazy
+type LayerType = z.infer<typeof layerSchema> | {
+  type: "group";
+  id: string;
+  layers: LayerType[];
+  visible: boolean;
+  opacity: number;
+  blendMode: typeof ALL_BLEND_MODES[number];
+  locked: boolean;
+};
+
+const layerGroupSchema: z.ZodType<LayerType> = z.lazy(() => z.union([
+  layerSchema,
+  z.object({
+    type: z.literal("group"),
+    id: z.string(),
+    layers: z.array(layerGroupSchema),
+    visible: z.boolean(),
+    opacity: z.number().min(0).max(1),
+    blendMode: z.enum(ALL_BLEND_MODES),
+    locked: z.boolean(),
+  })
+]));
+
 const ImageDataSchema = z.object({
-  layers: z.array(
-    z.object({
-      id: z.string(),
-      canvas: z.instanceof(Blob),
-      visible: z.boolean(),
-      opacity: z.number().min(0).max(1),
-      blendMode: z.enum(ALL_BLEND_MODES),
-      locked: z.boolean().optional(),
-    })
-  ),
+  layers: z.array(z.union([layerSchema, layerGroupSchema])),
   selection: z.object({
     width: z.number(),
     height: z.number(),
     data: z.instanceof(Blob),
-  }).nullable().optional(),
+  }).nullable(),
   size: z.object({
     width: z.number(),
     height: z.number(),
-  }).optional(), // TODO: remove this when all images are migrated
+  }),
   colorHistory: z.array(z.string()).optional(),
 });
 
-type ImageData = z.infer<typeof ImageDataSchema>;
+export type ImageData = z.infer<typeof ImageDataSchema>;
 
 export class Storage {
   private db: IDBDatabase | null = null;

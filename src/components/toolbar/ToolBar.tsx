@@ -321,9 +321,16 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={currentLayer?.canvas.getBbox() != null}
+        data-selected={
+          currentLayer?.type === "layer" &&
+          currentLayer.canvas.getBbox() != null
+        }
         onClick={() => {
-          if (currentLayer?.canvas.getBbox() == null) return;
+          if (
+            currentLayer?.type !== "layer" ||
+            currentLayer.canvas.getBbox() == null
+          )
+            return;
           intoLayerTransformMode(store);
         }}
         title="Layer Transform"
@@ -443,11 +450,12 @@ export function ToolBar() {
 }
 
 function intoLayerTransformMode(store: AppState) {
+  // TODO: support multiple layers
   store.update((draft) => {
     const layer = draft.stateContainer.state.layers.find(
       (l) => l.id === draft.uiState.currentLayerId
     );
-    const canvas = layer?.canvas;
+    const canvas = layer?.type === "layer" ? layer.canvas : undefined;
     if (!canvas) return;
     const bbox =
       draft.stateContainer.state.selection?.getBounds() ?? canvas.getBbox();
