@@ -1,11 +1,8 @@
 import { useUnsavedChangesGuard } from "@/features/unsaved-changes";
+import { loadFile } from "@/store/loadFile";
 import { useEffect, useState } from "react";
 import { loadImageFromFile } from "../libs/loadImageFile";
-import {
-  computeNextLayerIdFromLayers,
-  StateFromImage
-} from "../model/state";
-import { ImageMetaNew, useAppState } from "../store/appState";
+import { useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
 
@@ -113,25 +110,7 @@ function ImportImage({ onClose, file }: { onClose: () => void; file: File }) {
             className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 cursor-pointer"
             onClick={async () => {
               executeWithGuard(async () => {
-                if (isPsd) {
-                  const { loadPsdFromFile } = await import("../libs/psdImport");
-                  const psdData = await loadPsdFromFile(file);
-                  useAppState.getState().open(ImageMetaNew(file.name), {
-                    layers: psdData.layers,
-                    selection: null,
-                    size: { width: psdData.width, height: psdData.height },
-                    nextLayerId: computeNextLayerIdFromLayers(psdData.layers),
-                  });
-                } else {
-                  try {
-                    const img = await loadImageFromFile(file);
-                    useAppState
-                      .getState()
-                      .open(ImageMetaNew(file.name), StateFromImage(img));
-                  } catch (e) {
-                    pushToast("" + e, { type: "error" });
-                  }
-                }
+                await loadFile(file);
               });
               onClose();
             }}

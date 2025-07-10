@@ -1,17 +1,14 @@
 import { useUnsavedChangesGuard } from "@/features/unsaved-changes";
+import { loadFile } from "@/store/loadFile";
 import { loadImage } from "@/store/save";
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { CHECK_PATTERN } from "../libs/check";
-import { loadImageFromFile } from "../libs/loadImageFile";
 import {
-  computeNextLayerIdFromLayers,
-  StateFromImage,
   StateNew
 } from "../model/state";
 import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
-import { pushToast } from "./Toasts";
 
 export function Files() {
   const [files, setFiles] = useState(
@@ -99,28 +96,7 @@ export function Files() {
               const file = e.target.files?.[0];
               if (!file) return;
               executeWithGuard(async () => {
-                const fileExtension = file.name.toLowerCase().split(".").pop();
-
-                if (fileExtension === "psd") {
-                  const { loadPsdFromFile } = await import("../libs/psdImport");
-                  const psdData = await loadPsdFromFile(file);
-                  useAppState.getState().open(ImageMetaNew(file.name), {
-                    layers: psdData.layers,
-                    selection: null,
-                    size: { width: psdData.width, height: psdData.height },
-                    nextLayerId: computeNextLayerIdFromLayers(psdData.layers),
-                  });
-                } else {
-                  try {
-                    const img = await loadImageFromFile(file);
-                    useAppState
-                      .getState()
-                      .open(ImageMetaNew(file.name), StateFromImage(img));
-                  } catch (e) {
-                    pushToast("" + e, { type: "error" });
-                  }
-                }
-                load();
+                await loadFile(file);
               }, "Opening a file will discard your current unsaved changes.");
             }}
           />
