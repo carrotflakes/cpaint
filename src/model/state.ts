@@ -106,14 +106,18 @@ export function newLayerId(state: State | number): string {
   return `layer-${typeof state === "number" ? state : state.nextLayerId}`;
 }
 
-export function computeNextLayerIdFromLayerIds(layerIds: string[]): number {
+export function computeNextLayerIdFromLayers(layers: readonly (Layer | LayerGroup)[]): number {
   let maxId = 0;
-  for (const id of layerIds) {
-    const match = id.match(/layer-(\d+)/);
+  for (const layer of layers) {
+    const match = layer.id.match(/layer-(\d+)/);
     if (match)
-      maxId = Math.max(maxId, parseInt(match[1], 10));
+      maxId = Math.max(maxId, parseInt(match[1], 10) + 1);
+    if (layer.type === "group") {
+      const childMaxId = computeNextLayerIdFromLayers(layer.layers);
+      maxId = Math.max(maxId, childMaxId);
+    }
   }
-  return maxId + 1;
+  return maxId;
 }
 
 // Helper functions for layer ID-based operations
@@ -181,7 +185,7 @@ export function getLayerById(layers: State["layers"], layerId: string): State["l
 export function getLayerByIndex(
   layers: State["layers"],
   index: number[],
-): State["layers"][number] {
+): Layer {
   let currentLayers = layers;
   for (const i of index) {
     const layer = currentLayers[i];

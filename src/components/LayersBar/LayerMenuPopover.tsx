@@ -1,22 +1,21 @@
-import { useCallback } from "react";
 import { BlendMode } from "@/model/blendMode";
 import { findLayerById, findLayerIndexById } from "@/model/state";
-import { AppState } from "@/store/appState";
+import { useAppState } from "@/store/appState";
 import * as ops from "@/store/layers";
+import { useCallback } from "react";
 import { SliderH } from "../slider";
 import { BLEND_MODES } from "./constants";
 
 interface LayerMenuPopoverProps {
   layerId: string;
   closePopover: () => void;
-  store: AppState;
 }
 
 export function LayerMenuPopover({
   layerId,
   closePopover,
-  store,
 }: LayerMenuPopoverProps) {
+  const store = useAppState();
   const layerIndex = findLayerIndexById(
     store.stateContainer.state.layers,
     layerId

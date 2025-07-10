@@ -2,10 +2,11 @@ import { MCanvas } from "../libs/MCanvas";
 import { BlendMode } from "../model/blendMode";
 import {
   DEFAULT_LAYER_PROPS,
+  findLayerIndexById,
   getLayerByIndex,
-  newLayerId,
-  State,
   LayerGroup,
+  newLayerId,
+  State
 } from "../model/state";
 import { AppState } from "../store/appState";
 
@@ -77,7 +78,7 @@ export function updateLayerLock(store: AppState, index: number[], locked: boolea
         {
           op: "replace",
           path: [...indexToPath(index), 'locked'],
-          value: !locked satisfies State["layers"][number]["locked"],
+          value: locked satisfies State["layers"][number]["locked"],
         },
       ],
     },
@@ -132,20 +133,22 @@ export function deleteLayer(store: AppState, index: number[]) {
     null
   );
 
-  // TODO
   // Update the current layer index if necessary
-  // store.update((draft) => {
-  //   if (
-  //     !draft.stateContainer.state.layers.find(
-  //       (l) => l.id === draft.uiState.currentLayerId
-  //     )
-  //   ) {
-  //     draft.uiState.currentLayerId =
-  //       draft.stateContainer.state.layers[
-  //         Math.min(index, draft.stateContainer.state.layers.length - 1)
-  //       ].id;
-  //   }
-  // });
+  store.update((draft) => {
+    if (
+      "" + findLayerIndexById(store.stateContainer.state.layers, store.uiState.currentLayerId) === "" + index
+    ) {
+      let layer = draft.stateContainer.state.layers.at(index[0]) ?? draft.stateContainer.state.layers.at(index[0] - 1);
+      for (const i of index.slice(1)) {
+        if (layer?.type === "group") {
+          layer = layer.layers.at(i) ?? layer.layers.at(i - 1);
+        } else {
+          return;
+        }
+      }
+      draft.uiState.currentLayerId = layer?.id ?? "";
+    }
+  });
 }
 
 export function moveLayer(store: AppState, from: number[], to: number[]) {
@@ -287,7 +290,7 @@ export function createGroup(store: AppState, layerIndex: number[]) {
   const layer = getLayerByIndex(store.stateContainer.state.layers, layerIndex);
   if (!layer) return;
 
-  const newGroupId = newLayerId(store.stateContainer.state);
+  const newGroupId = newLayerId(store.stateContainer.state).replace("layer", "group");
   const newGroup: LayerGroup = {
     type: "group",
     id: newGroupId,

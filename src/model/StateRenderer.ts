@@ -56,7 +56,6 @@ export class StateRenderer {
         const ctx2 = canvas.getContextWrite();
         this.renderLayers(item.layers, ctx2, layerMod);
         ctx.drawImage(canvas.getCanvas(), 0, 0);
-        console.log(item)
       } else {
         const layer = item;
         if (layer.id === layerMod?.layerId) {
@@ -73,6 +72,11 @@ export class StateRenderer {
         }
       }
     }
+  }
+
+  getCacheCanvas(layerId: string): MCanvas | null {
+    const entry = this.cache.get(layerId);
+    return entry?.canvas ?? null;
   }
 }
 

@@ -1,23 +1,11 @@
-import * as Popover from "@radix-ui/react-popover";
-import { useState } from "react";
 import { ReactComponent as IconLayers } from "@/assets/icons/layers.svg";
 import { ReactComponent as IconMenu } from "@/assets/icons/menu.svg";
-import { useAppState } from "@/store/appState";
+import * as Popover from "@radix-ui/react-popover";
+import { useState } from "react";
 import { Layers } from "./Layers";
 import { LayersMenuPopover } from "./LayersMenuPopover";
 
 export function LayersBar() {
-  const store = useAppState();
-
-  const [popoverOpen, setPopoverOpen] = useState<{
-    open: boolean;
-    layerIndex: number[];
-  }>({ open: false, layerIndex: [] });
-
-  // D&D state
-  const [draggedIndex, setDraggedIndex] = useState<number[] | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number[] | null>(null);
-
   const [layersVisible, setLayersVisible] = useState(true);
   const [layersMenuOpen, setLayersMenuOpen] = useState(false);
 
@@ -58,7 +46,6 @@ export function LayersBar() {
                 onInteractOutside={() => setLayersMenuOpen(false)}
               >
                 <LayersMenuPopover
-                  store={store}
                   closePopover={() => setLayersMenuOpen(false)}
                 />
               </Popover.Content>
@@ -66,23 +53,7 @@ export function LayersBar() {
           </Popover.Root>
         )}
       </div>
-      {layersVisible && (
-        <div
-          className="grow shrink [&>*]:p-1 border-t border-gray-300 overflow-y-auto"
-          data-scroll={true}
-        >
-          <Layers
-            index={[]}
-            layers={store.stateContainer.state.layers}
-            popoverOpen={popoverOpen}
-            setPopoverOpen={setPopoverOpen}
-            draggedIndex={draggedIndex}
-            setDraggedIndex={setDraggedIndex}
-            dragOverIndex={dragOverIndex}
-            setDragOverIndex={setDragOverIndex}
-          />
-        </div>
-      )}
+      {layersVisible && <Layers />}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { ReactComponent as IconLock } from "@/assets/icons/lock.svg";
-import { MCanvas } from "@/libs/MCanvas";
+import { MCanvas, THUMBNAIL_SIZE } from "@/libs/MCanvas";
+import { useEffect, useRef } from "react";
 
 interface CanvasPreviewProps {
   canvas: MCanvas;
@@ -7,21 +8,27 @@ interface CanvasPreviewProps {
 }
 
 export function CanvasPreview({ canvas, locked }: CanvasPreviewProps) {
-  const thumbnail = canvas.getThumbnail();
+  const ref = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const thumbnail = canvas.getThumbnail();
+
+    const ctx = el.getContext("2d")!;
+    ctx.clearRect(0, 0, el.width, el.height);
+    ctx.globalAlpha = locked ? 0.5 : 1;
+    ctx.drawImage(thumbnail, 0, 0);
+  }, [canvas.getVersion(), locked]);
 
   return (
     <div className="w-8 h-8 grid place-items-center overflow-hidden">
       <canvas
         className="max-w-8 max-h-8"
-        ref={(ref) => {
-          if (!ref) return;
-          const ctx = ref.getContext("2d")!;
-          ctx.clearRect(0, 0, ref.width, ref.height);
-          if (locked) ctx.globalAlpha = 0.75;
-          ctx.drawImage(thumbnail, 0, 0);
-        }}
-        width={thumbnail.width}
-        height={thumbnail.height}
+        ref={ref}
+        width={THUMBNAIL_SIZE}
+        height={THUMBNAIL_SIZE}
       />
       {locked && (
         <IconLock width={16} height={16} className="absolute m-auto" />

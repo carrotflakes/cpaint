@@ -1,20 +1,16 @@
-import { useCallback } from "react";
-import { AppState } from "@/store/appState";
+import { useAppState } from "@/store/appState";
 import * as ops from "@/store/layers";
+import { useCallback } from "react";
 
 interface LayersMenuPopoverProps {
   closePopover: () => void;
-  store: AppState;
 }
 
-export function LayersMenuPopover({
-  closePopover,
-  store,
-}: LayersMenuPopoverProps) {
+export function LayersMenuPopover({ closePopover }: LayersMenuPopoverProps) {
   const handleAddLayer = useCallback(() => {
-    ops.addLayer(store);
+    ops.addLayer(useAppState.getState());
     closePopover();
-  }, [store, closePopover]);
+  }, [closePopover]);
 
   return (
     <div className="flex flex-col text-gray-800 bg-gray-50">

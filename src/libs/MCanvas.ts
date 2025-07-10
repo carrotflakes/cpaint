@@ -7,6 +7,7 @@ export class MCanvas {
   private _bbox: { x: number; y: number; width: number; height: number } | null = null;
   private _bboxDirty = true;
   private _thumbnail: ImageBitmap | null = null;
+  private _version = Symbol();
 
   constructor(width: number, height: number);
   constructor(canvas: OffscreenCanvas);
@@ -56,9 +57,18 @@ export class MCanvas {
     return this._bbox ? { ...this._bbox } : null;
   }
 
+  /**
+   * Get the current version symbol of the canvas content
+   * This symbol changes every time the canvas content is modified
+   */
+  getVersion(): symbol {
+    return this._version;
+  }
+
   markDirty(): void {
     this._bboxDirty = true;
     this._thumbnail = null;
+    this._version = Symbol();
   }
 
   private calculateBbox(): { x: number; y: number; width: number; height: number } | null {
@@ -105,6 +115,7 @@ export class MCanvas {
     this._bboxDirty = false;
     this._bbox = null;
     this._thumbnail = null;
+    this._version = Symbol();
   }
 
   getThumbnail(): ImageBitmap {
@@ -120,11 +131,14 @@ export class MCanvas {
     clonedCanvas._bbox = this._bbox;
     clonedCanvas._bboxDirty = this._bboxDirty;
     clonedCanvas._thumbnail = this._thumbnail;
+    clonedCanvas._version = this._version;
     return clonedCanvas;
   }
 }
 
-function createThumbnail(canvas: MCanvas, width = 64, height = 64) {
+export const THUMBNAIL_SIZE = 64;
+
+function createThumbnail(canvas: MCanvas, width = THUMBNAIL_SIZE, height = THUMBNAIL_SIZE): ImageBitmap {
   const bbox = canvas.getBbox();
   if (bbox) {
     const scale = Math.min(

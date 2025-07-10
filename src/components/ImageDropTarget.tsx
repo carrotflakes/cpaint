@@ -1,7 +1,10 @@
 import { useUnsavedChangesGuard } from "@/features/unsaved-changes";
 import { useEffect, useState } from "react";
 import { loadImageFromFile } from "../libs/loadImageFile";
-import { computeNextLayerIdFromLayerIds, StateFromImage } from "../model/state";
+import {
+  computeNextLayerIdFromLayers,
+  StateFromImage
+} from "../model/state";
 import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
 import { pushToast } from "./Toasts";
@@ -117,9 +120,7 @@ function ImportImage({ onClose, file }: { onClose: () => void; file: File }) {
                     layers: psdData.layers,
                     selection: null,
                     size: { width: psdData.width, height: psdData.height },
-                    nextLayerId: computeNextLayerIdFromLayerIds(
-                      psdData.layers.map((layer) => layer.id)
-                    ),
+                    nextLayerId: computeNextLayerIdFromLayers(psdData.layers),
                   });
                 } else {
                   try {

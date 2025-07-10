@@ -80,6 +80,7 @@ export async function loadPsdFromFile(file: File): Promise<PsdImportResult> {
         layers: psdLayer.children.map(mapLayer),
       };
     }
+    console.error('[loadPsdFromFile] Unsupported PSD layer', psdLayer);
     throw new Error(`Invalid PSD layer`);
   }
 

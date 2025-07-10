@@ -2,8 +2,8 @@ import { MCanvas } from "@/libs/MCanvas";
 import { Selection } from "@/libs/Selection";
 import { BlendMode } from "@/model/blendMode";
 import { pushToast } from "../components/Toasts";
-import { storage, ImageData } from "../libs/Storage";
-import { computeNextLayerIdFromLayerIds, Layer, LayerGroup } from "../model/state";
+import { ImageData, storage } from "../libs/Storage";
+import { computeNextLayerIdFromLayers, Layer, LayerGroup } from "../model/state";
 import { useAppState } from "./appState";
 
 export async function save() {
@@ -118,8 +118,8 @@ export async function loadImage(id: number) {
     layers,
     selection,
     size: imageData.size,
-    nextLayerId: computeNextLayerIdFromLayerIds(
-      layers.map((layer) => layer.id)
+    nextLayerId: computeNextLayerIdFromLayers(
+      layers
     ),
   };
   useAppState.getState().open(imageMeta, state, imageData.colorHistory || []);
