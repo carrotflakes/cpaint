@@ -24,30 +24,30 @@ export function LayerMenuPopover({
 
   const handleUpdateOpacity = useCallback(
     (opacity: number) => {
-      ops.updateOpacity(store, layerIndex, opacity);
+      ops.updateOpacity(layerIndex, opacity);
     },
-    [store]
+    [layerIndex]
   );
 
   const handleCreateGroup = useCallback(() => {
-    ops.createGroup(store, layerIndex);
+    ops.createGroup(layerIndex);
     closePopover();
-  }, [store, layerIndex, closePopover]);
+  }, [layerIndex, closePopover]);
 
   const handleDuplicateLayer = useCallback(() => {
-    ops.duplicateLayer(store, layerIndex);
+    ops.duplicateLayer(layerIndex);
     closePopover();
-  }, [store, closePopover]);
+  }, [layerIndex, closePopover]);
 
   const handleDeleteLayer = useCallback(() => {
-    ops.deleteLayer(store, layerIndex);
+    ops.deleteLayer(layerIndex);
     closePopover();
-  }, [store, closePopover]);
+  }, [layerIndex, closePopover]);
 
   const handleMergeLayer = useCallback(() => {
-    ops.mergeLayer(store, layerIndex);
+    ops.mergeLayer(layerIndex);
     closePopover();
-  }, [store, closePopover]);
+  }, [layerIndex, closePopover]);
 
   const layer = findLayerById(store.stateContainer.state.layers, layerId);
   if (layer?.type !== "layer") return null;
@@ -58,7 +58,7 @@ export function LayerMenuPopover({
         <select
           value={layer.blendMode}
           onChange={(e) =>
-            ops.updateBlendMode(store, layerIndex, e.target.value as BlendMode)
+            ops.updateBlendMode(layerIndex, e.target.value as BlendMode)
           }
           className="w-full"
         >
@@ -82,7 +82,7 @@ export function LayerMenuPopover({
       <div
         className="p-2 cursor-pointer hover:bg-gray-100"
         onClick={() => {
-          ops.updateLayerLock(store, layerIndex, !layer.locked);
+          ops.updateLayerLock(layerIndex, !layer.locked);
           closePopover();
         }}
       >

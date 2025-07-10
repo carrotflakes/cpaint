@@ -78,7 +78,7 @@ export function Layers() {
 
             const toIndex = [...parentIndex, index];
             indexAfterRemove(fromIndex, toIndex);
-            ops.moveLayer(useAppState.getState(), fromIndex, toIndex);
+            ops.moveLayer(fromIndex, toIndex);
 
             function indexAfterRemove(removed: number[], target: number[]) {
               if (target.length < removed.length) return;
@@ -143,7 +143,7 @@ const LayerItem = forwardRef<
         layer.id
       );
       if (!index) return;
-      ops.updateVisibility(store, index, !layer.visible);
+      ops.updateVisibility(index, !layer.visible);
     }, [layer]);
 
     const handleToggleCollapse = useCallback(() => {

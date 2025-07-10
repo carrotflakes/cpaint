@@ -24,9 +24,9 @@ export function LayerGroupMenuPopover({
 
   const handleUpdateOpacity = useCallback(
     (opacity: number) => {
-      ops.updateOpacity(store, layerIndex, opacity);
+      ops.updateOpacity(layerIndex, opacity);
     },
-    [store]
+    [layerIndex]
   );
 
   const layer = findLayerById(store.stateContainer.state.layers, layerId);
@@ -38,7 +38,7 @@ export function LayerGroupMenuPopover({
         <select
           value={layer.blendMode}
           onChange={(e) =>
-            ops.updateBlendMode(store, layerIndex, e.target.value as BlendMode)
+            ops.updateBlendMode(layerIndex, e.target.value as BlendMode)
           }
           className="w-full"
         >
@@ -62,7 +62,7 @@ export function LayerGroupMenuPopover({
       <div
         className="p-2 cursor-pointer hover:bg-gray-100"
         onClick={() => {
-          ops.updateLayerLock(store, layerIndex, !layer.locked);
+          ops.updateLayerLock(layerIndex, !layer.locked);
           closePopover();
         }}
       >

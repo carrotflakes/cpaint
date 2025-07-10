@@ -8,13 +8,13 @@ import {
   newLayerId,
   State
 } from "../model/state";
-import { AppState } from "../store/appState";
+import { useAppState } from "../store/appState";
 
 export function updateVisibility(
-  store: AppState,
   index: number[],
   visible: boolean
 ) {
+  const store = useAppState.getState();
   store.apply(
     {
       type: "patch",
@@ -31,7 +31,8 @@ export function updateVisibility(
   );
 }
 
-export function updateOpacity(store: AppState, index: number[], opacity: number) {
+export function updateOpacity(index: number[], opacity: number) {
+  const store = useAppState.getState();
   store.apply(
     {
       type: "patch",
@@ -49,10 +50,10 @@ export function updateOpacity(store: AppState, index: number[], opacity: number)
 }
 
 export function updateBlendMode(
-  store: AppState,
   index: number[],
   blendMode: BlendMode
 ) {
+  const store = useAppState.getState();
   store.apply(
     {
       type: "patch",
@@ -69,7 +70,8 @@ export function updateBlendMode(
   );
 }
 
-export function updateLayerLock(store: AppState, index: number[], locked: boolean) {
+export function updateLayerLock(index: number[], locked: boolean) {
+  const store = useAppState.getState();
   store.apply(
     {
       type: "patch",
@@ -86,7 +88,8 @@ export function updateLayerLock(store: AppState, index: number[], locked: boolea
   );
 }
 
-export function addLayer(store: AppState) {
+export function addLayer() {
+  const store = useAppState.getState();
   const canvasSize = store.canvasSize();
   const canvas = new MCanvas(canvasSize.width, canvasSize.height);
   const index = store.stateContainer.state.layers.length;
@@ -118,7 +121,8 @@ export function addLayer(store: AppState) {
   );
 }
 
-export function deleteLayer(store: AppState, index: number[]) {
+export function deleteLayer(index: number[]) {
+  const store = useAppState.getState();
   store.apply(
     {
       type: "patch",
@@ -151,9 +155,10 @@ export function deleteLayer(store: AppState, index: number[]) {
   });
 }
 
-export function moveLayer(store: AppState, from: number[], to: number[]) {
+export function moveLayer(from: number[], to: number[]) {
   if ("" + from === "" + to) return;
 
+  const store = useAppState.getState();
   store.apply(
     {
       type: "patch",
@@ -170,7 +175,8 @@ export function moveLayer(store: AppState, from: number[], to: number[]) {
   );
 }
 
-export function duplicateLayer(store: AppState, index: number[]) {
+export function duplicateLayer(index: number[]) {
+  const store = useAppState.getState();
   const layer = getLayerByIndex(store.stateContainer.state.layers, index);
   if (layer.type !== "layer") return; // Can only duplicate actual layers, not groups
 
@@ -209,7 +215,8 @@ export function duplicateLayer(store: AppState, index: number[]) {
   );
 }
 
-export function mergeLayer(store: AppState, index: number[]) {
+export function mergeLayer(index: number[]) {
+  const store = useAppState.getState();
   const layers = store.stateContainer.state.layers;
   if (index.at(-1) === 0) {
     alert("Cannot merge the bottom layer.");
@@ -286,7 +293,8 @@ export function mergeLayer(store: AppState, index: number[]) {
   });
 }
 
-export function createGroup(store: AppState, layerIndex: number[]) {
+export function createGroup(layerIndex: number[]) {
+  const store = useAppState.getState();
   const layer = getLayerByIndex(store.stateContainer.state.layers, layerIndex);
   if (!layer) return;
 
