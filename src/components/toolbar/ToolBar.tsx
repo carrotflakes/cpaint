@@ -1,5 +1,3 @@
-import * as Popover from "@radix-ui/react-popover";
-import { useState } from "react";
 import { ReactComponent as IconArrowsOutCardinal } from "@/assets/icons/arrows-out-cardinal.svg";
 import { ReactComponent as IconBucket } from "@/assets/icons/bucket.svg";
 import { ReactComponent as IconCheckerBoard } from "@/assets/icons/checkerboard.svg";
@@ -14,12 +12,14 @@ import { ReactComponent as IconRedo } from "@/assets/icons/redo.svg";
 import { ReactComponent as IconSelection } from "@/assets/icons/selection.svg";
 import { ReactComponent as IconSparkle } from "@/assets/icons/sparkle.svg";
 import { ReactComponent as IconUndo } from "@/assets/icons/undo.svg";
+import { findLayerById } from "@/model/state";
 import {
   StateContainerHasRedo,
   StateContainerHasUndo,
 } from "@/model/stateContainer";
-import { findLayerById } from "@/model/state";
-import { AppState, useAppState } from "@/store/appState";
+import { useAppState } from "@/store/appState";
+import * as Popover from "@radix-ui/react-popover";
+import { useCallback, useMemo, useState } from "react";
 import { BrushPreview } from "./BrushPreview";
 import { BrushSelector } from "./BrushSelector";
 import { BucketFillTool } from "./BucketFillTool";
@@ -34,8 +34,16 @@ import { ViewControls } from "./ViewControls";
 const scaleFactor = 2 ** (1 / 4);
 
 export function ToolBar() {
-  const store = useAppState();
-  const { uiState } = store;
+  const stateContainer = useAppState((state) => state.stateContainer);
+  const alphaLock = useAppState((state) => state.uiState.alphaLock);
+  const opacity = useAppState((state) => state.uiState.opacity);
+  const currentLayerId = useAppState((state) => state.uiState.currentLayerId);
+  const brushType = useAppState((state) => state.uiState.brushType);
+  const color = useAppState((state) => state.uiState.color);
+  const erase = useAppState((state) => state.uiState.erase);
+  const penSize = useAppState((state) => state.uiState.penSize);
+  const tool = useAppState((state) => state.uiState.tool);
+
   const [showBrushPreview, setShowBrushPreview] = useState(false);
   const [showBucketFill, setShowBucketFill] = useState(false);
   const [showBrush, setShowBrush] = useState(false);
@@ -44,17 +52,146 @@ export function ToolBar() {
   const [showEffects, setShowEffects] = useState(false);
 
   const controlOpacity = useControl({
-    getValue: () => uiState.opacity,
+    getValue: () => opacity,
     setValue: (v) =>
-      store.update((draft) => {
+      useAppState.getState().update((draft) => {
         draft.uiState.opacity = Math.max(Math.min(v, 1), 0);
       }),
     sensitivity: 0.01,
   });
 
-  const currentLayer = findLayerById(
-    store.stateContainer.state.layers,
-    uiState.currentLayerId
+  const currentLayer = useMemo(
+    () => findLayerById(stateContainer.state.layers, currentLayerId),
+    [stateContainer.state.layers, currentLayerId]
+  );
+
+  const hasUndo = useMemo(
+    () => StateContainerHasUndo(stateContainer),
+    [stateContainer]
+  );
+
+  const hasRedo = useMemo(
+    () => StateContainerHasRedo(stateContainer),
+    [stateContainer]
+  );
+
+  const colorStyle = useMemo(
+    () => ({ background: color }),
+    [color]
+  );
+
+  const brushPreviewProps = useMemo(
+    () => ({
+      color: color,
+      width: penSize,
+      opacity: opacity,
+    }),
+    [color, penSize, opacity]
+  );
+
+  const handleColorChange = useCallback((color: string) => {
+    useAppState.getState().update((draft) => {
+      draft.uiState.color = color;
+    });
+  }, []);
+
+  const handleOpacityChange = useCallback((value: number) => {
+    useAppState.getState().update((draft) => {
+      draft.uiState.opacity = value;
+    });
+  }, []);
+
+  const handleEraserToggle = useCallback(() => {
+    useAppState.getState().update((draft) => {
+      draft.uiState.erase = !draft.uiState.erase;
+    });
+  }, []);
+
+  const handleAlphaLockToggle = useCallback(() => {
+    useAppState.getState().update((draft) => {
+      draft.uiState.alphaLock = !draft.uiState.alphaLock;
+    });
+  }, []);
+
+  const handleBrushToolSelect = useCallback(() => {
+    if (tool === "brush") setShowBrush((x) => !x);
+    else setShowBrush(true);
+    useAppState.getState().update((draft) => {
+      draft.uiState.tool = "brush";
+    });
+  }, [tool]);
+
+  const handleBrushTypeChange = useCallback((brushType: string) => {
+    useAppState.getState().update((draft) => {
+      draft.uiState.brushType = brushType;
+    });
+    setShowBrushPreview(false);
+  }, []);
+
+  const handleFillToolSelect = useCallback(() => {
+    useAppState.getState().update((draft) => {
+      draft.uiState.tool = "fill";
+    });
+  }, []);
+
+  const handleBucketFillToolSelect = useCallback(() => {
+    if (tool === "bucketFill") setShowBucketFill((x) => !x);
+    else setShowBucketFill(true);
+    useAppState.getState().update((draft) => {
+      draft.uiState.tool = "bucketFill";
+    });
+  }, [tool]);
+
+  const handleEyeDropperToolSelect = useCallback(() => {
+    useAppState.getState().update((draft) => {
+      draft.uiState.tool = "eyeDropper";
+    });
+  }, []);
+
+  const handleSelectionToolSelect = useCallback(() => {
+    if (tool === "selection") setShowSelectionControls((x) => !x);
+    else setShowSelectionControls(true);
+    useAppState.getState().update((draft) => {
+      draft.uiState.tool = "selection";
+    });
+  }, [tool]);
+
+  const handleLayerTransform = useCallback(() => {
+    if (currentLayer?.type !== "layer" || currentLayer.canvas.getBbox() == null)
+      return;
+    intoLayerTransformMode();
+  }, [currentLayer]);
+
+  const handleUndo = useCallback(() => {
+    useAppState.getState().undo();
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    useAppState.getState().redo();
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    useAppState.getState().update((draft) => {
+      draft.uiState.canvasView.scale = roundFloat(
+        draft.uiState.canvasView.scale * scaleFactor,
+        4
+      );
+    });
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    useAppState.getState().update((draft) => {
+      draft.uiState.canvasView.scale = roundFloat(
+        draft.uiState.canvasView.scale / scaleFactor,
+        4
+      );
+    });
+  }, []);
+
+  const canTransformLayer = useMemo(
+    () =>
+      currentLayer?.type === "layer" && currentLayer.canvas.getBbox() != null,
+    [currentLayer]
   );
   return (
     <div
@@ -66,7 +203,7 @@ export function ToolBar() {
         <Popover.Trigger asChild>
           <div
             className="relative w-6 h-6 rounded-full shadow cursor-pointer"
-            style={{ background: uiState.color }}
+            style={colorStyle}
           ></div>
         </Popover.Trigger>
         <Popover.Portal>
@@ -77,20 +214,12 @@ export function ToolBar() {
             collisionPadding={8}
           >
             <ColorPalette
-              initialColor={uiState.color}
-              onChanged={(color: string) => {
-                store.update((draft) => {
-                  draft.uiState.color = color;
-                });
-              }}
+              initialColor={color}
+              onChanged={handleColorChange}
             />
             <BrushPreview
-              brushType={uiState.brushType}
-              overwriteProps={{
-                color: uiState.color,
-                width: uiState.penSize,
-                opacity: uiState.opacity,
-              }}
+              brushType={brushType}
+              overwriteProps={brushPreviewProps}
             />
           </Popover.Content>
         </Popover.Portal>
@@ -103,7 +232,7 @@ export function ToolBar() {
             title="Opacity"
             {...controlOpacity.props}
           >
-            {Math.round(uiState.opacity * 255)}
+            {Math.round(opacity * 255)}
           </div>
         </Popover.Trigger>
         <Popover.Portal>
@@ -114,21 +243,10 @@ export function ToolBar() {
             collisionPadding={8}
             onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus steal for slider
           >
-            <SliderV
-              value={uiState.opacity}
-              onChange={(value) => {
-                store.update((draft) => {
-                  draft.uiState.opacity = value;
-                });
-              }}
-            />
+            <SliderV value={opacity} onChange={handleOpacityChange} />
             <BrushPreview
-              brushType={uiState.brushType}
-              overwriteProps={{
-                color: uiState.color,
-                width: uiState.penSize,
-                opacity: uiState.opacity,
-              }}
+              brushType={brushType}
+              overwriteProps={brushPreviewProps}
             />
           </Popover.Content>
         </Popover.Portal>
@@ -136,12 +254,8 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=true]:text-blue-400"
-        data-selected={uiState.erase}
-        onClick={() => {
-          store.update((draft) => {
-            draft.uiState.erase = !draft.uiState.erase;
-          });
-        }}
+        data-selected={erase}
+        onClick={handleEraserToggle}
         title="Eraser"
       >
         <IconEraser width={24} height={24} />
@@ -149,12 +263,8 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=true]:text-blue-400"
-        data-selected={uiState.alphaLock}
-        onClick={() => {
-          store.update((draft) => {
-            draft.uiState.alphaLock = !draft.uiState.alphaLock;
-          });
-        }}
+        data-selected={alphaLock}
+        onClick={handleAlphaLockToggle}
         title="Alpha Lock"
       >
         <IconCheckerBoard width={24} height={24} />
@@ -162,18 +272,12 @@ export function ToolBar() {
 
       <hr className="opacity-20" />
 
-      <Popover.Root open={uiState.tool === "brush" && showBrush}>
+      <Popover.Root open={tool === "brush" && showBrush}>
         <Popover.Trigger asChild>
           <div
             className="cursor-pointer data-[selected=true]:text-blue-400"
-            data-selected={uiState.tool === "brush"}
-            onClick={() => {
-              if (uiState.tool === "brush") setShowBrush((x) => !x);
-              else setShowBrush(true);
-              store.update((draft) => {
-                draft.uiState.tool = "brush";
-              });
-            }}
+            data-selected={tool === "brush"}
+            onClick={handleBrushToolSelect}
             title="Brush"
           >
             <IconPencil width={24} height={24} />
@@ -209,13 +313,8 @@ export function ToolBar() {
                   forceMount
                 >
                   <BrushSelector
-                    brushType={uiState.brushType}
-                    onChange={(brushType) => {
-                      store.update((draft) => {
-                        draft.uiState.brushType = brushType;
-                      });
-                      setShowBrushPreview(false); // Close popover on select
-                    }}
+                    brushType={brushType}
+                    onChange={handleBrushTypeChange}
                   />
                 </Popover.Content>
               </Popover.Portal>
@@ -228,29 +327,19 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=true]:text-blue-400"
-        data-selected={uiState.tool === "fill"}
-        onClick={() => {
-          store.update((draft) => {
-            draft.uiState.tool = "fill";
-          });
-        }}
+        data-selected={tool === "fill"}
+        onClick={handleFillToolSelect}
         title="Fill"
       >
         <IconFill width={24} height={24} />
       </div>
 
-      <Popover.Root open={uiState.tool === "bucketFill" && showBucketFill}>
+      <Popover.Root open={tool === "bucketFill" && showBucketFill}>
         <Popover.Trigger asChild>
           <div
             className="cursor-pointer data-[selected=true]:text-blue-400"
-            data-selected={uiState.tool === "bucketFill"}
-            onClick={() => {
-              if (uiState.tool === "bucketFill") setShowBucketFill((x) => !x);
-              else setShowBucketFill(true);
-              store.update((draft) => {
-                draft.uiState.tool = "bucketFill";
-              });
-            }}
+            data-selected={tool === "bucketFill"}
+            onClick={handleBucketFillToolSelect}
             title="Bucket Fill"
           >
             <IconBucket width={24} height={24} />
@@ -270,33 +359,22 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=true]:text-blue-400"
-        data-selected={uiState.tool === "eyeDropper"}
-        onClick={() => {
-          store.update((draft) => {
-            draft.uiState.tool = "eyeDropper";
-          });
-        }}
+        data-selected={tool === "eyeDropper"}
+        onClick={handleEyeDropperToolSelect}
         title="Eye Dropper"
       >
         <IconDropper width={24} height={24} />
       </div>
 
       <Popover.Root
-        open={uiState.tool === "selection" && showSelectionControls}
+        open={tool === "selection" && showSelectionControls}
         onOpenChange={setShowSelectionControls}
       >
         <Popover.Trigger asChild>
           <div
             className="cursor-pointer data-[selected=true]:text-blue-400"
-            data-selected={uiState.tool === "selection"}
-            onClick={() => {
-              if (uiState.tool === "selection")
-                setShowSelectionControls((x) => !x);
-              else setShowSelectionControls(true);
-              store.update((draft) => {
-                draft.uiState.tool = "selection";
-              });
-            }}
+            data-selected={tool === "selection"}
+            onClick={handleSelectionToolSelect}
             title="Selection"
           >
             <IconSelection width={24} height={24} />
@@ -321,18 +399,8 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        data-selected={
-          currentLayer?.type === "layer" &&
-          currentLayer.canvas.getBbox() != null
-        }
-        onClick={() => {
-          if (
-            currentLayer?.type !== "layer" ||
-            currentLayer.canvas.getBbox() == null
-          )
-            return;
-          intoLayerTransformMode(store);
-        }}
+        data-selected={canTransformLayer}
+        onClick={handleLayerTransform}
         title="Layer Transform"
       >
         <IconArrowsOutCardinal width={24} height={24} />
@@ -368,10 +436,8 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[enabled=false]:opacity-50"
-        data-enabled={StateContainerHasUndo(store.stateContainer)}
-        onClick={() => {
-          store.undo();
-        }}
+        data-enabled={hasUndo}
+        onClick={handleUndo}
         title="Undo"
       >
         <IconUndo width={24} height={24} />
@@ -379,10 +445,8 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[enabled=false]:opacity-50"
-        data-enabled={StateContainerHasRedo(store.stateContainer)}
-        onClick={() => {
-          store.redo();
-        }}
+        data-enabled={hasRedo}
+        onClick={handleRedo}
         title="Redo"
       >
         <IconRedo width={24} height={24} />
@@ -392,14 +456,7 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        onClick={() =>
-          store.update((draft) => {
-            draft.uiState.canvasView.scale = roundFloat(
-              draft.uiState.canvasView.scale * scaleFactor,
-              4
-            );
-          })
-        }
+        onClick={handleZoomIn}
         title="Zoom in"
       >
         <IconPlus width={24} height={24} />
@@ -407,14 +464,7 @@ export function ToolBar() {
 
       <div
         className="cursor-pointer data-[selected=false]:opacity-50"
-        onClick={() =>
-          store.update((draft) => {
-            draft.uiState.canvasView.scale = roundFloat(
-              draft.uiState.canvasView.scale / scaleFactor,
-              4
-            );
-          })
-        }
+        onClick={handleZoomOut}
         title="Zoom out"
       >
         <IconMinus width={24} height={24} />
@@ -449,9 +499,9 @@ export function ToolBar() {
   );
 }
 
-function intoLayerTransformMode(store: AppState) {
+function intoLayerTransformMode() {
   // TODO: support multiple layers
-  store.update((draft) => {
+  useAppState.getState().update((draft) => {
     const layer = draft.stateContainer.state.layers.find(
       (l) => l.id === draft.uiState.currentLayerId
     );

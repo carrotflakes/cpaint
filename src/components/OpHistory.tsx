@@ -7,14 +7,14 @@ import { useAppState } from "../store/appState";
 
 export function OpHistory() {
   const [visible, setVisible] = useState(false);
-  const store = useAppState();
+  const stateContainer = useAppState((state) => state.stateContainer);
 
   const ops = useMemo(() => {
     return [
-      ...store.stateContainer.backward,
-      ...store.stateContainer.forward.toReversed(),
+      ...stateContainer.backward,
+      ...stateContainer.forward.toReversed(),
     ];
-  }, [store.stateContainer.forward, store.stateContainer.backward]);
+  }, [stateContainer.forward, stateContainer.backward]);
 
   return (
     <div className="max-h-full flex flex-col items-stretch bg-gray-50 dark:bg-gray-800 border-l border-b border-gray-300">
