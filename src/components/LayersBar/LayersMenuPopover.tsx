@@ -1,3 +1,4 @@
+import { useAppState } from "@/store/appState";
 import * as ops from "@/store/layers";
 import { useCallback } from "react";
 
@@ -7,7 +8,8 @@ interface LayersMenuPopoverProps {
 
 export function LayersMenuPopover({ closePopover }: LayersMenuPopoverProps) {
   const handleAddLayer = useCallback(() => {
-    ops.addLayer();
+    const store = useAppState.getState();
+    ops.addLayer([store.stateContainer.state.layers.length]);
     closePopover();
   }, [closePopover]);
 

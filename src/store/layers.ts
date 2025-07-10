@@ -4,6 +4,7 @@ import {
   DEFAULT_LAYER_PROPS,
   findLayerIndexById,
   getLayerByIndex,
+  Layer,
   LayerGroup,
   newLayerId,
   State
@@ -88,11 +89,16 @@ export function updateLayerLock(index: number[], locked: boolean) {
   );
 }
 
-export function addLayer() {
+export function addLayer(index: number[]) {
   const store = useAppState.getState();
   const canvasSize = store.canvasSize();
   const canvas = new MCanvas(canvasSize.width, canvasSize.height);
-  const index = store.stateContainer.state.layers.length;
+  const layer: Layer = {
+    ...DEFAULT_LAYER_PROPS,
+    type: "layer",
+    id: newLayerId(store.stateContainer.state),
+    canvas,
+  };
 
   store.apply(
     {
@@ -101,13 +107,8 @@ export function addLayer() {
       patches: [
         {
           op: "add",
-          path: ["layers", index],
-          value: {
-            ...DEFAULT_LAYER_PROPS,
-            type: "layer",
-            id: newLayerId(store.stateContainer.state),
-            canvas,
-          } satisfies State["layers"][number],
+          path: indexToPath(index),
+          value: layer satisfies State["layers"][number],
         },
         {
           op: "replace",
