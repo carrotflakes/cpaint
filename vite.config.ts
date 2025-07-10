@@ -13,6 +13,9 @@ export default defineConfig({
     svgr({ icon: true }),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true
+      },
       manifest: {
         name: "cpaint",
         short_name: "cpaint",
