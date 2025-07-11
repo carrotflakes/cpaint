@@ -1,7 +1,9 @@
+import { Patch } from "@/libs/patch";
 import { MCanvas } from "../libs/MCanvas";
 import { BlendMode } from "../model/blendMode";
 import {
   DEFAULT_LAYER_PROPS,
+  findLayerByIndex,
   findLayerIndexById,
   getLayerByIndex,
   Layer,
@@ -330,6 +332,39 @@ export function createGroup(layerIndex: number[]) {
   // Update the current layer to the group
   store.update((draft) => {
     draft.uiState.currentLayerId = newGroupId;
+  });
+}
+
+export function ungroup(layerIndex: number[]) {
+  const store = useAppState.getState();
+  const group = findLayerByIndex(store.stateContainer.state, layerIndex);
+  if (!group || !('type' in group) || group?.type !== "group") return;
+
+  const patches: Patch[] = group.layers.map((_, i) => ({
+    op: "move",
+    from: indexToPath([...layerIndex, 0]),
+    to: indexToPath([...layerIndex.slice(0, -1), layerIndex.at(-1)! + 1 + i]),
+  }));
+
+  patches.push({
+    op: "remove",
+    path: indexToPath(layerIndex),
+  });
+
+  store.apply(
+    {
+      type: "patch",
+      name: "Ungroup Layers",
+      patches,
+    },
+    null
+  );
+
+  // Update the current layer to the first layer of the ungrouped layers
+  store.update((draft) => {
+    draft.uiState.currentLayerId = group.layers.length > 0
+      ? group.layers.at(-1)!.id
+      : "";
   });
 }
 

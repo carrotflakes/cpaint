@@ -200,3 +200,18 @@ export function getLayerByIndex(
   }
   throw new Error(`No layer found at index ${index.join(", ")}`);
 }
+
+export function findLayerByIndex(
+  state: State,
+  index: number[],
+): State | Layer | LayerGroup | null {
+  let current: State | Layer | LayerGroup = state;
+  for (const i of index) {
+    if ('layers' in current) {
+      current = current.layers[i];
+    } else {
+      return null;
+    }
+  }
+  return current;
+}

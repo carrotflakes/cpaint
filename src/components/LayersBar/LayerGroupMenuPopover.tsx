@@ -36,6 +36,11 @@ export function LayerGroupMenuPopover({
     closePopover();
   }, [closePopover, layerIndex]);
 
+  const handleUngroup = useCallback(() => {
+    ops.ungroup(layerIndex);
+    closePopover();
+  }, [layerIndex, closePopover]);
+
   const handleDeleteLayer = useCallback(() => {
     ops.deleteLayer(layerIndex);
     closePopover();
@@ -85,6 +90,13 @@ export function LayerGroupMenuPopover({
         onClick={() => handleAddLayer()}
       >
         Add Layer
+      </div>
+
+      <div
+        className="p-2 cursor-pointer hover:bg-gray-100"
+        onClick={() => handleUngroup()}
+      >
+        Ungroup Layers
       </div>
 
       <div
