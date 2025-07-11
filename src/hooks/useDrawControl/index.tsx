@@ -63,9 +63,18 @@ export function useDrawControl(
       }
     };
 
+    // Prevent default touch behavior to avoid scrolling
+    const onTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
     container.addEventListener("pointerdown", onPointerDown);
+    container.addEventListener("touchstart", onTouchStart, {
+      passive: false,
+    });
     return () => {
       container.removeEventListener("pointerdown", onPointerDown);
+      container.removeEventListener("touchstart", onTouchStart);
     };
   }, [containerRef, touchToDraw]);
 

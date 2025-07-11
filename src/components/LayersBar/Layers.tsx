@@ -180,7 +180,7 @@ const LayerItem = forwardRef<
           ref={ref}
           style={style}
         >
-          <div className="cursor-grab" draggable {...handleProps}>
+          <div className="cursor-grab touch-none" draggable {...handleProps}>
             <IconDotsV width={16} height={24} />
           </div>
 

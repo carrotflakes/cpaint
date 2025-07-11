@@ -45,7 +45,7 @@ export default function CanvasArea({
 
   return (
     <div
-      className="relative w-full h-full grid place-items-center overflow-hidden"
+      className="relative w-full h-full grid place-items-center overflow-hidden touch-none"
       ref={containerRef}
       style={{
         backgroundImage: CHECK_PATTERN,

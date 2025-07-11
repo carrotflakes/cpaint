@@ -2,7 +2,7 @@ import { useEffect, RefObject, useRef } from "react";
 import { dist } from "../libs/geometry";
 import { useAppState } from "../store/appState";
 
-const TAP_TIMEOUT = 300; // Maximum time between touch start and end for a tap
+export const TAP_TIMEOUT = 300; // Maximum time between touch start and end for a tap
 const TAP_DISTANCE = 5; // Maximum distance between start and end positions for a tap
 
 export function useGestureControl(containerRef: RefObject<HTMLElement | null>) {

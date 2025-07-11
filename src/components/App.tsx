@@ -1,7 +1,6 @@
 import { useEffect } from "react";
+import { UnsavedChangesDialog } from "../features/unsaved-changes";
 import { useBeforeUnload } from "../hooks/useBeforeUnload";
-import { useDisableScroll } from "../hooks/useDisableScroll";
-import { usePointerClick } from "../hooks/usePointerClick";
 import { useAppState } from "../store/appState";
 import { useGlobalSettings } from "../store/globalSetting";
 import AddImageAsLayer from "./AddImageAsLayer";
@@ -19,11 +18,8 @@ import { SettingDialog } from "./SettingDialog";
 import { pushToast, Toasts } from "./Toasts";
 import { ToolBar } from "./toolbar/ToolBar";
 import Transform from "./Transform";
-import { UnsavedChangesDialog } from "../features/unsaved-changes";
 
 function App() {
-  useDisableScroll();
-  usePointerClick();
   useBeforeUnload();
   useReportUncaughtError();
 
@@ -32,7 +28,7 @@ function App() {
   const showOpHistory = useGlobalSettings((s) => s.showOpHistory);
 
   return (
-    <div 
+    <div
       data-testid="app"
       className="w-dvw h-dvh flex flex-col items-stretch overflow-hidden text-gray-800 dark:text-gray-100 relative"
     >

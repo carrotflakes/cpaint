@@ -54,10 +54,20 @@ export function usePointer<T extends HTMLElement>({
       e.preventDefault();
     };
 
+    // Prevent default touch behavior to avoid scrolling
+    const onTouchStart_ = (e: TouchEvent) => {
+      if (!ref.current) return;
+      e.preventDefault();
+    };
+
     container.addEventListener("pointerdown", onPointerDown_);
+    container.addEventListener("touchstart", onTouchStart_, {
+      passive: false,
+    });
 
     return () => {
       container.removeEventListener("pointerdown", onPointerDown_);
+      container.removeEventListener("touchstart", onTouchStart_);
     };
   }, [onPointerDown]);
 

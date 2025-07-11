@@ -24,7 +24,7 @@ export function Header() {
   const { executeWithGuard } = useUnsavedChangesGuard();
 
   return (
-    <div className="h-10 px-2 flex items-center gap-2 overflow-x-auto">
+    <div className="h-10 px-2 flex items-center gap-2 overflow-x-auto touch-none">
       {imageMeta ? (
         <div
           className="basis-6 cursor-pointer"

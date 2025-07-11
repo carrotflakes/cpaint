@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { TAP_TIMEOUT } from "@/hooks/useGestureControl";
 import { usePointer } from "@/hooks/usePointer";
+import { useRef, useState } from "react";
 
 export function useControl({
   getValue,
@@ -20,6 +21,7 @@ export function useControl({
       setTemporalShow(true);
       const initValue = getValue();
       let moved = false;
+      const time = Date.now();
 
       return {
         onMove(pos_) {
@@ -31,7 +33,8 @@ export function useControl({
         onUp() {
           setTemporalShow(false);
           // Toggle visibility if not moved
-          if (!moved) setShow((prev) => !prev);
+          // FIXME
+          if (!moved || Date.now() - time < TAP_TIMEOUT) setShow((prev) => !prev);
         },
       };
     },
