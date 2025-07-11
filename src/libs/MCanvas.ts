@@ -72,19 +72,21 @@ export class MCanvas {
   }
 
   private calculateBbox(): { x: number; y: number; width: number; height: number } | null {
+    const { width, height } = this.canvas;
+
     const ctx = this.getContextRead();
-    const imageData = ctx.getImageData(0, 0, this.width, this.height);
+    const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
 
-    let minX = this.width;
-    let minY = this.height;
+    let minX = width;
+    let minY = height;
     let maxX = -1;
     let maxY = -1;
 
     // Scan all pixels to find opaque ones (alpha > 0)
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        const alpha = data[(y * this.width + x) * 4 + 3];
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const alpha = data[(y * width + x) * 4 + 3];
         if (alpha > 0) {
           minX = Math.min(minX, x);
           minY = Math.min(minY, y);
