@@ -21,6 +21,8 @@ export function LayerGroupMenuPopover({
     layerId
   );
   if (layerIndex === null) return null;
+  const layer = findLayerById(store.stateContainer.state.layers, layerId);
+  if (layer?.type !== "group") return null;
 
   const handleUpdateOpacity = useCallback(
     (opacity: number) => {
@@ -29,8 +31,15 @@ export function LayerGroupMenuPopover({
     [layerIndex]
   );
 
-  const layer = findLayerById(store.stateContainer.state.layers, layerId);
-  if (layer?.type !== "group") return null;
+  const handleAddLayer = useCallback(() => {
+    ops.addLayer([...layerIndex, layer.layers.length]);
+    closePopover();
+  }, [closePopover, layerIndex]);
+
+  const handleDeleteLayer = useCallback(() => {
+    ops.deleteLayer(layerIndex);
+    closePopover();
+  }, [layerIndex, closePopover]);
 
   return (
     <div className="flex flex-col text-gray-800 bg-gray-50">
@@ -67,6 +76,22 @@ export function LayerGroupMenuPopover({
         }}
       >
         {layer.locked ? "Unlock Group" : "Lock Group"}
+      </div>
+
+      <hr className="opacity-20" />
+
+      <div
+        className="p-2 cursor-pointer hover:bg-gray-100"
+        onClick={() => handleAddLayer()}
+      >
+        Add Layer
+      </div>
+
+      <div
+        className="p-2 cursor-pointer hover:bg-gray-100"
+        onClick={() => handleDeleteLayer()}
+      >
+        Delete Group
       </div>
     </div>
   );
