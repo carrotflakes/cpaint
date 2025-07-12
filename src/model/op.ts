@@ -27,7 +27,7 @@ export type Op = {
   fillColor: string;
   opacity: number;
   erase: boolean;
-  path: { pos: [number, number] }[];
+  path: [number, number][];
   layerId: string;
 } | {
   type: "bucketFill";
@@ -97,7 +97,7 @@ export function applyOp(
       }
     } else if (op.type === "fill") {
       for (const p of op.path) {
-        touch.stroke(p.pos[0], p.pos[1], 1);
+        touch.stroke(p[0], p[1], 1);
       }
     }
 

@@ -98,9 +98,7 @@ export function startDrawing(
 }
 
 export function opPush(op: Op, pos: [number, number], pressure: number) {
-  if (op.type === "fill") {
-    op.path.push({ pos });
-  } else if (op.type === "bucketFill") {
+  if (op.type === "bucketFill") {
     op.pos = pos;
   } else if (op.type === "stroke") {
     op.path.push({ pos, pressure });

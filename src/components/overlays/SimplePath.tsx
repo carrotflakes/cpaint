@@ -2,7 +2,13 @@ import { useMemo } from "react";
 import { useAppState } from "../../store/appState";
 import { viewToSVGTransform } from "../CanvasArea";
 
-export function LassoPath({ path }: { path: { x: number; y: number }[] }) {
+export function SimplePath({
+  path,
+  color = "black",
+}: {
+  path: { x: number; y: number }[];
+  color?: string;
+}) {
   const store = useAppState();
   const view = store.uiState.canvasView;
   const canvasSize = store.canvasSize();
@@ -27,7 +33,7 @@ export function LassoPath({ path }: { path: { x: number; y: number }[] }) {
   return (
     <path
       d={pathString}
-      stroke="black"
+      stroke={color}
       strokeWidth={1 / view.scale}
       fill="none"
       transform={transform}

@@ -1,5 +1,5 @@
 import { computePos } from "@/components/CanvasArea";
-import { LassoPath } from "@/components/overlays/LassoPath";
+import { SimplePath } from "@/components/overlays/SimplePath";
 import { SelectionRect } from "@/components/overlays/SelectionRect";
 import { LayerMod } from "@/model/StateRenderer";
 import { useAppState } from "@/store/appState";
@@ -42,7 +42,7 @@ export function startSelection(
         lassoPath.push({ x: pos[0], y: pos[1] });
 
         setRet({
-          overlay: <LassoPath path={[...lassoPath]} />,
+          overlay: <SimplePath path={[...lassoPath]} />,
         });
       }
     };

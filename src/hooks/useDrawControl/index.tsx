@@ -6,6 +6,7 @@ import { useGlobalSettings } from "@/store/globalSetting";
 import { JSX, useEffect, useRef, useState } from "react";
 import { startDrawing } from "./startDrawing";
 import { startEyeDropper } from "./startEyeDropper";
+import { startFill } from "./startFill";
 import { startSelection } from "./startSelection";
 
 export function useDrawControl(
@@ -42,8 +43,10 @@ export function useDrawControl(
         switch (store.uiState.tool) {
           case "brush":
           case "bucketFill":
-          case "fill":
             startDrawing(container, e, lockRef, drawOrPanningRef, setRet);
+            break;
+          case "fill":
+            startFill(container, e, lockRef, drawOrPanningRef, setRet);
             break;
           case "eyeDropper":
             canvasRef.current &&
