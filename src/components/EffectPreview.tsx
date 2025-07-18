@@ -33,7 +33,7 @@ export default function EffectPreview() {
     StateContainerRender(store.stateContainer, ctx, layerMod);
   }, [
     store.stateContainer.state.layers,
-    effectPreview?.previewCanvas,
+    effectPreview?.previewCanvas.getVersion(),
     store.uiState.currentLayerId,
     canvasRef,
   ]);

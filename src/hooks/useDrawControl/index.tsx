@@ -1,5 +1,6 @@
 import { CursorIndicator } from "@/components/overlays/CursorIndicator";
 import { dist, Pos } from "@/libs/geometry";
+import { Selection } from "@/libs/Selection";
 import { LayerMod } from "@/model/StateRenderer";
 import { useAppState } from "@/store/appState";
 import { useGlobalSettings } from "@/store/globalSetting";
@@ -23,6 +24,7 @@ export function useDrawControl(
   const [ret, setRet] = useState<{
     layerMod?: LayerMod;
     overlay?: JSX.Element;
+    selection?: Selection;
   }>({});
 
   useEffect(() => {
@@ -84,6 +86,7 @@ export function useDrawControl(
   return {
     layerMod: ret.layerMod ?? null,
     overlay: ret.overlay ?? <CursorIndicator containerRef={containerRef} />,
+    selection: ret.selection ?? null,
   };
 }
 

@@ -183,7 +183,9 @@ export const useAppState = create<AppState>()((set, get) => {
       }
 
       const previewCanvas = new MCanvas(layer.canvas.width, layer.canvas.height);
-      await applyEffect(originalCanvas, previewCanvas, effect, usePerformanceSettings.getState().useWebGL);
+      const selection = store.stateContainer.state.selection;
+
+      await applyEffectWithSelection(originalCanvas, previewCanvas, effect, selection);
 
       set(() => ({
         mode: {
@@ -199,15 +201,17 @@ export const useAppState = create<AppState>()((set, get) => {
       const store = get();
       if (store.mode.type !== "effectPreview") return;
 
-      const previewCanvas = new MCanvas(store.mode.originalCanvas.width, store.mode.originalCanvas.height);
-      await applyEffect(store.mode.originalCanvas, previewCanvas, effect, usePerformanceSettings.getState().useWebGL);
+      const originalCanvas = store.mode.originalCanvas;
+      const previewCanvas = store.mode.previewCanvas;
+      const selection = store.stateContainer.state.selection;
 
-      set((state) => ({
+      await applyEffectWithSelection(originalCanvas, previewCanvas, effect, selection);
+
+      set(() => ({
         mode: {
-          ...state.mode,
-          type: "effectPreview" as const,
+          type: "effectPreview",
           effect,
-          originalCanvas: state.mode.type === "effectPreview" ? state.mode.originalCanvas : new MCanvas(1, 1),
+          originalCanvas,
           previewCanvas,
         }
       }));
@@ -363,43 +367,18 @@ export function wrapTransferWithClip(
   };
 }
 
-export async function appApplyEffect(effect: Effect) {
-  const store = useAppState.getState();
-  const performanceSettings = usePerformanceSettings.getState();
-  const layerOrg = findLayerById(store.stateContainer.state.layers, store.uiState.currentLayerId);
-  if (layerOrg?.type !== "layer")
-    return;
-
-  // Check if the layer is locked
-  if (layerOrg.locked) {
+async function applyEffectWithSelection(originalCanvas: MCanvas, previewCanvas: MCanvas, effect: Effect, selection: Selection | null) {
+  if (!selection) {
+    await applyEffect(originalCanvas, previewCanvas, effect, usePerformanceSettings.getState().useWebGL);
     return;
   }
-  const canvas = new MCanvas(
-    layerOrg.canvas.width,
-    layerOrg.canvas.height
-  );
 
-  const selection = store.stateContainer.state.selection;
-  if (selection) {
-    await applyEffect(layerOrg.canvas, canvas, effect, performanceSettings.useWebGL);
-    const selectionInverted = selection.clone();
-    selectionInverted.invert();
-    const imageDataOrg = layerOrg.canvas.getContextRead().getImageData(0, 0, canvas.width, canvas.height);
-    const ctx = canvas.getContextWrite();
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    selectionInverted.transferImageData(imageDataOrg, imageData);
-    ctx.putImageData(imageData, 0, 0);
-  } else {
-    await applyEffect(layerOrg.canvas, canvas, effect, performanceSettings.useWebGL);
-  }
-
-  const op: Op = {
-    type: "applyEffect",
-    layerId: store.uiState.currentLayerId,
-    effect,
-  };
-  store.apply(op, (ctx) => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(canvas.getCanvas(), 0, 0);
-  });
+  await applyEffect(originalCanvas, previewCanvas, effect, usePerformanceSettings.getState().useWebGL);
+  const selectionInverted = selection.clone();
+  selectionInverted.invert();
+  const imageDataOrg = originalCanvas.getContextRead().getImageData(0, 0, originalCanvas.width, originalCanvas.height);
+  const ctx = previewCanvas.getContextWrite();
+  const imageData = ctx.getImageData(0, 0, previewCanvas.width, previewCanvas.height);
+  selectionInverted.transferImageData(imageDataOrg, imageData);
+  ctx.putImageData(imageData, 0, 0);
 }

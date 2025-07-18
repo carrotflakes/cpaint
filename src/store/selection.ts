@@ -2,7 +2,7 @@ import { Selection } from "@/libs/Selection";
 import { getLayerById, State } from "@/model/state";
 import { useAppState } from "./appState";
 
-function patchSelection(selection: Selection | null) {
+export function patchSelection(selection: Selection | null) {
   // If the selection is empty, set it to null
   if (selection?.getBounds() === null) selection = null;
 

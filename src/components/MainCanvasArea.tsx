@@ -15,7 +15,7 @@ export default function MainCanvasArea() {
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
   const drawOrPanningRef = useRef<"draw" | "panning" | null>(null);
-  const { layerMod, overlay } = useDrawControl(
+  const { layerMod, overlay, selection } = useDrawControl(
     containerRef,
     canvasRef,
     drawOrPanningRef
@@ -40,7 +40,9 @@ export default function MainCanvasArea() {
       canvasRef={canvasRef}
     >
       {overlay}
-      <SelectionOverlay />
+      <SelectionOverlay
+        selection={selection ?? store.stateContainer.state.selection}
+      />
     </CanvasArea>
   );
 }

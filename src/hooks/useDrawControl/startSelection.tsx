@@ -3,16 +3,26 @@ import { SimplePath } from "@/components/overlays/SimplePath";
 import { SelectionRect } from "@/components/overlays/SelectionRect";
 import { LayerMod } from "@/model/StateRenderer";
 import { useAppState } from "@/store/appState";
-import { selectLasso, selectMagicWand, selectRect } from "@/store/selection";
+import {
+  patchSelection,
+  selectLasso,
+  selectMagicWand,
+  selectRect,
+} from "@/store/selection";
 import { JSX } from "react";
 import { listenPointer } from ".";
+import { Selection } from "@/libs/Selection";
 
 export function startSelection(
   container: HTMLDivElement,
   e: PointerEvent,
   lockRef: React.RefObject<boolean>,
   drawOrPanningRef: { current: "draw" | "panning" | null },
-  setRet: (ret: { layerMod?: LayerMod; overlay?: JSX.Element }) => void
+  setRet: (ret: {
+    layerMod?: LayerMod;
+    overlay?: JSX.Element;
+    selection?: Selection;
+  }) => void
 ) {
   const startPos = computePos(e, container);
   const store = useAppState.getState();
@@ -65,6 +75,61 @@ export function startSelection(
         // Apply lasso selection
         selectLasso(lassoPath);
       }
+    };
+
+    listenPointer(
+      e,
+      lockRef,
+      drawOrPanningRef,
+      setRet,
+      onPointerMove,
+      onPointerUp
+    );
+    return;
+  }
+
+  // Handle paint selection
+  if (store.uiState.selectionTool === "paint") {
+    const paintPath: { x: number; y: number }[] = [
+      { x: startPos[0], y: startPos[1] },
+    ];
+    const selection1 = new Selection(
+      store.canvasSize().width,
+      store.canvasSize().height
+    );
+    let selection2 = new Selection(
+      store.canvasSize().width,
+      store.canvasSize().height
+    );
+
+    const onPointerMove = (e: PointerEvent) => {
+      const pos = computePos(e, container);
+
+      const lastPoint = paintPath.at(-1)!;
+      const distance = Math.sqrt(
+        Math.pow(pos[0] - lastPoint.x, 2) + Math.pow(pos[1] - lastPoint.y, 2)
+      );
+
+      if (distance > 1) {
+        paintPath.push({ x: pos[0], y: pos[1] });
+
+        selection1.addPaint(paintPath.slice(-2), store.uiState.penSize);
+        selection2 = selection2.renew();
+        if (store.stateContainer.state.selection) {
+          selection2.combine(store.stateContainer.state.selection, "new");
+        } else {
+          selection2.clear();
+        }
+        selection2.combine(selection1, store.uiState.selectionOperation);
+
+        setRet({
+          selection: selection2,
+        });
+      }
+    };
+
+    const onPointerUp = () => {
+      patchSelection(selection2);
     };
 
     listenPointer(

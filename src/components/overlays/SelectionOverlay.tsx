@@ -1,12 +1,16 @@
+import { Selection } from "@/libs/Selection";
 import { useEffect, useMemo, useState } from "react";
 import { useAppState } from "../../store/appState";
 import { viewToSVGTransform } from "../CanvasArea";
 
-export function SelectionOverlay() {
-  const store = useAppState();
-  const selection = store.stateContainer.state.selection;
-  const view = store.uiState.canvasView;
-  const canvasSize = store.canvasSize();
+export function SelectionOverlay({
+  selection,
+}: {
+  selection: Selection | null;
+}) {
+  const view = useAppState((state) => state.uiState.canvasView);
+  const canvasSize = useAppState((state) => state.canvasSize());
+
   const [dashOffset, setDashOffset] = useState(0);
 
   const path = useMemo(() => {

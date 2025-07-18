@@ -35,27 +35,14 @@ export class Selection {
   }
 
   /**
-   * Create selection from canvas ImageData (uses alpha channel)
+   * Renew the Selection with the same data
    */
-  static fromImageData(imageData: ImageData): Selection {
-    const selection = new Selection(imageData.width, imageData.height);
-    for (let i = 0; i < selection.data.length; i++) {
-      // Extract alpha channel from RGBA
-      selection.data[i] = imageData.data[i * 4 + 3];
-    }
-    return selection;
-  }
-
-  /**
-   * Create selection from canvas (uses alpha channel as selection mask)
-   */
-  static fromCanvas(canvas: OffscreenCanvas): Selection {
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) {
-      throw new Error("Failed to get canvas context");
-    }
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    return Selection.fromImageData(imageData);
+  renew(): Selection {
+    const newSelection = new Selection(0, 0);
+    newSelection.width = this.width;
+    newSelection.height = this.height;
+    newSelection.data = this.data;
+    return newSelection;
   }
 
   /**
@@ -258,9 +245,15 @@ export class Selection {
   /**
    * Combine with another selection using specified operation
    */
-  combine(other: Selection, operation: 'add' | 'subtract' | 'intersect' | 'xor'): void {
+  combine(other: Selection, operation: Operation): void {
     if (other.width !== this.width || other.height !== this.height) {
       throw new Error("Selection dimensions must match");
+    }
+
+    if (operation === 'new') {
+      for (let i = 0; i < this.data.length; i++)
+        this.data[i] = other.data[i];
+      return;
     }
 
     for (let i = 0; i < this.data.length; i++) {
@@ -334,13 +327,6 @@ export class Selection {
    */
   clone(): Selection {
     return Selection.fromData(this.width, this.height, this.data);
-  }
-
-  /**
-   * Get raw data for serialization
-   */
-  getData(): Uint8Array {
-    return new Uint8Array(this.data);
   }
 
   /**
@@ -477,6 +463,59 @@ export class Selection {
     }
 
     return loops.map(loop => loop.map((p, i) => (i === 0 ? 'M' : 'L') + p).join(' ') + ' Z').join(' ');
+  }
+
+  addPaint(path: Array<{ x: number, y: number }>, brushSize: number): void {
+    if (path.length === 0) return;
+
+    const radius = brushSize / 2;
+
+    // Draw circles along the path
+    for (const point of path) {
+      this.addCircle(point.x, point.y, radius);
+    }
+
+    // Connect circles along the path for continuous stroke
+    for (let i = 0; i < path.length - 1; i++) {
+      const p1 = path[i];
+      const p2 = path[i + 1];
+      this.addLine(p1.x, p1.y, p2.x, p2.y, radius);
+    }
+  }
+
+  private addCircle(centerX: number, centerY: number, radius: number): void {
+    const minX = Math.max(0, Math.floor(centerX - radius));
+    const maxX = Math.min(this.width - 1, Math.ceil(centerX + radius));
+    const minY = Math.max(0, Math.floor(centerY - radius));
+    const maxY = Math.min(this.height - 1, Math.ceil(centerY + radius));
+
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const dx = x - centerX;
+        const dy = y - centerY;
+        if (dx * dx + dy * dy <= radius * radius) {
+          this.setPixel(x, y, true);
+        }
+      }
+    }
+  }
+
+  private addLine(x1: number, y1: number, x2: number, y2: number, radius: number): void {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance === 0) return;
+
+    const steps = Math.ceil(distance);
+    const stepX = dx / steps;
+    const stepY = dy / steps;
+
+    for (let i = 0; i <= steps; i++) {
+      const x = x1 + stepX * i;
+      const y = y1 + stepY * i;
+      this.addCircle(x, y, radius);
+    }
   }
 
   /**

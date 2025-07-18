@@ -1,5 +1,6 @@
 import { ReactComponent as IconLasso } from "@/assets/icons/lasso.svg";
 import { ReactComponent as IconMagicWand } from "@/assets/icons/magic-wand.svg";
+import { ReactComponent as IconPen } from "@/assets/icons/pencil.svg";
 import { findLayerById } from "@/model/state";
 import { useAppState } from "@/store/appState";
 import { selectAll, selectClear, selectInvert } from "@/store/selection";
@@ -15,6 +16,7 @@ const SELECTION_TOOLS: {
   { id: "ellipse", label: "○", title: "Ellipse Selection" },
   { id: "lasso", label: <IconLasso />, title: "Lasso Selection" },
   { id: "magicWand", label: <IconMagicWand />, title: "Magic Wand" },
+  { id: "paint", label: <IconPen />, title: "Paint Selection" },
 ];
 
 const SELECTION_OPERATIONS: {
@@ -59,6 +61,50 @@ export function SelectionControls() {
         </div>
       </div>
 
+      {/* Magic Wand Tolerance */}
+      {uiState.selectionTool === "magicWand" && (
+        <div>
+          <div className="text-xs font-medium mb-1">Tolerance</div>
+          <input
+            type="range"
+            min="0"
+            max="255"
+            value={uiState.selectionTolerance}
+            onChange={(e) => {
+              store.update((draft) => {
+                draft.uiState.selectionTolerance = parseInt(e.target.value);
+              });
+            }}
+            className="w-full"
+          />
+          <div className="text-xs text-gray-500 mt-1">
+            {uiState.selectionTolerance}
+          </div>
+        </div>
+      )}
+
+      {/* Paint Size */}
+      {uiState.selectionTool === "paint" && (
+        <div>
+          <div className="text-xs font-medium mb-1">Paint Size</div>
+          <input
+            type="range"
+            min="1"
+            max="100"
+            value={uiState.penSize}
+            onChange={(e) => {
+              store.update((draft) => {
+                draft.uiState.penSize = parseInt(e.target.value);
+              });
+            }}
+            className="w-full"
+          />
+          <div className="text-xs text-gray-500 mt-1">
+            {uiState.penSize}px
+          </div>
+        </div>
+      )}
+
       {/* Selection Operation */}
       <div>
         <div className="text-xs font-medium mb-1">Operation</div>
@@ -83,28 +129,6 @@ export function SelectionControls() {
           ))}
         </div>
       </div>
-
-      {/* Magic Wand Tolerance */}
-      {uiState.selectionTool === "magicWand" && (
-        <div>
-          <div className="text-xs font-medium mb-1">Tolerance</div>
-          <input
-            type="range"
-            min="0"
-            max="255"
-            value={uiState.selectionTolerance}
-            onChange={(e) => {
-              store.update((draft) => {
-                draft.uiState.selectionTolerance = parseInt(e.target.value);
-              });
-            }}
-            className="w-full"
-          />
-          <div className="text-xs text-gray-500 mt-1">
-            {uiState.selectionTolerance}
-          </div>
-        </div>
-      )}
 
       {/* Selection Actions */}
       <div>
