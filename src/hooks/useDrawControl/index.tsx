@@ -68,9 +68,10 @@ export function useDrawControl(
       }
     };
 
-    // Prevent default touch behavior to avoid scrolling
+    // This is a workaround to fix the issue where drawing does not occur when drawing quickly with an Apple Pencil.
     const onTouchStart = (e: TouchEvent) => {
       e.preventDefault();
+      containerRef.current?.focus();
     };
 
     container.addEventListener("pointerdown", onPointerDown);

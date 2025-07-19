@@ -50,6 +50,7 @@ export default function CanvasArea({
       style={{
         backgroundImage: CHECK_PATTERN,
       }}
+      tabIndex={-1}
     >
       <canvas
         className="absolute shadow-[0_0_0_99999px_#f3f4f6] dark:shadow-gray-950"
