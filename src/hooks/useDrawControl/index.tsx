@@ -97,8 +97,15 @@ export function listenPointer(
   drawOrPanningRef: { current: "draw" | "panning" | null },
   setRet: (ret: { layerMod?: LayerMod; overlay?: JSX.Element }) => void,
   onPointerMove: (e: PointerEvent) => void,
-  onPointerUp: (e: PointerEvent) => void
+  onPointerUp: (e: PointerEvent) => void,
+  highPrecision: boolean = false
 ) {
+  const usePointerRawUpdate = useGlobalSettings.getState().usePointerRawUpdate;
+  const pointermoveEvent =
+    usePointerRawUpdate && highPrecision
+      ? ("pointerrawupdate" as "pointermove")
+      : "pointermove";
+
   const pointerId = e.pointerId;
   const pos: Pos = [e.clientX, e.clientY];
   lockRef.current = true;
@@ -108,7 +115,7 @@ export function listenPointer(
     if (drawOrPanningRef?.current === "draw") drawOrPanningRef.current = null;
     setRet({});
 
-    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener(pointermoveEvent, onMove);
     window.removeEventListener("pointerup", onUp);
     window.removeEventListener("pointercancel", onUp);
   };
@@ -135,7 +142,7 @@ export function listenPointer(
     cleanup();
   };
 
-  window.addEventListener("pointermove", onMove);
+  window.addEventListener(pointermoveEvent, onMove);
   window.addEventListener("pointerup", onUp);
   window.addEventListener("pointercancel", onUp);
 }

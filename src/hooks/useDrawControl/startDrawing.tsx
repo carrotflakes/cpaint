@@ -18,7 +18,7 @@ export function startDrawing(
   e: PointerEvent,
   lockRef: React.RefObject<boolean>,
   drawOrPanningRef: { current: "draw" | "panning" | null },
-  setRet: (ret: { layerMod?: LayerMod; overlay?: JSX.Element; }) => void
+  setRet: (ret: { layerMod?: LayerMod; overlay?: JSX.Element }) => void
 ) {
   const store = useAppState.getState();
   const { pressureCurve } = useGlobalSettings.getState();
@@ -93,7 +93,8 @@ export function startDrawing(
     drawOrPanningRef,
     setRet,
     onPointerMove,
-    onPointerUp
+    onPointerUp,
+    true
   );
 }
 

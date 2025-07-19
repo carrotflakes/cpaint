@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import { storage } from "../libs/Storage";
-import { useGlobalSettings } from "../store/globalSetting";
+import { POINTERRAWUPDATE_AVAILABLE, useGlobalSettings } from "../store/globalSetting";
 import { ModalDialog } from "./ModalDialog";
-import { Toggle } from "./Toggle";
 import { usePenPressureDialog } from "./PenPressureDialog";
 import { usePerformanceSettingsDialog } from "./PerformanceSettings";
 import { pushToast } from "./Toasts";
+import { Toggle } from "./Toggle";
 
 export const useSettingDialog = create<{
   show: boolean;
@@ -48,6 +48,19 @@ export function SettingDialog() {
             onChange={(checked) =>
               useGlobalSettings.setState({
                 wheelZoom: checked,
+              })
+            }
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <label>Use high precision pointer events</label>
+          <Toggle
+            checked={globalSettings.usePointerRawUpdate}
+            disabled={!POINTERRAWUPDATE_AVAILABLE}
+            onChange={(checked) =>
+              useGlobalSettings.setState({
+                usePointerRawUpdate: checked,
               })
             }
           />
