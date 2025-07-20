@@ -3,7 +3,7 @@ import { State } from "./state";
 
 export class StateRenderer {
   private size: { width: number; height: number };
-  private cache: Map<string, { canvas: MCanvas, used: boolean }> = new Map();
+  private cache: Map<string, { canvas: MCanvas, used: boolean, identity: object }> = new Map();
   private tmpCanvas: OffscreenCanvas;
 
   constructor(width: number, height: number) {
@@ -47,14 +47,18 @@ export class StateRenderer {
           this.cache.set(item.id, {
             canvas: new MCanvas(this.size.width, this.size.height),
             used: false,
+            identity: {},
           });
         }
         const entry = this.cache.get(item.id)!;
         entry.used = true;
         const canvas = entry.canvas;
 
-        const ctx2 = canvas.getContextWrite();
-        this.renderLayers(item.layers, ctx2, layerMod);
+        if (entry.identity !== item || redrawRequired(item.layers, layerMod)) {
+          const ctx2 = canvas.getContextWrite();
+          this.renderLayers(item.layers, ctx2, layerMod);
+          entry.identity = item;
+        }
         ctx.drawImage(canvas.getCanvas(), 0, 0);
       } else {
         const layer = item;
@@ -78,6 +82,17 @@ export class StateRenderer {
     const entry = this.cache.get(layerId);
     return entry?.canvas ?? null;
   }
+}
+
+function redrawRequired(layers: State["layers"], layerMod: LayerMod | null): boolean {
+  for (const item of layers) {
+    if (item.type === "group") {
+      if (redrawRequired(item.layers, layerMod)) return true;
+    } else if (item.id === layerMod?.layerId) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export type LayerMod = {
