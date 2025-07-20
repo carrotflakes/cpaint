@@ -1,12 +1,12 @@
+import { ReactComponent as IconMenu } from "@/assets/icons/menu.svg";
 import { useUnsavedChangesGuard } from "@/features/unsaved-changes";
 import { loadFile } from "@/store/loadFile";
 import { loadImage } from "@/store/save";
+import * as Popover from "@radix-ui/react-popover";
 import { useCallback, useEffect, useState } from "react";
 import { useStorage } from "../hooks/useStorage";
 import { CHECK_PATTERN } from "../libs/check";
-import {
-  StateNew
-} from "../model/state";
+import { StateNew } from "../model/state";
 import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
 
@@ -20,6 +20,10 @@ export function Files() {
   } | null>(null);
   const [showCustomSizeDialog, setShowCustomSizeDialog] = useState(false);
   const [whiteBg, setWhiteBg] = useState(true);
+  const [fileMenuOpen, setFileMenuOpen] = useState<{
+    fileId: number;
+    open: boolean;
+  }>({ fileId: -1, open: false });
 
   const storage = useStorage();
   const { executeWithGuard } = useUnsavedChangesGuard();
@@ -110,6 +114,7 @@ export function Files() {
             key={file.id}
             className="w-48 p-4 flex flex-col gap-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-900"
             onClick={() =>
+              !fileMenuOpen.open &&
               storage &&
               executeWithGuard(
                 () => loadImage(file.id),
@@ -117,23 +122,23 @@ export function Files() {
               )
             }
           >
-            <span
-              className="whitespace-nowrap text-ellipsis overflow-hidden"
-              title={file.name}
-              translate="no"
-            >
-              {file.name}
-            </span>
+            <div className="flex">
+              <span
+                className="grow whitespace-nowrap text-ellipsis overflow-hidden"
+                title={file.name}
+                translate="no"
+              >
+                {file.name}
+              </span>
+
+              <FileMenuButton
+                file={file}
+                fileMenuOpen={fileMenuOpen}
+                setFileMenuOpen={setFileMenuOpen}
+                setFileToDelete={setFileToDelete}
+              />
+            </div>
             <Thumbnail id={file.id} />
-            <button
-              className="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                setFileToDelete(file);
-              }}
-            >
-              Delete
-            </button>
           </div>
         ))}
       </div>
@@ -318,6 +323,81 @@ function Thumbnail(props: { id: number }) {
           }}
         />
       )}
+    </div>
+  );
+}
+
+function FileMenuButton({
+  file,
+  fileMenuOpen,
+  setFileMenuOpen,
+  setFileToDelete,
+}: {
+  file: { id: number; name: string };
+  fileMenuOpen: { fileId: number; open: boolean };
+  setFileMenuOpen: (state: { fileId: number; open: boolean }) => void;
+  setFileToDelete: (file: { id: number; name: string }) => void;
+}) {
+  return (
+    <Popover.Root
+      open={fileMenuOpen.open && fileMenuOpen.fileId === file.id}
+      onOpenChange={(open) => setFileMenuOpen({ fileId: file.id, open })}
+    >
+      <Popover.Trigger asChild>
+        <button
+          className="w-6 h-6 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            setFileMenuOpen({ fileId: file.id, open: true });
+          }}
+          title="File menu"
+        >
+          <IconMenu width={16} height={16} className="m-auto" />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          className="min-w-20 bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-600 shadow-sm z-50"
+          sideOffset={5}
+          align="end"
+          collisionPadding={8}
+          avoidCollisions={true}
+          onInteractOutside={() =>
+            setFileMenuOpen({ fileId: file.id, open: false })
+          }
+        >
+          <FileMenuPopover
+            file={file}
+            onDelete={() => setFileToDelete(file)}
+            closePopover={() =>
+              setFileMenuOpen({ fileId: file.id, open: false })
+            }
+          />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
+function FileMenuPopover({
+  onDelete,
+  closePopover,
+}: {
+  file: { id: number; name: string };
+  onDelete: () => void;
+  closePopover: () => void;
+}) {
+  return (
+    <div className="flex flex-col text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-950">
+      <div
+        className="p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+        onClick={() => {
+          onDelete();
+          closePopover();
+        }}
+      >
+        Delete
+      </div>
     </div>
   );
 }
