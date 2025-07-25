@@ -5,10 +5,10 @@ import { canvasToImageDiff } from "../libs/imageDiff";
 import { MCanvas } from "../libs/MCanvas";
 import { Patch } from "../libs/patch";
 import { startTouchBrush } from "../libs/touch/brush";
-import { startTouchFill } from "../libs/touch/fill";
 import type { State } from "./state";
 import { getLayerById, StateReplaceLayerCanvas } from "./state";
 import { StateDiff } from "./stateContainer";
+import { createFill } from "@/libs/createFill";
 
 export type Op = {
   type: "stroke";
@@ -66,10 +66,10 @@ export function applyOp(
   state: State;
   diff: StateDiff;
 } | null {
-  if (op.type === "stroke" || op.type === "fill") {
+  if (op.type === "stroke") {
     const layer = getLayerById(state.layers, op.layerId);
     if (layer.type !== "layer") return null;
-    const touch = op.type === "stroke" ?
+    const touch =
       startTouchBrush({
         brushType: op.strokeStyle.brushType,
         width: op.strokeStyle.width,
@@ -78,11 +78,6 @@ export function applyOp(
         erase: op.erase,
         alphaLock: op.alphaLock,
         canvasSize: [layer.canvas.width, layer.canvas.height],
-      }) :
-      startTouchFill({
-        color: op.fillColor,
-        opacity: op.opacity,
-        erase: op.erase,
       });
     const newCanvas = new MCanvas(
       layer.canvas.width,
@@ -95,10 +90,6 @@ export function applyOp(
       for (const p of op.path) {
         touch.stroke(p.pos[0], p.pos[1], p.pressure);
       }
-    } else if (op.type === "fill") {
-      for (const p of op.path) {
-        touch.stroke(p[0], p[1], 1);
-      }
     }
 
     touch.end();
@@ -108,6 +99,32 @@ export function applyOp(
       newCanvas,
       layer.canvas);
 
+    if (id == null)
+      return null;
+    const diff: StateDiff = {
+      type: "imageDiffs",
+      layers: [{
+        id: layer.id,
+        imageDiff: id,
+      }],
+    };
+    const newState = StateReplaceLayerCanvas(state, layer.id, newCanvas);
+    return { state: newState, diff };
+  }
+  if (op.type === "fill") {
+    const layer = getLayerById(state.layers, op.layerId);
+    if (layer.type !== "layer") return null;
+    const newCanvas = new MCanvas(
+      layer.canvas.width,
+      layer.canvas.height,
+    );
+    const ctx = newCanvas.getContextWrite();
+    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
+    createFill(op.path, op.fillColor, op.opacity, op.erase)(ctx);
+
+    const id = canvasToImageDiff(
+      newCanvas,
+      layer.canvas);
     if (id == null)
       return null;
     const diff: StateDiff = {

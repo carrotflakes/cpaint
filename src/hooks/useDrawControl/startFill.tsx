@@ -5,6 +5,7 @@ import { LayerMod } from "@/model/StateRenderer";
 import { useAppState, wrapTransferWithClip } from "@/store/appState";
 import { JSX } from "react";
 import { listenPointer } from ".";
+import { createFill } from "../../libs/createFill";
 
 export function startFill(
   container: HTMLDivElement,
@@ -47,7 +48,7 @@ export function startFill(
   const onPointerUp = () => {
     op.path = path.map((p) => [p.x, p.y]);
 
-    let transfer = createFill(path, op.fillColor, op.opacity, op.erase);
+    let transfer = createFill(op.path, op.fillColor, op.opacity, op.erase);
     transfer = wrapTransferWithClip(
       transfer,
       store.stateContainer.state.selection
@@ -65,25 +66,4 @@ export function startFill(
     onPointerUp
   );
   return;
-}
-
-function createFill(
-  path: { x: number; y: number }[],
-  color: string,
-  opacity: number,
-  erase: boolean
-) {
-  return (
-    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
-  ) => {
-    ctx.save();
-    ctx.fillStyle = color;
-    ctx.globalAlpha = opacity;
-    if (erase) ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    for (const p of path) ctx.lineTo(p.x, p.y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  };
 }

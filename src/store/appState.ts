@@ -11,7 +11,6 @@ import {
   startTouchBrush,
 } from "../libs/touch/brush";
 import { startTouchBucketFill } from '../libs/touch/bucketFill';
-import { startTouchFill } from '../libs/touch/fill';
 import { Op } from '../model/op';
 import { findLayerById, State, StateNew } from '../model/state';
 import { StateContainer, StateContainerDo, StateContainerFromState, StateContainerRedo, StateContainerUndo, } from '../model/stateContainer';
@@ -272,15 +271,6 @@ export function createOp(store: AppState): Op | null {
   }
 
   switch (store.uiState.tool) {
-    case "fill":
-      return {
-        type: "fill",
-        fillColor: store.uiState.color,
-        opacity: store.uiState.opacity,
-        erase: store.uiState.erase,
-        path: [],
-        layerId: store.uiState.currentLayerId,
-      };
     case "brush":
       return {
         type: "stroke",
@@ -324,12 +314,6 @@ export function createTouch(store: AppState) {
   const canvasSize: [number, number] = [canvas.width, canvas.height];
 
   switch (store.uiState.tool) {
-    case "fill":
-      return startTouchFill({
-        color: store.uiState.color,
-        opacity: store.uiState.opacity,
-        erase: store.uiState.erase,
-      });
     case "brush":
       return startTouchBrush({
         brushType: store.uiState.brushType,
