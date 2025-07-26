@@ -1,4 +1,4 @@
-import { Touch, CanvasContext } from ".";
+import { Touch, CanvasContext, updateRectCircle } from ".";
 import { mulberry32 } from "../rand";
 
 export function startTouchParticle1({ width, color, opacity, canvasSize }: { width: number; color: string; opacity: number; canvasSize: [number, number]; }
@@ -21,6 +21,7 @@ export function startTouchParticle1({ width, color, opacity, canvasSize }: { wid
         path.next(1);
       }
       ctx.fill();
+      this.rect = updateRectCircle(this.rect, x, y, width * pressure);
     },
     end() {
     },
@@ -30,6 +31,7 @@ export function startTouchParticle1({ width, color, opacity, canvasSize }: { wid
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },
+    rect: null,
   };
 }
 
@@ -57,6 +59,7 @@ export function startTouchParticle2({ width, color, opacity, canvasSize }: { wid
         ctx.fill();
         path.next(0.5);
       }
+      this.rect = updateRectCircle(this.rect, x, y, pressure * width * 0.5 + width * 0.1);
     },
     end() {
     },
@@ -66,6 +69,7 @@ export function startTouchParticle2({ width, color, opacity, canvasSize }: { wid
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },
+    rect: null,
   };
 }
 
@@ -90,6 +94,7 @@ export function startTouchParticle3({ width, color, opacity, canvasSize, pressur
         ctx.fill();
         path.next(1);
       }
+      this.rect = updateRectCircle(this.rect, x, y, width * (pressureToSize ? pressure : 1));
     },
     end() {
     },
@@ -98,6 +103,7 @@ export function startTouchParticle3({ width, color, opacity, canvasSize, pressur
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },
+    rect: null,
   };
 }
 

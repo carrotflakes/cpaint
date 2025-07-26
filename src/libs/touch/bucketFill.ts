@@ -54,5 +54,11 @@ export function startTouchBucketFill({ color, opacity, erase, tolerance, imageDa
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },
+    rect: {
+      x: 0,
+      y: 0,
+      width: imageData.width,
+      height: imageData.height,
+    }
   }
 }

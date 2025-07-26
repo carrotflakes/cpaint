@@ -1,4 +1,4 @@
-import { CanvasContext, Touch } from ".";
+import { CanvasContext, Touch, updateRectCircle } from ".";
 
 export function startTouchPixel({ color, opacity, canvasSize }:
   { color: string, opacity: number, canvasSize: [number, number] }
@@ -50,6 +50,7 @@ export function startTouchPixel({ color, opacity, canvasSize }:
         }
       }
       prev = { x, y };
+      this.rect = updateRectCircle(this.rect, x, y, 1);
     },
     end() {
     },
@@ -64,5 +65,6 @@ export function startTouchPixel({ color, opacity, canvasSize }:
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },
+    rect: null,
   }
 }

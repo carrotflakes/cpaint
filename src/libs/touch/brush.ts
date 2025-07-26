@@ -1,4 +1,4 @@
-import { CanvasContext, Touch } from ".";
+import { CanvasContext, Touch, updateRectCircle } from ".";
 import { startTouchCat } from "./cat";
 import { startTouchParticle1, startTouchParticle2, startTouchParticle3 } from "./particle";
 import { startTouchPixel } from "./pixel";
@@ -50,6 +50,17 @@ export function startTouchBrush({ brushType, width, color, opacity, erase, alpha
       ctx.restore();
     };
   }
+
+  // touch.transfer = function (ctx: CanvasContext) {
+  //   ctx.save();
+  //   transfer(ctx);
+  //   ctx.globalAlpha = 0.25;
+  //   ctx.fillStyle = "#f00";
+  //   if (this.rect)
+  //     ctx.fillRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
+  //   ctx.restore();
+  // }.bind(touch);
+
   return touch;
 }
 
@@ -90,6 +101,7 @@ export function startTouchSoft({ width, color, opacity, canvasSize }:
         );
       }
       prev = { x, y, pressure };
+      this.rect = updateRectCircle(this.rect, x, y, width * pressure);
     },
     end() {
     },
@@ -104,6 +116,7 @@ export function startTouchSoft({ width, color, opacity, canvasSize }:
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },
+    rect: null,
   }
 }
 
@@ -117,6 +130,7 @@ export function startTouchHard({ width, color, opacity, canvasSize }:
   return {
     stroke(x: number, y: number, pressure: number) {
       path.push({ x, y, pressure });
+      this.rect = updateRectCircle(this.rect, x, y, width);
     },
     end() {
     },
@@ -140,6 +154,7 @@ export function startTouchHard({ width, color, opacity, canvasSize }:
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },
+    rect: null,
   }
 }
 

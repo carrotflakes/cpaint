@@ -1,4 +1,4 @@
-import { CanvasContext, Touch } from ".";
+import { CanvasContext, Touch, updateRectCircle } from ".";
 import { pathToDots } from "./particle";
 
 export function startTouchCat({ width, color, opacity, canvasSize }: { width: number; color: string; opacity: number; canvasSize: [number, number]; }
@@ -42,6 +42,8 @@ export function startTouchCat({ width, color, opacity, canvasSize }: { width: nu
         ctx.restore();
         path.next(width);
         isRight = !isRight;
+
+        this.rect = updateRectCircle(this.rect, d.x, d.y, width);
       }
     },
     end() {
@@ -51,5 +53,6 @@ export function startTouchCat({ width, color, opacity, canvasSize }: { width: nu
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     },
+    rect: null,
   };
 }
