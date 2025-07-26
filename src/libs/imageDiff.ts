@@ -59,16 +59,15 @@ export function canvasToImageDiff(
   const height = canvas1.height;
   const imageData1 = ctx1.getImageData(0, 0, width, height);
   const imageData2 = ctx2.getImageData(0, 0, width, height);
+  const data1 = new Uint32Array(imageData1.data.buffer);
+  const data2 = new Uint32Array(imageData2.data.buffer);
 
   let minX = width, minY = height, maxX = -1, maxY = -1;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const index = (y * width + x) * 4;
+      const index = y * width + x;
       if (
-        imageData1.data[index] !== imageData2.data[index] ||
-        imageData1.data[index + 1] !== imageData2.data[index + 1] ||
-        imageData1.data[index + 2] !== imageData2.data[index + 2] ||
-        imageData1.data[index + 3] !== imageData2.data[index + 3]
+        data1[index] !== data2[index]
       ) {
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
