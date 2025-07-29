@@ -20,6 +20,7 @@ export default function EffectPreview() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
+    const selection = store.stateContainer.state.selection;
     const layerMod = {
       layerId: store.uiState.currentLayerId,
       apply: (
@@ -28,6 +29,7 @@ export default function EffectPreview() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(effectPreview.previewCanvas.getCanvas(), 0, 0);
       },
+      rect: selection?.getBounds() ?? ("full" as const),
     };
 
     StateContainerRender(store.stateContainer, ctx, layerMod);

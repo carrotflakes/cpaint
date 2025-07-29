@@ -54,7 +54,11 @@ export function startFill(
       store.stateContainer.state.selection
     );
 
-    store.apply(op, transfer);
+    store.apply(op, {
+      layerId: op.layerId,
+      apply: transfer,
+      rect: pathToBounds(path),
+    });
   };
 
   listenPointer(
@@ -66,4 +70,20 @@ export function startFill(
     onPointerUp
   );
   return;
+}
+
+function pathToBounds(path: { x: number; y: number }[]) {
+  if (path.length <= 1) return "none";
+
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+  for (const point of path) {
+    if (point.x < minX) minX = point.x;
+    if (point.y < minY) minY = point.y;
+    if (point.x > maxX) maxX = point.x;
+    if (point.y > maxY) maxY = point.y;
+  }
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }

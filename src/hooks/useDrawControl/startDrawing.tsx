@@ -50,6 +50,7 @@ export function startDrawing(
     layerMod: {
       layerId,
       apply: touch.transfer,
+      rect: touch.rect ? roundRect(touch.rect) : "none",
     },
   });
 
@@ -67,6 +68,7 @@ export function startDrawing(
         layerMod: {
           layerId,
           apply: touch.transfer,
+          rect: touch.rect ? roundRect(touch.rect) : "none",
         },
       });
     }
@@ -84,7 +86,11 @@ export function startDrawing(
     }
 
     touch.end();
-    store.apply(op, touch.transfer);
+    store.apply(op, {
+      layerId,
+      apply: touch.transfer,
+      rect: touch.rect ? roundRect(touch.rect) : "none",
+    });
   };
 
   listenPointer(
@@ -111,4 +117,20 @@ export function opPush(op: Op, pos: [number, number], pressure: number) {
 export function getPressure(e: PointerEvent) {
   // NOTE: e.pressure will be 0 for touch events on iPad chrome.
   return e.pointerType === "touch" && e.pressure === 0 ? 0.5 : e.pressure;
+}
+
+export function roundRect(rect: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}) {
+  const x = Math.floor(rect.x);
+  const y = Math.floor(rect.y);
+  return {
+    x,
+    y,
+    width: Math.ceil(rect.x + rect.width) - x,
+    height: Math.ceil(rect.y + rect.height) - y,
+  };
 }

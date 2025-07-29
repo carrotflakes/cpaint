@@ -48,26 +48,24 @@ export default function Transform() {
 
   useViewControl(containerRef);
 
+  const layerMod = useMemo(() => {
+    if (!layerTransform || !canvases) return null;
+
+    return {
+      layerId: layerTransform.layerId,
+      apply: makeApply(canvases.base, canvases.target, layerTransform.rect),
+      rect: "full" as const, // TODO
+    };
+  }, [layerTransform, canvases]);
+
   useEffect(() => {
-    if (!layerTransform || !canvases) return;
+    if (!layerMod) return;
 
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
 
-    const layer = findLayerById(
-      store.stateContainer.state.layers,
-      layerTransform.layerId
-    );
-    if (layer?.type !== "layer") {
-      throw new Error("Not a valid layer for transformation");
-    }
-
-    const touch = {
-      layerId: layer.id,
-      apply: makeApply(canvases.base, canvases.target, layerTransform.rect),
-    };
-    StateContainerRender(store.stateContainer, ctx, touch);
-  }, [store.stateContainer, canvases, canvasRef, layerTransform]);
+    StateContainerRender(store.stateContainer, ctx, layerMod);
+  }, [store.stateContainer, canvasRef, layerMod]);
 
   if (!layerTransform) {
     return "Oops, not in transform mode🤔";
@@ -118,10 +116,7 @@ export default function Transform() {
               rect: layerTransform.rect,
             };
 
-            store.apply(
-              op,
-              makeApply(canvases.base, canvases.target, layerTransform.rect)
-            );
+            store.apply(op, layerMod);
             store.update((draft) => {
               draft.mode = { type: "draw" };
             });

@@ -1,3 +1,4 @@
+import { LayerMod } from '@/model/StateRenderer';
 import { produce, WritableDraft } from 'immer';
 import { create } from 'zustand';
 import { Rect as TransformRect } from '../components/overlays/TransformRectHandles';
@@ -49,7 +50,7 @@ export type AppState = {
   savedState: State | null
 
   canvasSize: () => { width: number; height: number }
-  apply: (op: Op, transfer: ((ctx: OffscreenCanvasRenderingContext2D) => void) | null) => void
+  apply: (op: Op, layerMod: LayerMod | null) => void
   open: (imageMeta: { id: number; name: string; createdAt: number }, state: State, colorHistory?: string[]) => void
   undo: () => void
   redo: () => void
@@ -75,7 +76,7 @@ export const useAppState = create<AppState>()((set, get) => {
     canvasSize() {
       return this.stateContainer.state.size;
     },
-    apply(op, transfer) {
+    apply(op, layerMod) {
       // Check if the operation affects a locked layer
       if ('layerId' in op && typeof op.layerId === 'string') {
         const layer = findLayerById(get().stateContainer.state.layers, op.layerId);
@@ -89,10 +90,7 @@ export const useAppState = create<AppState>()((set, get) => {
       }
 
       set(state => ({
-        stateContainer: StateContainerDo(state.stateContainer, op, transfer && op.type !== "patch" ? {
-          layerId: op.layerId,
-          apply: transfer
-        } : null),
+        stateContainer: StateContainerDo(state.stateContainer, op, layerMod),
       }))
     },
     open(imageMeta, state, colorHistory = []) {
@@ -227,9 +225,14 @@ export const useAppState = create<AppState>()((set, get) => {
       };
 
       const previewCanvas = store.mode.previewCanvas;
-      store.apply(op, (ctx) => {
-        ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-        ctx.drawImage(previewCanvas.getCanvas(), 0, 0);
+      const rect = store.stateContainer.state.selection?.getBounds() ?? "full";
+      store.apply(op, {
+        layerId: op.layerId,
+        apply: (ctx) => {
+          ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+          ctx.drawImage(previewCanvas.getCanvas(), 0, 0);
+        },
+        rect,
       });
 
       set(() => ({
