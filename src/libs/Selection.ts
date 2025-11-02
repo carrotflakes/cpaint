@@ -646,7 +646,7 @@ export class Selection {
   }
 
   toStorable(): Storable {
-    const blob = new Blob([this.data], { type: 'application/octet-stream' });
+    const blob = new Blob([new Uint8Array(this.data)], { type: 'application/octet-stream' });
     return {
       width: this.width,
       height: this.height,
