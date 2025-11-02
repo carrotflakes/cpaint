@@ -145,18 +145,54 @@ export const useAppState = create<AppState>()((set, get) => {
       );
     },
     undo() {
-      set((state) => ({
-        stateContainer: StateContainerUndo(state.stateContainer),
-      }));
-      // TODO: Select the last layer after undo
+      let lastLayerId: string | null = null;
+      set((state) => {
+        const newStateContainer = StateContainerUndo(state.stateContainer);
+        // Get the last operation from forward history (the operation that was undone)
+        const lastOp = newStateContainer.forward[newStateContainer.forward.length - 1]?.op;
+        if (lastOp && 'layerId' in lastOp) {
+          lastLayerId = lastOp.layerId;
+        }
+        return {
+          stateContainer: newStateContainer,
+        };
+      });
       ensureCurrentLayerId();
+      // Select the last layer that was modified if it still exists
+      if (lastLayerId) {
+        const store = useAppState.getState();
+        const layer = findLayerById(store.stateContainer.state.layers, lastLayerId);
+        if (layer) {
+          store.update((draft) => {
+            draft.uiState.currentLayerId = lastLayerId!;
+          });
+        }
+      }
     },
     redo() {
-      set((state) => ({
-        stateContainer: StateContainerRedo(state.stateContainer),
-      }));
-      // TODO: Select the last layer after redo
+      let lastLayerId: string | null = null;
+      set((state) => {
+        const newStateContainer = StateContainerRedo(state.stateContainer);
+        // Get the last operation from backward history (the operation that was redone)
+        const lastOp = newStateContainer.backward[newStateContainer.backward.length - 1]?.op;
+        if (lastOp && 'layerId' in lastOp) {
+          lastLayerId = lastOp.layerId;
+        }
+        return {
+          stateContainer: newStateContainer,
+        };
+      });
       ensureCurrentLayerId();
+      // Select the last layer that was modified if it still exists
+      if (lastLayerId) {
+        const store = useAppState.getState();
+        const layer = findLayerById(store.stateContainer.state.layers, lastLayerId);
+        if (layer) {
+          store.update((draft) => {
+            draft.uiState.currentLayerId = lastLayerId!;
+          });
+        }
+      }
     },
     hasUnsavedChanges() {
       const state = get();

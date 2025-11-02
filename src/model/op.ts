@@ -1,10 +1,13 @@
 import { Effect } from "@/features/effects";
-import { Rect as TransformRect } from "../components/overlays/TransformRectHandles";
+import { Rect as TransformRect, makeApply } from "../components/overlays/TransformRectHandles";
 import { applyPatches } from "../libs/applyPatches";
+import { bucketFill } from "../libs/bucket";
 import { canvasToImageDiff } from "../libs/imageDiff";
 import { MCanvas } from "../libs/MCanvas";
 import { Patch } from "../libs/patch";
+import { Selection } from "../libs/Selection";
 import { startTouchBrush } from "../libs/touch/brush";
+import * as cc from "color-convert";
 import type { State } from "./state";
 import { getLayerById, StateReplaceLayerCanvas } from "./state";
 import { StateDiff } from "./stateContainer";
@@ -138,13 +141,168 @@ export function applyOp(
     return { state: newState, diff };
   }
   if (op.type === "bucketFill") {
-    // TODO
+    const layer = getLayerById(state.layers, op.layerId);
+    if (layer.type !== "layer") return null;
+    
+    const newCanvas = new MCanvas(
+      layer.canvas.width,
+      layer.canvas.height,
+    );
+    const ctx = newCanvas.getContextWrite();
+    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
+    
+    const ctxRead = layer.canvas.getContextRead();
+    const imageDataSrc = ctxRead.getImageData(0, 0, layer.canvas.width, layer.canvas.height);
+    const imageDataDst = new ImageData(layer.canvas.width, layer.canvas.height);
+    
+    const rgb = cc.hex.rgb(op.fillColor.slice(1));
+    const rgba = {
+      r: rgb[0],
+      g: rgb[1],
+      b: rgb[2],
+      a: 255,
+    };
+    
+    bucketFill(imageDataSrc, imageDataDst, op.pos[0], op.pos[1], rgba, op.tolerance);
+    
+    ctx.save();
+    if (op.erase) {
+      ctx.globalCompositeOperation = "destination-out";
+    }
+    ctx.globalAlpha = op.opacity;
+    ctx.putImageData(imageDataDst, 0, 0);
+    ctx.restore();
+    
+    const id = canvasToImageDiff(newCanvas, layer.canvas);
+    if (id == null) return null;
+    
+    const diff: StateDiff = {
+      type: "imageDiffs",
+      layers: [{
+        id: layer.id,
+        imageDiff: id,
+      }],
+    };
+    const newState = StateReplaceLayerCanvas(state, layer.id, newCanvas);
+    return { state: newState, diff };
   }
   if (op.type === "selectionFill") {
-    // TODO
+    const layer = getLayerById(state.layers, op.layerId);
+    if (layer.type !== "layer") return null;
+    
+    const selection = state.selection;
+    if (!selection) return null;
+    
+    const newCanvas = new MCanvas(
+      layer.canvas.width,
+      layer.canvas.height,
+    );
+    const ctx = newCanvas.getContextWrite();
+    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
+    
+    ctx.save();
+    selection.setCanvasClip(ctx);
+    ctx.fillStyle = op.fillColor;
+    ctx.globalAlpha = op.opacity;
+    ctx.fillRect(0, 0, layer.canvas.width, layer.canvas.height);
+    ctx.restore();
+    
+    const id = canvasToImageDiff(newCanvas, layer.canvas);
+    if (id == null) return null;
+    
+    const diff: StateDiff = {
+      type: "imageDiffs",
+      layers: [{
+        id: layer.id,
+        imageDiff: id,
+      }],
+    };
+    const newState = StateReplaceLayerCanvas(state, layer.id, newCanvas);
+    return { state: newState, diff };
+  }
+  if (op.type === "selectionDelete") {
+    const layer = getLayerById(state.layers, op.layerId);
+    if (layer.type !== "layer") return null;
+    
+    const selection = state.selection;
+    if (!selection) return null;
+    
+    const newCanvas = new MCanvas(
+      layer.canvas.width,
+      layer.canvas.height,
+    );
+    const ctx = newCanvas.getContextWrite();
+    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
+    
+    ctx.save();
+    selection.setCanvasClip(ctx);
+    ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+    ctx.restore();
+    
+    const id = canvasToImageDiff(newCanvas, layer.canvas);
+    if (id == null) return null;
+    
+    const diff: StateDiff = {
+      type: "imageDiffs",
+      layers: [{
+        id: layer.id,
+        imageDiff: id,
+      }],
+    };
+    const newState = StateReplaceLayerCanvas(state, layer.id, newCanvas);
+    return { state: newState, diff };
   }
   if (op.type === "layerTransform") {
-    // TODO
+    const layer = getLayerById(state.layers, op.layerId);
+    if (layer.type !== "layer") return null;
+    
+    const canvas = layer.canvas;
+    let selection = state.selection;
+    
+    // If no selection, use canvas bounding box
+    if (!selection) {
+      const bbox = canvas.getBbox();
+      if (!bbox) return null;
+      selection = new Selection(canvas.width, canvas.height);
+      selection.addRect(bbox.x, bbox.y, bbox.width, bbox.height, "new");
+    }
+    
+    const bbox = selection.getBounds();
+    if (!bbox) return null;
+    
+    // Split canvas by selection
+    const ctxRead = canvas.getContextRead();
+    const baseID = ctxRead.getImageData(0, 0, canvas.width, canvas.height);
+    const targetID = ctxRead.getImageData(0, 0, canvas.width, canvas.height);
+    
+    selection.clipImageData(targetID);
+    const targetCanvas = new MCanvas(bbox.width, bbox.height);
+    targetCanvas.getContextWrite().putImageData(targetID, -bbox.x, -bbox.y);
+    
+    const selectionInverted = selection.clone();
+    selectionInverted.invert();
+    selectionInverted.clipImageData(baseID);
+    const baseCanvas = new MCanvas(canvas.width, canvas.height);
+    baseCanvas.getContextWrite().putImageData(baseID, 0, 0);
+    
+    // Apply transformation
+    const newCanvas = new MCanvas(canvas.width, canvas.height);
+    const ctx = newCanvas.getContextWrite();
+    const apply = makeApply(baseCanvas, targetCanvas, op.rect);
+    apply(ctx);
+    
+    const id = canvasToImageDiff(newCanvas, layer.canvas);
+    if (id == null) return null;
+    
+    const diff: StateDiff = {
+      type: "imageDiffs",
+      layers: [{
+        id: layer.id,
+        imageDiff: id,
+      }],
+    };
+    const newState = StateReplaceLayerCanvas(state, layer.id, newCanvas);
+    return { state: newState, diff };
   }
   if (op.type === "patch") {
     const aps = applyPatches(state, op.patches);
