@@ -282,7 +282,7 @@ export function SortableTree<Item, Extra>({
       const { depth, parentId } = projected;
 
       const fromId = active.id;
-      let toId = over.id;
+      const toId = over.id;
       const fromI = flattenedItems.findIndex(({ id }) => id === fromId)!;
       let toI = flattenedItems.findIndex(({ id }) => id === toId)!;
       const children = parentId

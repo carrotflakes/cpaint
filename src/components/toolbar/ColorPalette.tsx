@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import * as color from "color-convert";
+import color from "color-convert";
 import { usePointer } from "@/hooks/usePointer";
 import { useAppState } from "@/store/appState";
 

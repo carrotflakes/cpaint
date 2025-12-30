@@ -1,6 +1,6 @@
 import { CanvasContext, Touch } from ".";
 import { bucketFill, bucketFillEstimate } from "../bucket";
-import * as cc from "color-convert";
+import cc from "color-convert";
 
 export function startTouchBucketFill({ color, opacity, erase, tolerance, imageData }:
   { color: string, opacity: number, erase: boolean, tolerance: number, imageData: ImageData }

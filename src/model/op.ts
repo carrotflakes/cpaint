@@ -7,7 +7,7 @@ import { MCanvas } from "../libs/MCanvas";
 import { Patch } from "../libs/patch";
 import { Selection } from "../libs/Selection";
 import { startTouchBrush } from "../libs/touch/brush";
-import * as cc from "color-convert";
+import cc from "color-convert";
 import type { State } from "./state";
 import { getLayerById, StateReplaceLayerCanvas } from "./state";
 import { StateDiff } from "./stateContainer";
@@ -332,7 +332,7 @@ export function mergeOp(
 export function shrinkPatches(patches: Patch[]): Patch[] | null {
   patches = patches.slice();
   let shrinked = false;
-  iterate: do {
+  iterate: while (true) {
     for (let i = 0; i < patches.length; i++) {
       const current = patches[i];
       const next = patches[i + 1];
@@ -343,6 +343,7 @@ export function shrinkPatches(patches: Patch[]): Patch[] | null {
         continue iterate;
       }
     }
-  } while (false);
+    break;
+  }
   return shrinked ? patches : null;
 }

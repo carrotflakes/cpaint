@@ -39,7 +39,7 @@ export function startDrawing(
   );
   touch.stroke(pos[0], pos[1], pressure);
 
-  let op = createOp(store);
+  const op = createOp(store);
   if (op == null) return;
   opPush(op, pos, pressure);
 

@@ -148,7 +148,7 @@ export class StateRenderer {
 
 type Node = {
   source: Layer;
-  canvasVersion: Symbol;
+  canvasVersion: symbol;
 } | {
   source: LayerGroup;
   nodes: Node[];

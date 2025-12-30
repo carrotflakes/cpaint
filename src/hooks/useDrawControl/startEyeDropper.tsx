@@ -5,7 +5,7 @@ import { isSafari } from "@/libs/browser";
 import { Pos } from "@/libs/geometry";
 import { LayerMod } from "@/model/StateRenderer";
 import { useAppState } from "@/store/appState";
-import * as color from "color-convert";
+import color from "color-convert";
 import { JSX } from "react";
 import { listenPointer } from ".";
 
