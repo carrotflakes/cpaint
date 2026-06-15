@@ -29,7 +29,9 @@ export class StateRenderer {
 
     const nodes = state.layers.map(layerToNode);
     const canvas = this.renderGroup("", nodes, layerMod ?? this.modified);
+    ctx.globalCompositeOperation = "copy";
     ctx.drawImage(canvas, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
 
     if (SHOW_REDRAW_AREA && layerMod) {
       ctx.fillStyle = "#f00";
