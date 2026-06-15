@@ -115,8 +115,8 @@ export function opPush(op: Op, pos: [number, number], pressure: number) {
 }
 
 export function getPressure(e: PointerEvent) {
-  // NOTE: e.pressure will be 0 for touch events on iPad chrome.
-  return e.pointerType === "touch" && e.pressure === 0 ? 0.5 : e.pressure;
+  // Some browsers report zero pressure for mouse and touch pointer events.
+  return e.pointerType !== "pen" && e.pressure === 0 ? 0.5 : e.pressure;
 }
 
 export function roundRect(rect: {

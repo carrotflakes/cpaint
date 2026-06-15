@@ -36,8 +36,10 @@ export function useDrawControl(
 
       e.preventDefault();
 
+      // Firefox Playwrite sends e.pointerType as an empty string
       if (
-        (e.pointerType === "mouse" && e.button === 0) ||
+        ((e.pointerType === "mouse" || e.pointerType === "") &&
+          e.button === 0) ||
         e.pointerType === "pen" ||
         (touchToDraw && e.pointerType === "touch")
       ) {
