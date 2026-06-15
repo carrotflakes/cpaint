@@ -51,7 +51,7 @@ export function useDrawControl(
             startFill(container, e, lockRef, drawOrPanningRef, setRet);
             break;
           case "eyeDropper":
-            canvasRef.current &&
+            if (canvasRef.current)
               startEyeDropper(
                 container,
                 e,

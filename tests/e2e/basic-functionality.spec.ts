@@ -158,9 +158,8 @@ test.describe('CPaint Basic Functionality', () => {
     await expect(layersPanel).toBeVisible();
 
     // Should have at least one layer (check for layer elements in the layers bar)
-    const layerElements = page.locator('[data-testid="layers-bar"] [data-layer-index]');
-
     // FIXME
+    // const layerElements = page.locator('[data-testid="layers-bar"] [data-layer-index]');
     // const count = await layerElements.count();
     // expect(count).toBeGreaterThanOrEqual(1);
   });
@@ -512,21 +511,4 @@ async function countDrawingPixelsInArea(canvas: any, x: number, y: number, width
     }
     return drawingPixels;
   }, { x, y, width, height });
-}
-
-// Helper function to count all pixels with alpha > 0
-async function countAllPixels(canvas: any) {
-  return await canvas.evaluate((canvasEl: HTMLCanvasElement) => {
-    const ctx = canvasEl.getContext('2d');
-    if (!ctx) return 0;
-
-    const imageData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
-    const data = imageData.data;
-    let count = 0;
-
-    for (let i = 3; i < data.length; i += 4) {
-      if (data[i] > 0) count++;
-    }
-    return count;
-  });
 }

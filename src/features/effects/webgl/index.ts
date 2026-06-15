@@ -64,7 +64,7 @@ export function isWebGLSupported(): boolean {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl2');
     return gl !== null;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

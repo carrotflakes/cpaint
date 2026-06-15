@@ -30,7 +30,7 @@ export function Files() {
 
   const load = useCallback(() => {
     storage?.getAllImageMetas()?.then((images) => {
-      images && setFiles(images as any);
+      if (images) setFiles(images as any);
     });
   }, [storage]);
 
@@ -308,7 +308,7 @@ function Thumbnail(props: { id: number }) {
 
   useEffect(() => {
     storage?.getThumbnail(props.id)?.then((thumbnail) => {
-      thumbnail && setThumbnail(URL.createObjectURL(thumbnail as any));
+      if (thumbnail) setThumbnail(URL.createObjectURL(thumbnail as any));
     });
   }, [storage]);
 
