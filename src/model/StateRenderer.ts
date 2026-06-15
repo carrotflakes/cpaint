@@ -2,7 +2,7 @@ import { MCanvas } from "@/libs/MCanvas";
 import { Layer, LayerGroup, State } from "./state";
 
 // TODO: Show redraw area for debugging purposes
-const SHOW_REDRW_AREA = false;
+const SHOW_REDRAW_AREA = false;
 
 export class StateRenderer {
   private size: { width: number; height: number };
@@ -31,7 +31,7 @@ export class StateRenderer {
     const canvas = this.renderGroup("", nodes, layerMod ?? this.modified);
     ctx.drawImage(canvas, 0, 0);
 
-    if (SHOW_REDRW_AREA && layerMod) {
+    if (SHOW_REDRAW_AREA && layerMod) {
       ctx.fillStyle = "#f00";
       ctx.globalAlpha = 0.25;
       if (layerMod.rect === "full") {
