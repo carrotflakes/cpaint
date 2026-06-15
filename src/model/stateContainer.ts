@@ -1,10 +1,9 @@
 import { applyPatches } from "@/libs/applyPatches";
-import { applyImageDiff, canvasToImageDiff, ImageDiff } from "@/libs/imageDiff";
-import { MCanvas } from "@/libs/MCanvas";
+import { applyImageDiff, ImageDiff } from "@/libs/imageDiff";
 import { Patch } from "@/libs/patch";
-import { applyOp, mergeOp, shrinkPatches, type Op } from "./op";
+import { applyOp, editLayerCanvas, mergeOp, shrinkPatches, type Op } from "./op";
 import { OpTs, OpTsNew } from "./opts";
-import { getLayerById, State, StateReplaceLayerCanvas } from "./state";
+import { getLayerById, State } from "./state";
 import { LayerMod, StateRenderer } from "./StateRenderer";
 
 export type StateDiff = {
@@ -94,27 +93,21 @@ export function StateContainerDo(
     if (layer.type !== "layer") {
       throw new Error(`Layer with id ${layerMod.layerId} not found or is not a layer`);
     }
-    const canvas = new MCanvas(
-      layer.canvas.width,
-      layer.canvas.height,
-    );
-    const ctx = canvas.getContextWrite();
-    if (!ctx) {
-      throw new Error("Failed to get context");
-    }
-    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
-    ctx.save();
-    layerMod.apply(ctx);
-    ctx.restore();
-    const diff = canvasToImageDiff(canvas, layer.canvas);
-    if (!diff) {
+    // The renderer already trusts layerMod.rect to bound the change, so reuse
+    // it to limit the diff scan instead of comparing the whole canvas.
+    const clip = typeof layerMod.rect === "object" ? layerMod.rect : undefined;
+    const result = editLayerCanvas(sc.state, layerMod.layerId, (ctx) => {
+      ctx.save();
+      layerMod.apply(ctx);
+      ctx.restore();
+    }, clip);
+    if (!result) {
       // No difference found
       return sc;
     }
-    const state = StateReplaceLayerCanvas(sc.state, layer.id, canvas);
     return {
-      state,
-      backward: newBackward(sc.backward, { op: opts, diff: { type: "imageDiffs", layers: [{ id: layer.id, imageDiff: diff }] } }),
+      state: result.state,
+      backward: newBackward(sc.backward, { op: opts, diff: result.diff }),
       forward: [],
       renderer: sc.renderer,
     }

@@ -62,6 +62,57 @@ export type Op = {
   patches: Patch[];
 };
 
+function clampRectToCanvas(
+  rect: { x: number; y: number; width: number; height: number },
+  width: number,
+  height: number,
+): { x: number; y: number; width: number; height: number } {
+  const x = Math.max(0, Math.min(width, Math.floor(rect.x)));
+  const y = Math.max(0, Math.min(height, Math.floor(rect.y)));
+  const right = Math.max(0, Math.min(width, Math.ceil(rect.x + rect.width)));
+  const bottom = Math.max(0, Math.min(height, Math.ceil(rect.y + rect.height)));
+  return { x, y, width: right - x, height: bottom - y };
+}
+
+// Apply an edit to a copy of the layer's canvas and return the new state plus
+// the image diff. Returns null when the target is missing/not a layer or when
+// nothing changed.
+//
+// When `clip` is given, the diff is only scanned within that region (clamped
+// to the canvas). The caller must guarantee the edit cannot change pixels
+// outside it; the renderer already trusts these rects for partial redraws, so
+// reusing them keeps diff cost proportional to the edited area rather than the
+// whole canvas.
+export function editLayerCanvas(
+  state: State,
+  layerId: string,
+  edit: (ctx: OffscreenCanvasRenderingContext2D) => void,
+  clip?: { x: number; y: number; width: number; height: number },
+): { state: State; diff: StateDiff } | null {
+  const layer = getLayerById(state.layers, layerId);
+  if (layer.type !== "layer") return null;
+
+  const newCanvas = new MCanvas(layer.canvas.width, layer.canvas.height);
+  const ctx = newCanvas.getContextWrite();
+  ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
+  edit(ctx);
+
+  let scanClip = clip;
+  if (clip) {
+    scanClip = clampRectToCanvas(clip, newCanvas.width, newCanvas.height);
+    // Fully off-canvas: nothing could have changed.
+    if (scanClip.width <= 0 || scanClip.height <= 0) return null;
+  }
+
+  const imageDiff = canvasToImageDiff(newCanvas, layer.canvas, scanClip);
+  if (imageDiff == null) return null;
+
+  return {
+    state: StateReplaceLayerCanvas(state, layerId, newCanvas),
+    diff: { type: "imageDiffs", layers: [{ id: layer.id, imageDiff }] },
+  };
+}
+
 export function applyOp(
   state: State,
   op: Op,
@@ -72,73 +123,25 @@ export function applyOp(
   if (op.type === "stroke") {
     const layer = getLayerById(state.layers, op.layerId);
     if (layer.type !== "layer") return null;
-    const touch =
-      startTouchBrush({
-        brushType: op.strokeStyle.brushType,
-        width: op.strokeStyle.width,
-        color: op.strokeStyle.color,
-        opacity: op.opacity,
-        erase: op.erase,
-        alphaLock: op.alphaLock,
-        canvasSize: [layer.canvas.width, layer.canvas.height],
-      });
-    const newCanvas = new MCanvas(
-      layer.canvas.width,
-      layer.canvas.height,
-    );
-    const ctx = newCanvas.getContextWrite();
-    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
-
-    if (op.type === "stroke") {
-      for (const p of op.path) {
-        touch.stroke(p.pos[0], p.pos[1], p.pressure);
-      }
+    const touch = startTouchBrush({
+      brushType: op.strokeStyle.brushType,
+      width: op.strokeStyle.width,
+      color: op.strokeStyle.color,
+      opacity: op.opacity,
+      erase: op.erase,
+      alphaLock: op.alphaLock,
+      canvasSize: [layer.canvas.width, layer.canvas.height],
+    });
+    for (const p of op.path) {
+      touch.stroke(p.pos[0], p.pos[1], p.pressure);
     }
-
     touch.end();
-    touch.transfer(ctx);
-
-    const id = canvasToImageDiff(
-      newCanvas,
-      layer.canvas);
-
-    if (id == null)
-      return null;
-    const diff: StateDiff = {
-      type: "imageDiffs",
-      layers: [{
-        id: layer.id,
-        imageDiff: id,
-      }],
-    };
-    const newState = StateReplaceLayerCanvas(state, layer.id, newCanvas);
-    return { state: newState, diff };
+    return editLayerCanvas(state, op.layerId, (ctx) => touch.transfer(ctx), touch.rect ?? undefined);
   }
   if (op.type === "fill") {
-    const layer = getLayerById(state.layers, op.layerId);
-    if (layer.type !== "layer") return null;
-    const newCanvas = new MCanvas(
-      layer.canvas.width,
-      layer.canvas.height,
-    );
-    const ctx = newCanvas.getContextWrite();
-    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
-    createFill(op.path, op.fillColor, op.opacity, op.erase)(ctx);
-
-    const id = canvasToImageDiff(
-      newCanvas,
-      layer.canvas);
-    if (id == null)
-      return null;
-    const diff: StateDiff = {
-      type: "imageDiffs",
-      layers: [{
-        id: layer.id,
-        imageDiff: id,
-      }],
-    };
-    const newState = StateReplaceLayerCanvas(state, layer.id, newCanvas);
-    return { state: newState, diff };
+    return editLayerCanvas(state, op.layerId, (ctx) => {
+      createFill(op.path, op.fillColor, op.opacity, op.erase)(ctx);
+    });
   }
   if (op.type === "bucketFill") {
     const layer = getLayerById(state.layers, op.layerId);
@@ -187,70 +190,26 @@ export function applyOp(
     return { state: newState, diff };
   }
   if (op.type === "selectionFill") {
-    const layer = getLayerById(state.layers, op.layerId);
-    if (layer.type !== "layer") return null;
-    
     const selection = state.selection;
     if (!selection) return null;
-    
-    const newCanvas = new MCanvas(
-      layer.canvas.width,
-      layer.canvas.height,
-    );
-    const ctx = newCanvas.getContextWrite();
-    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
-    
-    ctx.save();
-    selection.setCanvasClip(ctx);
-    ctx.fillStyle = op.fillColor;
-    ctx.globalAlpha = op.opacity;
-    ctx.fillRect(0, 0, layer.canvas.width, layer.canvas.height);
-    ctx.restore();
-    
-    const id = canvasToImageDiff(newCanvas, layer.canvas);
-    if (id == null) return null;
-    
-    const diff: StateDiff = {
-      type: "imageDiffs",
-      layers: [{
-        id: layer.id,
-        imageDiff: id,
-      }],
-    };
-    const newState = StateReplaceLayerCanvas(state, layer.id, newCanvas);
-    return { state: newState, diff };
+    return editLayerCanvas(state, op.layerId, (ctx) => {
+      ctx.save();
+      selection.setCanvasClip(ctx);
+      ctx.fillStyle = op.fillColor;
+      ctx.globalAlpha = op.opacity;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.restore();
+    }, selection.getBounds() ?? undefined);
   }
   if (op.type === "selectionDelete") {
-    const layer = getLayerById(state.layers, op.layerId);
-    if (layer.type !== "layer") return null;
-    
     const selection = state.selection;
     if (!selection) return null;
-    
-    const newCanvas = new MCanvas(
-      layer.canvas.width,
-      layer.canvas.height,
-    );
-    const ctx = newCanvas.getContextWrite();
-    ctx.drawImage(layer.canvas.getCanvas(), 0, 0);
-    
-    ctx.save();
-    selection.setCanvasClip(ctx);
-    ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
-    ctx.restore();
-    
-    const id = canvasToImageDiff(newCanvas, layer.canvas);
-    if (id == null) return null;
-    
-    const diff: StateDiff = {
-      type: "imageDiffs",
-      layers: [{
-        id: layer.id,
-        imageDiff: id,
-      }],
-    };
-    const newState = StateReplaceLayerCanvas(state, layer.id, newCanvas);
-    return { state: newState, diff };
+    return editLayerCanvas(state, op.layerId, (ctx) => {
+      ctx.save();
+      selection.setCanvasClip(ctx);
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.restore();
+    }, selection.getBounds() ?? undefined);
   }
   if (op.type === "layerTransform") {
     const layer = getLayerById(state.layers, op.layerId);
