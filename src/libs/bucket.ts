@@ -33,32 +33,54 @@ export function bucketFill(
     ? (color: RGBAColor) => colorsDistance(color, targetColor) <= tolerance
     : (color: RGBAColor) => colorsMatch(color, targetColor);
 
+  const dst = imageDataDst.data;
   const queue: [number, number][] = [[sX, sY]];
+
+  // Push one seed per contiguous matching, not-yet-filled run on an adjacent
+  // row, scanning only within [spanLeft, spanRight). A seed re-expands left and
+  // right when popped, so runs that extend past the current span are still
+  // reached. This keeps the queue proportional to the number of spans rather
+  // than to the filled area.
+  function seedRow(spanLeft: number, spanRight: number, ny: number) {
+    let px = spanLeft;
+    while (px < spanRight) {
+      if (
+        dst[(ny * canvasWidth + px) * 4 + 3] !== 0 ||
+        !match(getColorAtPixel(imageDataSrc, px, ny))
+      ) {
+        px++;
+        continue;
+      }
+      queue.push([px, ny]);
+      do {
+        px++;
+      } while (
+        px < spanRight &&
+        dst[(ny * canvasWidth + px) * 4 + 3] === 0 &&
+        match(getColorAtPixel(imageDataSrc, px, ny))
+      );
+    }
+  }
 
   while (queue.length > 0) {
     const [x, y] = queue.pop()!;
 
-    if (imageDataDst.data[(y * canvasWidth + x) * 4 + 3] !== 0)
+    if (dst[(y * canvasWidth + x) * 4 + 3] !== 0)
       continue;
 
-    let lx = x;
-    while (lx >= 0 && match(getColorAtPixel(imageDataSrc, lx, y)))
-      lx--;
+    let left = x;
+    while (left > 0 && match(getColorAtPixel(imageDataSrc, left - 1, y)))
+      left--;
 
-    let rx = x;
-    while (rx < canvasWidth && match(getColorAtPixel(imageDataSrc, rx, y)))
-      rx++;
+    let right = x + 1;
+    while (right < canvasWidth && match(getColorAtPixel(imageDataSrc, right, y)))
+      right++;
 
-    for (let px = lx + 1; px < rx; px++)
+    for (let px = left; px < right; px++)
       setColorAtPixel(imageDataDst, px, y, fillColor);
 
-    if (y > 0)
-      for (let px = lx + 1; px < rx; px++)
-        queue.push([px, y - 1]);
-
-    if (y < canvasHeight - 1)
-      for (let px = lx + 1; px < rx; px++)
-        queue.push([px, y + 1]);
+    if (y > 0) seedRow(left, right, y - 1);
+    if (y < canvasHeight - 1) seedRow(left, right, y + 1);
   }
 }
 
