@@ -13,6 +13,9 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 const SCOPE = "https://www.googleapis.com/auth/drive.file";
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 const TOKEN_LEEWAY_MS = 60_000;
+// Remembers that the user signed in, so we can silently restore the session on
+// the next visit (GIS access tokens themselves are not persisted).
+const REMEMBER_KEY = "cpaint.googleSignedIn";
 
 export const isGoogleConfigured = !!CLIENT_ID;
 
@@ -84,6 +87,7 @@ async function ensureTokenClient(): Promise<TokenClient> {
         accessToken = response.access_token;
         tokenExpiry =
           Date.now() + (response.expires_in ?? 3600) * 1000 - TOKEN_LEEWAY_MS;
+        localStorage.setItem(REMEMBER_KEY, "1");
         useGoogleAuth.setState({ signedIn: true });
         settle((w) => w.resolve(response.access_token!));
       } else {
@@ -126,6 +130,23 @@ export const useGoogleAuth = create<AuthState>(() => ({
     if (accessToken) window.google?.accounts.oauth2.revoke(accessToken);
     accessToken = null;
     tokenExpiry = 0;
+    localStorage.removeItem(REMEMBER_KEY);
     useGoogleAuth.setState({ signedIn: false });
   },
 }));
+
+/**
+ * On startup, silently restore a previous Drive session without any popup.
+ * If the user is no longer authorized, the silent request fails and we simply
+ * forget the session.
+ */
+async function restoreSession() {
+  if (!isGoogleConfigured || localStorage.getItem(REMEMBER_KEY) !== "1") return;
+  try {
+    await getAccessToken();
+  } catch {
+    localStorage.removeItem(REMEMBER_KEY);
+  }
+}
+
+restoreSession();

@@ -9,7 +9,12 @@
  */
 
 import { DocMeta, DocumentStore } from "./DocumentStore";
-import { packDocument, unpackDocument } from "./cpaintFile";
+import {
+  embeddedThumbnailLength,
+  packDocument,
+  THUMBNAIL_HEADER_SIZE,
+  unpackDocument,
+} from "./cpaintFile";
 import { StoredDocument } from "./document";
 import { getAccessToken } from "./googleAuth";
 
@@ -48,18 +53,34 @@ class GoogleDriveStore implements DocumentStore {
     return unpackDocument(await res.blob());
   }
 
-  async getThumbnail(_id: string): Promise<Blob | null> {
-    // Thumbnails for Drive documents are handled separately (later); the file
-    // grid simply shows no preview for now.
-    return null;
+  async getThumbnail(id: string): Promise<Blob | null> {
+    // The preview is embedded at the start of the .cpaint file, so we fetch
+    // just the leading bytes with a Range request instead of the whole file.
+    // (Drive's thumbnailLink can't be read cross-origin.)
+    try {
+      const fileId = await this.resolveFileId(id);
+      if (!fileId) return null;
+      const header = await this.range(fileId, 0, THUMBNAIL_HEADER_SIZE - 1);
+      const length = embeddedThumbnailLength(await header.arrayBuffer());
+      if (!length) return null;
+      const thumb = await this.range(
+        fileId,
+        THUMBNAIL_HEADER_SIZE,
+        THUMBNAIL_HEADER_SIZE + length - 1
+      );
+      return new Blob([await thumb.arrayBuffer()], { type: "image/png" });
+    } catch {
+      return null;
+    }
   }
 
   async putDocument(
     meta: DocMeta,
     doc: StoredDocument,
-    _thumbnail: Blob
+    thumbnail: Blob
   ): Promise<void> {
-    const body = await packDocument(doc);
+    const preview = thumbnail.size > 0 ? await downscale(thumbnail, 256) : undefined;
+    const body = await packDocument(doc, preview);
     const metadata = {
       name: meta.name + EXT,
       mimeType: "application/octet-stream",
@@ -109,6 +130,12 @@ class GoogleDriveStore implements DocumentStore {
     return files[0] ?? null;
   }
 
+  private range(fileId: string, start: number, end: number): Promise<Response> {
+    return authedFetch(`${FILES_URL}/${fileId}?alt=media`, {
+      headers: { Range: `bytes=${start}-${end}` },
+    });
+  }
+
   private async query(q: string): Promise<DriveFile[]> {
     const params = new URLSearchParams({
       q,
@@ -145,6 +172,18 @@ class GoogleDriveStore implements DocumentStore {
     );
     return (await res.json()) as DriveFile;
   }
+}
+
+/** Shrink a full-size thumbnail so the embedded preview stays small. */
+async function downscale(blob: Blob, max: number): Promise<Blob> {
+  const bitmap = await createImageBitmap(blob);
+  const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = new OffscreenCanvas(width, height);
+  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+  return canvas.convertToBlob({ type: "image/png" });
 }
 
 async function authedFetch(url: string, init: RequestInit = {}): Promise<Response> {

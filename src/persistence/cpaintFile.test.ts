@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { packDocument, unpackDocument } from "./cpaintFile";
+import {
+  embeddedThumbnailLength,
+  packDocument,
+  THUMBNAIL_HEADER_SIZE,
+  unpackDocument,
+} from "./cpaintFile";
 import { StoredDocument } from "./document";
 
 function bytes(...values: number[]) {
@@ -80,5 +85,31 @@ describe("cpaint container", () => {
     await expect(
       unpackDocument(new Blob([bytes(0, 1, 2, 3, 4, 5, 6, 7)]))
     ).rejects.toThrow();
+  });
+
+  it("embeds a thumbnail and still round-trips the document", async () => {
+    const thumbnail = new Blob([bytes(10, 20, 30, 40, 50)]);
+    const packed = await packDocument(sampleDoc, thumbnail);
+
+    const headerBytes = await packed.slice(0, THUMBNAIL_HEADER_SIZE).arrayBuffer();
+    expect(embeddedThumbnailLength(headerBytes)).toBe(5);
+
+    const embedded = packed.slice(
+      THUMBNAIL_HEADER_SIZE,
+      THUMBNAIL_HEADER_SIZE + 5
+    );
+    expect(await blobBytes(embedded)).toEqual(bytes(10, 20, 30, 40, 50));
+
+    const restored = await unpackDocument(packed);
+    expect(restored.size).toEqual(sampleDoc.size);
+    const bg = restored.layers[0];
+    if (bg.type !== "layer") throw new Error("expected layer");
+    expect(await blobBytes(bg.canvas)).toEqual(bytes(1, 2, 3, 4));
+  });
+
+  it("reports zero thumbnail length when none is embedded", async () => {
+    const packed = await packDocument(sampleDoc);
+    const headerBytes = await packed.slice(0, THUMBNAIL_HEADER_SIZE).arrayBuffer();
+    expect(embeddedThumbnailLength(headerBytes)).toBe(0);
   });
 });
