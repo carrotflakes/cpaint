@@ -1,8 +1,26 @@
-import { DocumentStore } from "./DocumentStore";
+import { DocMeta, DocumentStore } from "./DocumentStore";
+import { StoredDocument } from "./document";
+import { useGoogleAuth } from "./googleAuth";
+import { googleDriveStore } from "./googleDriveStore";
 import { indexedDbStore } from "./indexedDbStore";
 
 /**
- * The active document store. This is the single swap point for adding cloud
- * backends later (e.g. a Google Drive store, or a synced store wrapping both).
+ * The active document store. Documents live in IndexedDB by default; once the
+ * user signs in to Google, reads and writes go to their Drive instead. This is
+ * the single swap point for backends — `save.ts` / the file browser only ever
+ * see the `DocumentStore` interface.
  */
-export const documentStore: DocumentStore = indexedDbStore;
+function active(): DocumentStore {
+  return useGoogleAuth.getState().signedIn ? googleDriveStore : indexedDbStore;
+}
+
+export const documentStore: DocumentStore = {
+  listMetas: () => active().listMetas(),
+  getMeta: (id) => active().getMeta(id),
+  getDocument: (id) => active().getDocument(id),
+  getThumbnail: (id) => active().getThumbnail(id),
+  putDocument: (meta: DocMeta, doc: StoredDocument, thumbnail: Blob) =>
+    active().putDocument(meta, doc, thumbnail),
+  deleteDocument: (id) => active().deleteDocument(id),
+  clearAll: () => active().clearAll(),
+};

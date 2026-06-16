@@ -6,9 +6,11 @@ import * as Popover from "@radix-ui/react-popover";
 import { useCallback, useEffect, useState } from "react";
 import { CHECK_PATTERN } from "../libs/check";
 import { StateNew } from "../model/state";
+import { isGoogleConfigured, useGoogleAuth } from "../persistence/googleAuth";
 import { documentStore } from "../persistence/store";
 import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
+import { pushToast } from "./Toasts";
 
 export function Files() {
   const [files, setFiles] = useState(
@@ -26,14 +28,16 @@ export function Files() {
   }>({ fileId: "", open: false });
 
   const { executeWithGuard } = useUnsavedChangesGuard();
+  const signedIn = useGoogleAuth((s) => s.signedIn);
 
   const load = useCallback(() => {
     documentStore.listMetas().then(setFiles);
   }, []);
 
+  // Reload when the active backend changes (sign in / out).
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, signedIn]);
 
   const newFile = useCallback(
     (size: [number, number], whiteBackground: boolean = true) => {
@@ -104,7 +108,10 @@ export function Files() {
         </label>
       </div>
 
-      <h2 className="text-2xl">Files</h2>
+      <div className="flex items-center gap-4">
+        <h2 className="text-2xl">Files</h2>
+        {isGoogleConfigured && <GoogleDriveButton signedIn={signedIn} />}
+      </div>
       <div className="flex flex-wrap">
         {files?.map((file) => (
           <div
@@ -392,5 +399,34 @@ function FileMenuPopover({
         Delete
       </div>
     </div>
+  );
+}
+
+function GoogleDriveButton({ signedIn }: { signedIn: boolean }) {
+  const { signIn, signOut } = useGoogleAuth();
+
+  if (signedIn) {
+    return (
+      <button
+        className="px-2 py-1 text-sm rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
+        onClick={signOut}
+        title="Files are stored in your Google Drive"
+      >
+        Google Drive: on — Sign out
+      </button>
+    );
+  }
+
+  return (
+    <button
+      className="px-2 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+      onClick={() =>
+        signIn().catch((e) =>
+          pushToast("Google sign-in failed: " + e, { type: "error" })
+        )
+      }
+    >
+      Sign in with Google Drive
+    </button>
   );
 }
