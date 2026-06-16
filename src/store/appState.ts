@@ -41,7 +41,7 @@ type Mode = {
 
 export type AppState = {
   imageMeta: null | {
-    id: number,
+    id: string,
     name: string,
     createdAt: number,
   }
@@ -51,7 +51,7 @@ export type AppState = {
 
   canvasSize: () => { width: number; height: number }
   apply: (op: Op, layerMod: LayerMod | null) => void
-  open: (imageMeta: { id: number; name: string; createdAt: number }, state: State, colorHistory?: string[]) => void
+  open: (imageMeta: { id: string; name: string; createdAt: number }, state: State, colorHistory?: string[]) => void
   undo: () => void
   redo: () => void
   update: (update: (draft: WritableDraft<AppState>) => void) => void
@@ -291,7 +291,7 @@ function ensureCurrentLayerId() {
 
 export function ImageMetaNew(name?: string) {
   return {
-    id: Date.now(),
+    id: crypto.randomUUID(),
     name: name ?? new Date().toISOString().split(".")[0].replace(/:/g, "-"),
     createdAt: Date.now(),
   };

@@ -4,35 +4,32 @@ import { loadFile } from "@/store/loadFile";
 import { loadImage } from "@/store/save";
 import * as Popover from "@radix-ui/react-popover";
 import { useCallback, useEffect, useState } from "react";
-import { useStorage } from "../hooks/useStorage";
 import { CHECK_PATTERN } from "../libs/check";
 import { StateNew } from "../model/state";
+import { documentStore } from "../persistence/store";
 import { ImageMetaNew, useAppState } from "../store/appState";
 import { ModalDialog } from "./ModalDialog";
 
 export function Files() {
   const [files, setFiles] = useState(
-    null as null | { id: number; name: string }[]
+    null as null | { id: string; name: string }[]
   );
   const [fileToDelete, setFileToDelete] = useState<{
-    id: number;
+    id: string;
     name: string;
   } | null>(null);
   const [showCustomSizeDialog, setShowCustomSizeDialog] = useState(false);
   const [whiteBg, setWhiteBg] = useState(true);
   const [fileMenuOpen, setFileMenuOpen] = useState<{
-    fileId: number;
+    fileId: string;
     open: boolean;
-  }>({ fileId: -1, open: false });
+  }>({ fileId: "", open: false });
 
-  const storage = useStorage();
   const { executeWithGuard } = useUnsavedChangesGuard();
 
   const load = useCallback(() => {
-    storage?.getAllImageMetas()?.then((images) => {
-      if (images) setFiles(images as any);
-    });
-  }, [storage]);
+    documentStore.listMetas().then(setFiles);
+  }, []);
 
   useEffect(() => {
     load();
@@ -115,7 +112,6 @@ export function Files() {
             className="w-48 p-4 flex flex-col gap-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-900"
             onClick={() =>
               !fileMenuOpen.open &&
-              storage &&
               executeWithGuard(
                 () => loadImage(file.id),
                 `Loading "${file.name}" will discard your current unsaved changes.`
@@ -147,8 +143,7 @@ export function Files() {
         <DeleteDialog
           fileName={fileToDelete.name}
           onDelete={() => {
-            storage?.deleteImage(fileToDelete.id);
-            load();
+            documentStore.deleteDocument(fileToDelete.id).then(load);
             setFileToDelete(null);
           }}
           onCancel={() => setFileToDelete(null)}
@@ -301,16 +296,14 @@ function CustomSizeDialog({
 }
 
 // TODO: revoke the object URL
-function Thumbnail(props: { id: number }) {
-  const storage = useStorage();
-
+function Thumbnail(props: { id: string }) {
   const [thumbnail, setThumbnail] = useState(null as null | string);
 
   useEffect(() => {
-    storage?.getThumbnail(props.id)?.then((thumbnail) => {
-      if (thumbnail) setThumbnail(URL.createObjectURL(thumbnail as any));
+    documentStore.getThumbnail(props.id).then((thumbnail) => {
+      if (thumbnail) setThumbnail(URL.createObjectURL(thumbnail));
     });
-  }, [storage]);
+  }, [props.id]);
 
   return (
     <div className="w-40 h-40 grid place-items-center">
@@ -333,10 +326,10 @@ function FileMenuButton({
   setFileMenuOpen,
   setFileToDelete,
 }: {
-  file: { id: number; name: string };
-  fileMenuOpen: { fileId: number; open: boolean };
-  setFileMenuOpen: (state: { fileId: number; open: boolean }) => void;
-  setFileToDelete: (file: { id: number; name: string }) => void;
+  file: { id: string; name: string };
+  fileMenuOpen: { fileId: string; open: boolean };
+  setFileMenuOpen: (state: { fileId: string; open: boolean }) => void;
+  setFileToDelete: (file: { id: string; name: string }) => void;
 }) {
   return (
     <Popover.Root
@@ -383,7 +376,7 @@ function FileMenuPopover({
   onDelete,
   closePopover,
 }: {
-  file: { id: number; name: string };
+  file: { id: string; name: string };
   onDelete: () => void;
   closePopover: () => void;
 }) {

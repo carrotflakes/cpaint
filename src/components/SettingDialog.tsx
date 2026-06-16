@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { storage } from "../libs/Storage";
+import { documentStore } from "../persistence/store";
 import { POINTERRAWUPDATE_AVAILABLE, useGlobalSettings } from "../store/globalSetting";
 import { ModalDialog } from "./ModalDialog";
 import { usePenPressureDialog } from "./PenPressureDialog";
@@ -122,7 +122,7 @@ export function SettingDialog() {
             className="px-2 py-1 rounded font-semibold bg-red-700 text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 transition-colors cursor-pointer"
             onClick={() => {
               if (confirm("Delete all data?")) {
-                storage.deleteDatabase();
+                documentStore.clearAll();
                 pushToast("All data deleted.", { type: "warning" });
               }
             }}
