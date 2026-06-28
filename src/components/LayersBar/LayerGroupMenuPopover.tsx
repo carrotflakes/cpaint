@@ -41,6 +41,11 @@ export function LayerGroupMenuPopover({
     closePopover();
   }, [layerIndex, closePopover]);
 
+  const handleMergeGroup = useCallback(() => {
+    ops.mergeGroup(layerIndex);
+    closePopover();
+  }, [layerIndex, closePopover]);
+
   const handleDeleteLayer = useCallback(() => {
     ops.deleteLayer(layerIndex);
     closePopover();
@@ -97,6 +102,13 @@ export function LayerGroupMenuPopover({
         onClick={() => handleUngroup()}
       >
         Ungroup Layers
+      </div>
+
+      <div
+        className="p-2 cursor-pointer hover:bg-gray-100"
+        onClick={() => handleMergeGroup()}
+      >
+        Merge Group
       </div>
 
       <div

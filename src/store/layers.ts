@@ -11,6 +11,7 @@ import {
   newLayerId,
   State
 } from "../model/state";
+import { StateRenderer } from "../model/StateRenderer";
 import { useAppState } from "../store/appState";
 
 export function updateVisibility(
@@ -293,6 +294,60 @@ export function mergeLayer(index: number[]) {
     ) {
       draft.uiState.currentLayerId = mergedLayer.id;
     }
+  });
+}
+
+export function mergeGroup(index: number[]) {
+  const store = useAppState.getState();
+  const state = store.stateContainer.state;
+  const group = findLayerByIndex(state, index);
+  if (!group || !("type" in group) || group.type !== "group") return;
+
+  const { width, height } = state.size;
+  // Flatten the group by rendering just its children through the canonical
+  // compositing of StateRenderer (a throwaway instance, so it leaves the
+  // live renderer's cache untouched).
+  const mergedCanvas = new MCanvas(width, height);
+  new StateRenderer(width, height).render(
+    { ...state, layers: group.layers },
+    mergedCanvas.getContextWrite(),
+    null
+  );
+
+  const mergedLayer = {
+    type: "layer",
+    id: newLayerId(store.stateContainer.state),
+    canvas: mergedCanvas,
+    visible: group.visible,
+    opacity: group.opacity,
+    blendMode: group.blendMode,
+    locked: group.locked,
+  } satisfies State["layers"][number];
+
+  store.apply(
+    {
+      type: "patch",
+      name: "Merge Group",
+      patches: [
+        {
+          op: "replace",
+          path: indexToPath(index),
+          value: mergedLayer,
+        },
+        {
+          op: "replace",
+          path: ["nextLayerId"],
+          value: (store.stateContainer.state.nextLayerId +
+            1) satisfies State["nextLayerId"],
+        },
+      ],
+    },
+    null
+  );
+
+  // Point the current layer at the resulting merged layer
+  store.update((draft) => {
+    draft.uiState.currentLayerId = mergedLayer.id;
   });
 }
 
