@@ -1,6 +1,8 @@
 import { CursorIndicator } from "@/components/overlays/CursorIndicator";
+import { pushToast } from "@/components/Toasts";
 import { dist, Pos } from "@/libs/geometry";
 import { Selection } from "@/libs/Selection";
+import { findLayerById } from "@/model/state";
 import { LayerMod } from "@/model/StateRenderer";
 import { useAppState } from "@/store/appState";
 import { useGlobalSettings } from "@/store/globalSetting";
@@ -17,7 +19,7 @@ export function useDrawControl(
   canvasRef: {
     current: HTMLCanvasElement | null;
   },
-  drawOrPanningRef: { current: "draw" | "panning" | null }
+  drawOrPanningRef: { current: "draw" | "panning" | null },
 ) {
   const { touchToDraw } = useGlobalSettings((state) => state);
   const lockRef = useRef(false);
@@ -44,7 +46,31 @@ export function useDrawControl(
         (touchToDraw && e.pointerType === "touch")
       ) {
         const store = useAppState.getState();
-        switch (store.uiState.tool) {
+        const tool = store.uiState.tool;
+
+        // Drawing tools can't target a group; warn instead of silently doing nothing.
+        if (tool === "brush" || tool === "bucketFill" || tool === "fill") {
+          const layer = findLayerById(
+            store.stateContainer.state.layers,
+            store.uiState.currentLayerId,
+          );
+          if (layer?.type === "group") {
+            pushToast("Cannot draw on a group. Select a layer inside it.", {
+              autoHide: true,
+              type: "warning",
+            });
+            return;
+          }
+          if (layer?.locked) {
+            pushToast("Cannot draw on a locked layer.", {
+              autoHide: true,
+              type: "warning",
+            });
+            return;
+          }
+        }
+
+        switch (tool) {
           case "brush":
           case "bucketFill":
             startDrawing(container, e, lockRef, drawOrPanningRef, setRet);
@@ -60,7 +86,7 @@ export function useDrawControl(
                 lockRef,
                 drawOrPanningRef,
                 canvasRef.current,
-                setRet
+                setRet,
               );
             break;
           case "selection":
@@ -100,7 +126,7 @@ export function listenPointer(
   setRet: (ret: { layerMod?: LayerMod; overlay?: JSX.Element }) => void,
   onPointerMove: (e: PointerEvent) => void,
   onPointerUp: (e: PointerEvent) => void,
-  highPrecision: boolean = false
+  highPrecision: boolean = false,
 ) {
   const usePointerRawUpdate = useGlobalSettings.getState().usePointerRawUpdate;
   const pointermoveEvent =
